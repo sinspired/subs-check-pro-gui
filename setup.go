@@ -76,7 +76,7 @@ func setupApp() (*app.App, *GuiApp, bool) {
 		os.Exit(1)
 	}
 
-	registerGuiAutoLogin(coreApp.GetRouter())
+	registerGuiRoutes(coreApp.GetRouter())
 
 	go coreApp.Run()
 

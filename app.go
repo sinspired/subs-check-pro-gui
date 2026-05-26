@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync/atomic"
+	"time"
 
 	coreapp "github.com/sinspired/subs-check-pro/v2/app"
 	"github.com/sinspired/subs-check-pro/v2/config"
@@ -16,15 +18,26 @@ import (
 type GuiApp struct {
 	configPath string
 	backend    *coreapp.App
-	// window 持有主窗口引用，由 main.go 在创建窗口后注入。
+	// window 持有主窗口引用（loginWin 的别名），兼容托盘等旧引用。
+	// 由 main.go 在创建窗口后注入。
 	window *application.WebviewWindow
 
+	// loginWin 登录小窗（加载 Wails 前端资产）。
+	// 由 main.go 在创建窗口后注入。
+	loginWin *application.WebviewWindow
+
+	// webUIWin WebUI 大窗（加载外部 Gin 服务，初始隐藏）。
+	// 由 main.go 在创建窗口后注入。
+	webUIWin *application.WebviewWindow
+
 	// pendingInit 为 true 时表示端口预检发现冲突，Initialize() 尚未调用。
-	// 前端通过 GetAppInfo().portConflictHTTP/portConflictSubStore 感知，
-	// 用户修正端口后调用 CompleteInit() 完成初始化。
 	pendingInit     bool
 	preConflictHTTP bool
 	preConflictSub  bool
+
+	// inWebUI 为 true 表示窗口已切换到外部 WebUI 页面。
+	// 此时 Wails JS runtime 不可用，关闭事件须走 Go 原生对话框。
+	inWebUI atomic.Bool
 }
 
 // AppInfo 前端展示所需的应用运行信息。
@@ -48,6 +61,33 @@ type AppInfo struct {
 	AutostartEnabled bool `json:"autostartEnabled"`
 }
 
+// EnterWebUI 由前端调用：导航 WebUI 窗口、显示它、隐藏登录窗口。
+// 完全无定时器，无闪烁。
+func (g *GuiApp) EnterWebUI(enterURL string) {
+	if g.webUIWin == nil || g.loginWin == nil {
+		return
+	}
+	g.inWebUI.Store(true)
+	// Wails v3 中导航到指定 URL 的正确方法是 SetURL，Navigate 已不存在
+	g.webUIWin.SetURL(enterURL)
+	g.webUIWin.Show()
+	g.webUIWin.Center()
+	g.webUIWin.Focus()
+	g.loginWin.Hide()
+}
+
+// BackToLogin 从 WebUI 返回登录窗口（可选功能，供托盘菜单使用）
+func (g *GuiApp) BackToLogin() {
+	if g.loginWin == nil {
+		return
+	}
+	g.inWebUI.Store(false)
+	g.loginWin.Show()
+	g.loginWin.Center()
+	g.loginWin.Focus()
+	g.webUIWin.Hide()
+}
+
 // GetAppInfo 返回应用运行信息（含端口冲突检测）。
 func (g *GuiApp) GetAppInfo() AppInfo {
 	port := strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
@@ -58,11 +98,9 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 
 	var conflictHTTP, conflictSubStore bool
 	if g.pendingInit {
-		// 预检阶段：使用预检结果
 		conflictHTTP = g.preConflictHTTP
 		conflictSubStore = g.preConflictSub
 	} else if g.backend != nil {
-		// 正常运行阶段：使用后端运行时结果
 		conflictHTTP = g.backend.PortConflictHTTP()
 		conflictSubStore = g.backend.PortConflictSubStore()
 	}
@@ -81,10 +119,9 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 }
 
 // CompleteInit 在用户修正端口冲突后，由前端调用，完成后端初始化。
-// 仅当 pendingInit==true 时有效；初始化完成后自动清除 pending 状态。
 func (g *GuiApp) CompleteInit() error {
 	if !g.pendingInit {
-		return nil // 已初始化，幂等返回
+		return nil
 	}
 
 	if g.backend == nil {
@@ -103,7 +140,6 @@ func (g *GuiApp) CompleteInit() error {
 
 	go g.backend.Run()
 
-	// 更新 configPath（Initialize 可能已解析出真实路径）
 	g.configPath = g.backend.GetConfigPath()
 	g.pendingInit = false
 	g.preConflictHTTP = false
@@ -130,8 +166,7 @@ func (g *GuiApp) ValidateConfigKey(enteredKey string, remember bool) (string, er
 	return generateNonce(actual, remember), nil
 }
 
-// ValidatePort 实时验证单个端口号合法性，供前端输入框即时校验调用。
-// 返回空字符串表示合法；否则返回可直接展示的错误描述。
+// ValidatePort 实时验证单个端口号合法性。
 func (g *GuiApp) ValidatePort(port string) string {
 	if err := validatePort(port); err != nil {
 		return err.Error()
@@ -140,12 +175,10 @@ func (g *GuiApp) ValidatePort(port string) string {
 }
 
 // SetPorts 更新端口配置。
-// 先做合法性校验（数字、范围 1024-65535、两端口不重复），再做占用检测。
 func (g *GuiApp) SetPorts(httpPort, subStorePort string) error {
 	httpPort = normalizePort(httpPort)
 	subStorePort = normalizePort(subStorePort)
 
-	// 合法性校验
 	if err := validatePort(httpPort); err != nil {
 		return fmt.Errorf("HTTP 端口无效: %w", err)
 	}
@@ -158,7 +191,6 @@ func (g *GuiApp) SetPorts(httpPort, subStorePort string) error {
 		}
 	}
 
-	// 端口占用检测
 	if isPortInUse(httpPort) {
 		return fmt.Errorf("HTTP 端口 %s 已被占用，请换一个", httpPort)
 	}
@@ -166,28 +198,47 @@ func (g *GuiApp) SetPorts(httpPort, subStorePort string) error {
 		return fmt.Errorf("Sub-Store 端口 %s 已被占用，请换一个", subStorePort)
 	}
 
-	// 写入配置
 	config.GlobalConfig.ListenPort = ":" + httpPort
 	if subStorePort != "" {
 		config.GlobalConfig.SubStorePort = ":" + subStorePort
 	}
 
-	// 更新预检冲突状态（用户已选择了可用端口）
 	g.preConflictHTTP = false
 	g.preConflictSub = false
 
 	return nil
 }
 
-// ResizeToMain 将登录小窗切换为管理界面大窗。
+// ResizeToMain 将登录小窗无闪烁地切换为管理界面大窗。
+//
+// 实现策略（Wails v3 原生方式）：
+//  1. 标记进入 WebUI 模式（关闭按钮改走 Go 原生对话框）
+//  2. 立即隐藏窗口（用户看不到后续的尺寸/导航变化）
+//  3. 调整窗口大小并居中
+//  4. 启动定时器，在外部页面加载完成后再显示窗口
+//
+// 前端在此函数返回后立即执行 window.location.replace()，
+// 定时器在导航和页面渲染完成后触发 Show()，实现无感切换。
 func (g *GuiApp) ResizeToMain() {
 	if g.window == nil {
 		return
 	}
+
+	// 标记已进入 WebUI；关闭钩子将改用 Go 原生对话框
+	g.inWebUI.Store(true)
+
+	// 隐藏窗口——从此刻起用户看不到任何 resize / 页面切换的闪烁
+	g.window.Hide()
 	g.window.SetSize(1024, 768)
 	g.window.Center()
-	g.window.Focus()
-	windowVisible.Store(true)
+
+	// 600 ms 后显示：给 window.location.replace 和本地页面加载足够时间
+	// localhost 页面通常 <100 ms 加载完毕，600 ms 有充足余量
+	time.AfterFunc(600*time.Millisecond, func() {
+		g.window.Show()
+		g.window.Focus()
+		windowVisible.Store(true)
+	})
 }
 
 // ShowWindow 供前端主动调用，显示并聚焦主窗口。
@@ -210,7 +261,6 @@ func (g *GuiApp) HideToTray() {
 }
 
 // QuitApp 供前端"关闭按钮对话框"选择退出时调用。
-// 这里只发起退出请求；真正退出后的“已退出”通知由 OnShutdown 统一发送。
 func (g *GuiApp) QuitApp() {
 	sendOSNotification("Subs Check Pro", "正在退出…")
 	app := application.Get()
@@ -220,7 +270,7 @@ func (g *GuiApp) QuitApp() {
 }
 
 // OpenConfigFile 打开系统文件选择对话框，返回用户选择的配置文件路径。
-// 用户取消时返回空字符串。
+// 用户取消时返回空字符串（不返回错误）。
 func (g *GuiApp) OpenConfigFile() (string, error) {
 	app := application.Get()
 	if app == nil {
@@ -232,23 +282,61 @@ func (g *GuiApp) OpenConfigFile() (string, error) {
 		AddFilter("YAML 配置文件", "*.yaml;*.yml").
 		PromptForSingleSelection()
 	if err != nil {
+		// 部分平台（Windows）在用户取消时返回错误而非空字符串
+		// 检测 cancel 语义，统一处理为"取消 = 空字符串，无错误"
+		errLower := strings.ToLower(err.Error())
+		if result == "" &&
+			(strings.Contains(errLower, "cancel") ||
+				strings.Contains(errLower, "cancelled") ||
+				strings.Contains(errLower, "no file") ||
+				strings.Contains(errLower, "user cancelled")) {
+			return "", nil
+		}
 		return "", fmt.Errorf("打开文件对话框失败: %w", err)
 	}
 	return result, nil
 }
 
-// 端口校验辅助
-// normalizePort 去除前缀冒号和空格，统一为纯数字字符串。
+// ── 双窗口调度辅助 ───────────────────────────────────────────────────────────
+
+// showActiveWindow 根据当前所处模式（WebUI / 登录窗口）显示对应窗口。
+// 供托盘菜单及单实例唤醒信号调用。
+func (g *GuiApp) showActiveWindow() {
+	if g.inWebUI.Load() {
+		// 当前处于 WebUI 大窗模式
+		if g.webUIWin != nil {
+			showWindow(g.webUIWin)
+		}
+	} else {
+		// 当前处于登录小窗模式
+		if g.loginWin != nil {
+			showWindow(g.loginWin)
+		}
+	}
+}
+
+// hideActiveWindow 根据当前所处模式（WebUI / 登录窗口）隐藏对应窗口。
+// 供托盘菜单"隐藏界面"调用。
+func (g *GuiApp) hideActiveWindow() {
+	if g.inWebUI.Load() {
+		// 当前处于 WebUI 大窗模式
+		if g.webUIWin != nil {
+			hideWindow(g.webUIWin)
+		}
+	} else {
+		// 当前处于登录小窗模式
+		if g.loginWin != nil {
+			hideWindow(g.loginWin)
+		}
+	}
+}
+
+// ── 端口校验辅助 ─────────────────────────────────────────────────────────────
+
 func normalizePort(port string) string {
 	return strings.TrimPrefix(strings.TrimSpace(port), ":")
 }
 
-// validatePort 校验端口号合法性。
-//
-// 规则：
-//   - 不能为空
-//   - 必须是纯数字
-//   - 范围 1024-65535（1-1023 为系统保留端口，需 root 权限）
 func validatePort(port string) error {
 	port = normalizePort(port)
 
@@ -265,7 +353,6 @@ func validatePort(port string) error {
 	case p < 1:
 		return fmt.Errorf("端口不能小于 1")
 	case p < 1024:
-		// 系统保留端口，普通进程无权限绑定（Windows 需管理员，Unix 需 root）
 		return fmt.Errorf("端口 %d 是系统保留端口（1-1023），请使用 1024-65535 范围内的端口", p)
 	case p > 65535:
 		return fmt.Errorf("端口不能大于 65535，当前值: %d", p)
@@ -274,7 +361,6 @@ func validatePort(port string) error {
 	return nil
 }
 
-// isPortInUse 通过尝试绑定来判断端口是否已被占用。
 func isPortInUse(port string) bool {
 	if port == "" {
 		return false

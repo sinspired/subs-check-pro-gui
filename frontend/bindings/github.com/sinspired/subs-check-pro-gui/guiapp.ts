@@ -15,11 +15,25 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as $models from "./models.js";
 
 /**
+ * BackToLogin 从 WebUI 返回登录窗口（可选功能，供托盘菜单使用）
+ */
+export function BackToLogin(): $CancellablePromise<void> {
+    return $Call.ByID(2210097929);
+}
+
+/**
  * CompleteInit 在用户修正端口冲突后，由前端调用，完成后端初始化。
- * 仅当 pendingInit==true 时有效；初始化完成后自动清除 pending 状态。
  */
 export function CompleteInit(): $CancellablePromise<void> {
     return $Call.ByID(3843184923);
+}
+
+/**
+ * EnterWebUI 由前端调用：导航 WebUI 窗口、显示它、隐藏登录窗口。
+ * 完全无定时器，无闪烁。
+ */
+export function EnterWebUI(enterURL: string): $CancellablePromise<void> {
+    return $Call.ByID(551937120, enterURL);
 }
 
 /**
@@ -47,7 +61,7 @@ export function HideToTray(): $CancellablePromise<void> {
 
 /**
  * OpenConfigFile 打开系统文件选择对话框，返回用户选择的配置文件路径。
- * 用户取消时返回空字符串。
+ * 用户取消时返回空字符串（不返回错误）。
  */
 export function OpenConfigFile(): $CancellablePromise<string> {
     return $Call.ByID(1547608438);
@@ -55,14 +69,22 @@ export function OpenConfigFile(): $CancellablePromise<string> {
 
 /**
  * QuitApp 供前端"关闭按钮对话框"选择退出时调用。
- * 这里只发起退出请求；真正退出后的“已退出”通知由 OnShutdown 统一发送。
  */
 export function QuitApp(): $CancellablePromise<void> {
     return $Call.ByID(1033637092);
 }
 
 /**
- * ResizeToMain 将登录小窗切换为管理界面大窗。
+ * ResizeToMain 将登录小窗无闪烁地切换为管理界面大窗。
+ * 
+ * 实现策略（Wails v3 原生方式）：
+ *  1. 标记进入 WebUI 模式（关闭按钮改走 Go 原生对话框）
+ *  2. 立即隐藏窗口（用户看不到后续的尺寸/导航变化）
+ *  3. 调整窗口大小并居中
+ *  4. 启动定时器，在外部页面加载完成后再显示窗口
+ * 
+ * 前端在此函数返回后立即执行 window.location.replace()，
+ * 定时器在导航和页面渲染完成后触发 Show()，实现无感切换。
  */
 export function ResizeToMain(): $CancellablePromise<void> {
     return $Call.ByID(1128121742);
@@ -70,7 +92,6 @@ export function ResizeToMain(): $CancellablePromise<void> {
 
 /**
  * SetPorts 更新端口配置。
- * 先做合法性校验（数字、范围 1024-65535、两端口不重复），再做占用检测。
  */
 export function SetPorts(httpPort: string, subStorePort: string): $CancellablePromise<void> {
     return $Call.ByID(3443572318, httpPort, subStorePort);
@@ -91,8 +112,7 @@ export function ValidateConfigKey(enteredKey: string, remember: boolean): $Cance
 }
 
 /**
- * ValidatePort 实时验证单个端口号合法性，供前端输入框即时校验调用。
- * 返回空字符串表示合法；否则返回可直接展示的错误描述。
+ * ValidatePort 实时验证单个端口号合法性。
  */
 export function ValidatePort(port: string): $CancellablePromise<string> {
     return $Call.ByID(2902552419, port);

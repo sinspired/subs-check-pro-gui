@@ -41,13 +41,13 @@ var (
 // startSysTray 初始化 Wails v3 原生系统托盘。
 // 参数：
 //   - wailsApp : Wails 应用实例
-//   - win      : 主窗口（用于 Show/Hide/Focus）
-//   - guiApp   : GUI 业务层（备用，当前暂不使用）
+//   - guiApp   : GUI 业务层（提供 showActiveWindow / hideActiveWindow）
+//   - coreApp  : 核心业务实例（用于发送终止检测信号）
+//   - notifier : 通知服务
 //   - onQuit   : 退出回调（先关闭 coreApp 再退出进程）
 func startSysTray(
 	wailsApp *application.App,
-	win *application.WebviewWindow,
-	_ *GuiApp,
+	guiApp *GuiApp,
 	coreApp *coreapp.App,
 	notifier *notifications.NotificationService,
 	onQuit func(),
@@ -60,21 +60,21 @@ func startSysTray(
 	tray.SetTooltip("Subs Check Pro - 订阅检测管理")
 
 	// 构建右键菜单
-	menu := buildTrayMenu(wailsApp, win, coreApp, notifier, onQuit)
+	menu := buildTrayMenu(wailsApp, guiApp, coreApp, notifier, onQuit)
 	tray.SetMenu(menu)
 
-	// 左键单击：切换显示/隐藏
+	// 左键单击：切换当前活跃窗口的显示/隐藏
 	tray.OnClick(func() {
 		if windowVisible.Load() {
-			hideWindow(win)
+			guiApp.hideActiveWindow()
 		} else {
-			showWindow(win)
+			guiApp.showActiveWindow()
 		}
 	})
 
-	// 左键双击：强制显示
+	// 左键双击：强制显示当前活跃窗口
 	tray.OnDoubleClick(func() {
-		showWindow(win)
+		guiApp.showActiveWindow()
 	})
 
 	// 右键单击：弹出菜单
@@ -87,7 +87,7 @@ func startSysTray(
 
 func buildTrayMenu(
 	wailsApp *application.App,
-	win *application.WebviewWindow,
+	guiApp *GuiApp,
 	coreApp *coreapp.App,
 	notifier *notifications.NotificationService,
 	onQuit func(),
@@ -95,11 +95,11 @@ func buildTrayMenu(
 	menu := wailsApp.NewMenu()
 
 	menu.Add("显示主界面").OnClick(func(_ *application.Context) {
-		showWindow(win)
+		guiApp.showActiveWindow()
 	})
 
 	menu.Add("隐藏界面").OnClick(func(_ *application.Context) {
-		hideWindow(win)
+		guiApp.hideActiveWindow()
 		sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击图标可恢复窗口")
 	})
 

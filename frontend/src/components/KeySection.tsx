@@ -2,7 +2,6 @@
  * frontend/src/components/KeySection.tsx
  */
 import { useState } from 'preact/hooks';
-import { TransitionOverlay } from './TransitionOverlay';
 import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 
@@ -33,13 +32,16 @@ export function KeySection({ info, toast }: Props) {
 
   const [launching, setLaunching] = useState(false);
 
-  // 通过 nonce 进入 WebUI（apiKey 不出现在 URL）
+  // 进入 WebUI（双窗口方案，彻底无闪烁）
+  //
+  // 流程：
+  //   1. 前端获取带 nonce 的完整 URL
+  //   2. 调用 EnterWebUI(url) —— Go 端在 webUIWin 上 Navigate + Show，
+  //      同时隐藏 loginWin；全程原子操作，无定时器
+  //   3. loginWin 隐藏后前端代码不再执行，launching 无需重置
   async function enterWebUI() {
     if (launching) return;
     setLaunching(true);
-
-    // 先让过渡层完成一次绘制，避免尺寸调整时的拉伸/闪烁。
-    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
     let nonce: string;
     try {
@@ -50,15 +52,14 @@ export function KeySection({ info, toast }: Props) {
       return;
     }
 
+    const enterURL = `http://localhost:${info.listenPort}/gui/enter?n=${encodeURIComponent(nonce)}`;
     try {
-      await GuiApp.ResizeToMain();
-    } catch {
-      // ResizeToMain 失败不阻断跳转
+      await GuiApp.EnterWebUI(enterURL);
+      // Go 端完成 Navigate+Show+Hide，loginWin 已不可见
+    } catch (e: any) {
+      toast('进入管理界面失败: ' + (e?.message ?? ''));
+      setLaunching(false);
     }
-
-    window.location.replace(
-      `http://localhost:${info.listenPort}/gui/enter?n=${encodeURIComponent(nonce)}`
-    );
   }
 
   return (
@@ -146,10 +147,14 @@ export function KeySection({ info, toast }: Props) {
 
       {/* 进入按钮 */}
       <button class="btn-enter" onClick={enterWebUI} disabled={launching}>
-        {launching ? '进入中…' : '进入管理界面 →'}
+        {launching ? '正在进入…' : '进入管理界面 →'}
       </button>
 
-      {launching && <TransitionOverlay message="正在进入管理界面…" />}
+      {/*
+        不再使用全屏 TransitionOverlay：
+        窗口在 ResizeToMain() 后立即被 Go 端隐藏，用户看不到任何过渡状态，
+        无需遮罩。按钮文字 "正在进入…" + disabled 提供足够的交互反馈。
+      */}
     </div>
   );
 }
