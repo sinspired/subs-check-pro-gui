@@ -39,17 +39,35 @@ export function OpenConfigFile(): $CancellablePromise<string> {
 }
 
 /**
- * ResizeToMain 将登录窗口扩展为主界面尺寸。
+ * ResizeToMain 将登录小窗切换为管理界面大窗。
+ * 
+ * 核心策略：先隐藏窗口 → 调整尺寸并居中 → 短暂异步延迟后再显示。
+ * 前端在调用本方法后立即发起页面跳转，窗口将在管理页面开始加载时
+ * 以正确尺寸重新出现，彻底避免用户看到拉伸动画（约 1-2 秒的卡顿感）。
+ * 
+ * 延迟时长说明（500ms）：
+ *   - 足够让前端完成 GetEnterNonce + location.replace 调用
+ *   - 足够让 Webview 开始加载新 URL
+ *   - 保持在用户可接受的"快速切换"感知范围内
  */
 export function ResizeToMain(): $CancellablePromise<void> {
     return $Call.ByID(1128121742);
 }
 
 /**
- * SetPorts 更新端口配置并检测冲突。
+ * SetPorts 更新端口配置。
+ * 先做合法性校验（数字、范围 1024-65535、两端口不重复），再做占用检测。
  */
 export function SetPorts(httpPort: string, subStorePort: string): $CancellablePromise<void> {
     return $Call.ByID(3443572318, httpPort, subStorePort);
+}
+
+/**
+ * ShowWindow 供前端主动调用，显示并聚焦主窗口。
+ * 用于管理页面加载完成后的"亮相"时机控制（可选调用）。
+ */
+export function ShowWindow(): $CancellablePromise<void> {
+    return $Call.ByID(91192051);
 }
 
 /**
@@ -57,6 +75,14 @@ export function SetPorts(httpPort: string, subStorePort: string): $CancellablePr
  */
 export function ValidateConfigKey(enteredKey: string, remember: boolean): $CancellablePromise<string> {
     return $Call.ByID(2798811533, enteredKey, remember);
+}
+
+/**
+ * ValidatePort 实时验证单个端口号合法性，供前端输入框即时校验调用。
+ * 返回空字符串表示合法；否则返回可直接展示的错误描述。
+ */
+export function ValidatePort(port: string): $CancellablePromise<string> {
+    return $Call.ByID(2902552419, port);
 }
 
 // Private type creation functions

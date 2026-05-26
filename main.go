@@ -21,6 +21,9 @@ var assets embed.FS
 // and starts a goroutine that emits a time-based event every second. It subsequently runs the application and
 // logs any error that might occur.
 func main() {
+	// 若检测到已有实例，向其发送唤醒信号后退出本进程。
+	ensureSingleInstance()
+
 	coreApp, guiApp, appInitOK := setupApp()
 
 	// Create a new Wails application by providing the necessary options.
@@ -79,6 +82,14 @@ func main() {
 		win.Hide()
 		go NotifyHideToTray()
 	})
+
+	// 后台协程：每秒发送一次事件，供前端定时器订阅（例如更新托盘时间显示）。
+	go func() {
+		for range showSignalCh {
+			slog.Info("收到单实例唤醒信号，显示主窗口")
+			showWindow(win)
+		}
+	}()
 
 	// 系统托盘
 	startSysTray(wailsApp, win, guiApp, func() {
