@@ -40,7 +40,7 @@ export function QuitDialog({ onClose }: Props) {
         <div class="quit-actions">
           <button
             class="quit-btn quit-btn-secondary"
-            onClick={handleMinimize}
+            onClick={() => { void handleMinimize(); }}
           >
             <div class="quit-btn-icon">🗕</div>
 
@@ -57,7 +57,7 @@ export function QuitDialog({ onClose }: Props) {
 
           <button
             class="quit-btn quit-btn-danger"
-            onClick={handleQuit}
+            onClick={() => { void handleQuit(); }}
           >
             <div class="quit-btn-icon">✕</div>
 

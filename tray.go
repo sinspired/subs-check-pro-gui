@@ -215,7 +215,7 @@ func waitForBackendIdle(timeout time.Duration) {
 	slog.Warn("等待后端空闲超时，继续退出流程")
 }
 
-// 窗口显示/隐藏
+// showWindow 窗口显示/隐藏
 func showWindow(win *application.WebviewWindow) {
 	win.Show()
 	win.Focus()
@@ -237,6 +237,7 @@ func NotifyHideToTray() {
 	slog.Info("已最小化到系统托盘，单击托盘图标可恢复窗口")
 }
 
+// formatSysTrayTooltip 构建托盘悬浮提示文本，包含应用名称和当前监听端口。
 func formatSysTrayTooltip() string {
 	return fmt.Sprintf("Subs Check Pro  |  端口 %s",
 		strings.TrimPrefix(config.GlobalConfig.ListenPort, ":"))

@@ -2,6 +2,7 @@
  * frontend/src/components/KeySection.tsx
  */
 import { useState } from 'preact/hooks';
+import { TransitionOverlay } from './TransitionOverlay';
 import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 
@@ -30,21 +31,29 @@ export function KeySection({ info, toast }: Props) {
     }
   }
 
-  // 通过 nonce 进入 WebUI（apiKey 不出现在 URL
+  const [launching, setLaunching] = useState(false);
+
+  // 通过 nonce 进入 WebUI（apiKey 不出现在 URL）
   async function enterWebUI() {
-    // 先调整窗口尺寸（如果 Go 侧实现了）
-    try {
-      await GuiApp.ResizeToMain();
-    } catch {
-      // ResizeToMain 失败不阻断跳转
-    }
+    if (launching) return;
+    setLaunching(true);
+
+    // 先让过渡层完成一次绘制，避免尺寸调整时的拉伸/闪烁。
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
     let nonce: string;
     try {
       nonce = await GuiApp.GetEnterNonce(remember);
     } catch (e: any) {
       toast('获取登录凭证失败: ' + (e?.message ?? ''));
+      setLaunching(false);
       return;
+    }
+
+    try {
+      await GuiApp.ResizeToMain();
+    } catch {
+      // ResizeToMain 失败不阻断跳转
     }
 
     window.location.replace(
@@ -136,9 +145,11 @@ export function KeySection({ info, toast }: Props) {
       </label>
 
       {/* 进入按钮 */}
-      <button class="btn-enter" onClick={enterWebUI}>
-        进入管理界面 →
+      <button class="btn-enter" onClick={enterWebUI} disabled={launching}>
+        {launching ? '进入中…' : '进入管理界面 →'}
       </button>
+
+      {launching && <TransitionOverlay message="正在进入管理界面…" />}
     </div>
   );
 }

@@ -2,6 +2,7 @@
  * frontend/src/components/PasswordConfirm.tsx
  */
 import { useState } from 'preact/hooks';
+import { TransitionOverlay } from './TransitionOverlay';
 import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 
@@ -21,8 +22,10 @@ export function PasswordConfirm({ cfgPath, toast, onDone }: Props) {
       toast('请输入 API 密钥');
       return;
     }
+    if (loading) return;
 
     setLoading(true);
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
     let nonce: string;
     try {
@@ -33,7 +36,7 @@ export function PasswordConfirm({ cfgPath, toast, onDone }: Props) {
       return;
     }
 
-    // 调整窗口尺寸
+    // 先进入过渡态，再调整窗口尺寸。
     try { await GuiApp.ResizeToMain(); } catch { /* 可选 */ }
 
     // 获取最新 AppInfo
@@ -47,7 +50,6 @@ export function PasswordConfirm({ cfgPath, toast, onDone }: Props) {
       `http://localhost:${port}/gui/enter?n=${encodeURIComponent(nonce)}`
     );
 
-    onDone(newInfo);
   }
 
   return (
@@ -72,6 +74,8 @@ export function PasswordConfirm({ cfgPath, toast, onDone }: Props) {
       </div>
 
       <div class="cfg-path-hint">{cfgPath}</div>
+
+      {loading && <TransitionOverlay message="正在验证并进入管理界面…" />}
     </div>
   );
 }

@@ -11,15 +11,18 @@ import (
 )
 
 // setupApp 完成业务层初始化，返回三个值供 main() 使用：
+//
 //   - coreApp   核心应用实例（用于 Shutdown）
+//
 //   - guiApp    Wails 绑定实例（注入窗口引用后传给 Services）
+//
 //   - appInitOK 标记业务是否成功启动（退出时决定是否调用 Shutdown）
 //
-//  1. 先读取配置文件中的端口信息，检测端口是否可用。
-//  2. 若端口冲突 → 不调用 coreApp.Initialize()，将 appInitOK=false 返回给 main；
+//     1. 先读取配置文件中的端口信息，检测端口是否可用。
+//     2. 若端口冲突 → 不调用 coreApp.Initialize()，将 appInitOK=false 返回给 main；
 //     Wails 窗口启动后前端读取 guiApp.HasPendingInit()==true，展示端口冲突界面；
 //     用户修改端口并点击"应用"后，前端调用 GuiApp.CompleteInit() 完成初始化。
-//  3. 若端口正常 → 按原有流程调用 Initialize() + EnsureRouter() + Run()。
+//     3. 若端口正常 → 按原有流程调用 Initialize() + EnsureRouter() + Run()。
 func setupApp() (*app.App, *GuiApp, bool) {
 	os.Setenv("START_FROM_GUI", "1")
 

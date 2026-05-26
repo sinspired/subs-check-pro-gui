@@ -104,6 +104,7 @@ func main() {
 				slog.Error("关闭应用失败", "error", err)
 			}
 		}
+		sendOSNotification("Subs Check Pro", "已退出")
 	})
 
 	// 单实例唤醒

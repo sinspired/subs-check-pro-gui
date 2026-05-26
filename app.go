@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	coreapp "github.com/sinspired/subs-check-pro/v2/app"
 	"github.com/sinspired/subs-check-pro/v2/config"
@@ -185,16 +184,10 @@ func (g *GuiApp) ResizeToMain() {
 	if g.window == nil {
 		return
 	}
-	g.window.Hide()
 	g.window.SetSize(1024, 768)
 	g.window.Center()
-
-	go func() {
-		time.Sleep(500 * time.Millisecond)
-		g.window.Show()
-		g.window.Focus()
-		windowVisible.Store(true)
-	}()
+	g.window.Focus()
+	windowVisible.Store(true)
 }
 
 // ShowWindow 供前端主动调用，显示并聚焦主窗口。
@@ -217,6 +210,7 @@ func (g *GuiApp) HideToTray() {
 }
 
 // QuitApp 供前端"关闭按钮对话框"选择退出时调用。
+// 这里只发起退出请求；真正退出后的“已退出”通知由 OnShutdown 统一发送。
 func (g *GuiApp) QuitApp() {
 	sendOSNotification("Subs Check Pro", "正在退出…")
 	app := application.Get()
@@ -243,8 +237,7 @@ func (g *GuiApp) OpenConfigFile() (string, error) {
 	return result, nil
 }
 
-// ── 端口校验辅助
-
+// 端口校验辅助
 // normalizePort 去除前缀冒号和空格，统一为纯数字字符串。
 func normalizePort(port string) string {
 	return strings.TrimPrefix(strings.TrimSpace(port), ":")

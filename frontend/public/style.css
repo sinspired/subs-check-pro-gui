@@ -56,6 +56,10 @@
   --first-run-bd: rgba(14, 165, 160, 0.28);
 }
 
+:root[data-theme='dark'] .transition-overlay {
+  background: rgba(17, 19, 23, 0.82);
+}
+
 *,
 *::before,
 *::after {
@@ -513,13 +517,13 @@ code {
 }
 
 .quit-dialog {
-  width: 380px;
+  width: min(340px, calc(100vw - 28px));
 
   background: var(--card);
 
   border: 1px solid var(--border);
 
-  border-radius: 18px;
+  border-radius: 16px;
 
   box-shadow:
     0 30px 80px rgba(0, 0, 0, 0.32),
@@ -545,18 +549,18 @@ code {
 .quit-header {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 
-  padding: 22px 22px 18px;
+  padding: 18px 18px 14px;
 
   border-bottom: 1px solid var(--border);
 }
 
 .quit-icon-wrap {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
 
-  border-radius: 14px;
+  border-radius: 12px;
 
   background:
     linear-gradient(
@@ -573,7 +577,7 @@ code {
 }
 
 .quit-icon {
-  font-size: 24px;
+  font-size: 20px;
   color: var(--accent);
 }
 
@@ -582,7 +586,7 @@ code {
 }
 
 .quit-title {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
 
   color: var(--fg);
@@ -601,19 +605,19 @@ code {
   display: flex;
   flex-direction: column;
 
-  gap: 10px;
+  gap: 8px;
 
-  padding: 18px 20px;
+  padding: 14px 16px;
 }
 
 .quit-btn {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 
   width: 100%;
 
-  padding: 14px 14px;
+  padding: 11px 12px;
 
   border-radius: 14px;
 
@@ -657,10 +661,10 @@ code {
 }
 
 .quit-btn-icon {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
 
-  border-radius: 12px;
+  border-radius: 10px;
 
   display: flex;
   align-items: center;
@@ -678,7 +682,7 @@ code {
 }
 
 .quit-btn-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 
   color: var(--fg);
@@ -687,7 +691,7 @@ code {
 .quit-btn-sub {
   margin-top: 2px;
 
-  font-size: 11px;
+  font-size: 10px;
 
   color: var(--muted);
 }
@@ -697,7 +701,7 @@ code {
   justify-content: flex-end;
 
   padding:
-    0 20px 18px;
+    0 16px 14px;
 }
 
 .quit-cancel {
@@ -725,4 +729,33 @@ code {
   background: var(--bg);
 
   color: var(--fg);
+}
+
+/* ── 过渡遮罩：进入管理界面时避免尺寸调整闪烁 ── */
+.transition-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(242, 244, 246, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.transition-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+}
+
+.transition-text {
+  font-size: 13px;
+  color: var(--muted);
 }

@@ -55,6 +55,7 @@ export function OpenConfigFile(): $CancellablePromise<string> {
 
 /**
  * QuitApp 供前端"关闭按钮对话框"选择退出时调用。
+ * 这里只发起退出请求；真正退出后的“已退出”通知由 OnShutdown 统一发送。
  */
 export function QuitApp(): $CancellablePromise<void> {
     return $Call.ByID(1033637092);
