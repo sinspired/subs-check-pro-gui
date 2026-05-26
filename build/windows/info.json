@@ -1,0 +1,15 @@
+{
+	"fixed": {
+		"file_version": "0.0.1"
+	},
+	"info": {
+		"0000": {
+			"ProductVersion": "0.0.1",
+			"CompanyName": "sinspired",
+			"FileDescription": "A modern GUI of Subs-Check-Pro",
+			"LegalCopyright": "(c) 2025, sinspired",
+			"ProductName": "subs-check-pro-gui",
+			"Comments": "A modern GUI of Subs-Check-Pro, for high-performance proxy management, check, and subscription management and generation"
+		}
+	}
+}
