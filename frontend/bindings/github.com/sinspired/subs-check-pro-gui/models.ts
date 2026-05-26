@@ -39,6 +39,11 @@ export class AppInfo {
     "portConflictSubStore": boolean;
 
     /**
+     * PendingInit 为 true 表示后端尚未初始化，需要前端先解决端口冲突
+     */
+    "pendingInit": boolean;
+
+    /**
      * AutostartEnabled 当前平台开机自启状态
      */
     "autostartEnabled": boolean;
@@ -68,6 +73,9 @@ export class AppInfo {
         }
         if (!("portConflictSubStore" in $$source)) {
             this["portConflictSubStore"] = false;
+        }
+        if (!("pendingInit" in $$source)) {
+            this["pendingInit"] = false;
         }
         if (!("autostartEnabled" in $$source)) {
             this["autostartEnabled"] = false;

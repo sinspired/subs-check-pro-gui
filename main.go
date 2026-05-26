@@ -7,6 +7,7 @@ import (
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
+	"github.com/wailsapp/wails/v3/pkg/services/notifications"
 )
 
 // Wails uses Go's `embed` package to embed the frontend files into the binary.
@@ -26,6 +27,10 @@ func main() {
 
 	coreApp, guiApp, appInitOK := setupApp()
 
+	// Wails v3 通知初始化
+	notifier := notifications.New()
+	InitNotifier(notifier)
+
 	// Create a new Wails application by providing the necessary options.
 	// Variables 'Name' and 'Description' are for application metadata.
 	// 'Assets' configures the asset server with the 'FS' variable pointing to the frontend files.
@@ -36,6 +41,7 @@ func main() {
 		Description: "订阅检测桌面管理面板",
 		Services: []application.Service{
 			application.NewService(guiApp),
+			application.NewService(notifier),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
@@ -76,14 +82,31 @@ func main() {
 
 	guiApp.window = win
 
-	// 窗口关闭 → 最小化到托盘
-	win.OnWindowEvent(events.Common.WindowClosing, func(e *application.WindowEvent) {
+	// 关闭按钮：拦截并交给前端决定“退出 / 最小化到托盘”
+	win.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
 		e.Cancel()
-		win.Hide()
-		go NotifyHideToTray()
+		win.EmitEvent("window:close-requested", nil)
 	})
 
-	// 后台协程：每秒发送一次事件，供前端定时器订阅（例如更新托盘时间显示）。
+	// 最小化按钮：隐藏到托盘
+	win.OnWindowEvent(events.Common.WindowMinimise, func(e *application.WindowEvent) {
+		win.Hide()
+		windowVisible.Store(false)
+		sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击托盘图标可恢复窗口")
+		slog.Info("窗口已最小化到系统托盘")
+	})
+
+	// 退出时统一清理
+	wailsApp.OnShutdown(func() {
+		slog.Info("应用正在退出，执行清理工作…")
+		if appInitOK {
+			if err := coreApp.Shutdown(); err != nil {
+				slog.Error("关闭应用失败", "error", err)
+			}
+		}
+	})
+
+	// 单实例唤醒
 	go func() {
 		for range showSignalCh {
 			slog.Info("收到单实例唤醒信号，显示主窗口")
@@ -91,22 +114,12 @@ func main() {
 		}
 	}()
 
-	// 系统托盘
-	startSysTray(wailsApp, win, guiApp, func() {
-		if appInitOK {
-			_ = coreApp.Shutdown()
-		}
-		os.Exit(0)
-	})
+	// 托盘退出统一走 Wails 生命周期
+	onQuit := func() {
+		wailsApp.Quit()
+	}
 
-	// 应用退出
-	wailsApp.OnShutdown(func() {
-		if appInitOK {
-			if err := coreApp.Shutdown(); err != nil {
-				slog.Error("关闭应用失败", "error", err)
-			}
-		}
-	})
+	startSysTray(wailsApp, win, guiApp, coreApp, notifier, onQuit)
 
 	slog.Info("Wails 登录窗口已启动", "appReady", appInitOK)
 

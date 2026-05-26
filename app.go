@@ -19,6 +19,13 @@ type GuiApp struct {
 	backend    *coreapp.App
 	// window 持有主窗口引用，由 main.go 在创建窗口后注入。
 	window *application.WebviewWindow
+
+	// pendingInit 为 true 时表示端口预检发现冲突，Initialize() 尚未调用。
+	// 前端通过 GetAppInfo().portConflictHTTP/portConflictSubStore 感知，
+	// 用户修正端口后调用 CompleteInit() 完成初始化。
+	pendingInit     bool
+	preConflictHTTP bool
+	preConflictSub  bool
 }
 
 // AppInfo 前端展示所需的应用运行信息。
@@ -36,6 +43,8 @@ type AppInfo struct {
 	PortConflictHTTP bool `json:"portConflictHTTP"`
 	// PortConflictSubStore 为 true 表示 Sub-Store 端口被占用
 	PortConflictSubStore bool `json:"portConflictSubStore"`
+	// PendingInit 为 true 表示后端尚未初始化，需要前端先解决端口冲突
+	PendingInit bool `json:"pendingInit"`
 	// AutostartEnabled 当前平台开机自启状态
 	AutostartEnabled bool `json:"autostartEnabled"`
 }
@@ -49,7 +58,12 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 	subStorePort := strings.TrimPrefix(config.GlobalConfig.SubStorePort, ":")
 
 	var conflictHTTP, conflictSubStore bool
-	if g.backend != nil {
+	if g.pendingInit {
+		// 预检阶段：使用预检结果
+		conflictHTTP = g.preConflictHTTP
+		conflictSubStore = g.preConflictSub
+	} else if g.backend != nil {
+		// 正常运行阶段：使用后端运行时结果
 		conflictHTTP = g.backend.PortConflictHTTP()
 		conflictSubStore = g.backend.PortConflictSubStore()
 	}
@@ -63,7 +77,41 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 		ConfigPath:           g.configPath,
 		PortConflictHTTP:     conflictHTTP,
 		PortConflictSubStore: conflictSubStore,
+		PendingInit:          g.pendingInit,
 	}
+}
+
+// CompleteInit 在用户修正端口冲突后，由前端调用，完成后端初始化。
+// 仅当 pendingInit==true 时有效；初始化完成后自动清除 pending 状态。
+func (g *GuiApp) CompleteInit() error {
+	if !g.pendingInit {
+		return nil // 已初始化，幂等返回
+	}
+
+	if g.backend == nil {
+		return fmt.Errorf("内部错误：backend 未设置")
+	}
+
+	if err := g.backend.Initialize(); err != nil {
+		return fmt.Errorf("初始化后端失败: %w", err)
+	}
+
+	if err := g.backend.EnsureRouter(); err != nil {
+		return fmt.Errorf("初始化 HTTP 路由失败: %w", err)
+	}
+
+	registerGuiAutoLogin(g.backend.GetRouter())
+
+	go g.backend.Run()
+
+	// 更新 configPath（Initialize 可能已解析出真实路径）
+	g.configPath = g.backend.GetConfigPath()
+	g.pendingInit = false
+	g.preConflictHTTP = false
+	g.preConflictSub = false
+
+	sendOSNotification("Subs Check Pro", "服务已成功启动")
+	return nil
 }
 
 // GetEnterNonce 生成一次性 nonce，用于 /gui/enter 安全跳转。
@@ -124,39 +172,32 @@ func (g *GuiApp) SetPorts(httpPort, subStorePort string) error {
 	if subStorePort != "" {
 		config.GlobalConfig.SubStorePort = ":" + subStorePort
 	}
+
+	// 更新预检冲突状态（用户已选择了可用端口）
+	g.preConflictHTTP = false
+	g.preConflictSub = false
+
 	return nil
 }
 
 // ResizeToMain 将登录小窗切换为管理界面大窗。
-//
-// 核心策略：先隐藏窗口 → 调整尺寸并居中 → 短暂异步延迟后再显示。
-// 前端在调用本方法后立即发起页面跳转，窗口将在管理页面开始加载时
-// 以正确尺寸重新出现，彻底避免用户看到拉伸动画（约 1-2 秒的卡顿感）。
-//
-// 延迟时长说明（500ms）：
-//   - 足够让前端完成 GetEnterNonce + location.replace 调用
-//   - 足够让 Webview 开始加载新 URL
-//   - 保持在用户可接受的"快速切换"感知范围内
 func (g *GuiApp) ResizeToMain() {
 	if g.window == nil {
 		return
 	}
-	// 立即隐藏：用户看不到窗口拉伸
 	g.window.Hide()
 	g.window.SetSize(1024, 768)
 	g.window.Center()
 
-	// 异步延迟显示：让前端的页面跳转先发出，窗口以管理页面内容亮相
 	go func() {
 		time.Sleep(500 * time.Millisecond)
 		g.window.Show()
 		g.window.Focus()
-		windowVisible.Store(true) // 同步托盘可见状态标志
+		windowVisible.Store(true)
 	}()
 }
 
 // ShowWindow 供前端主动调用，显示并聚焦主窗口。
-// 用于管理页面加载完成后的"亮相"时机控制（可选调用）。
 func (g *GuiApp) ShowWindow() {
 	if g.window == nil {
 		return
@@ -164,6 +205,24 @@ func (g *GuiApp) ShowWindow() {
 	g.window.Show()
 	g.window.Focus()
 	windowVisible.Store(true)
+}
+
+// HideToTray 供前端"关闭按钮对话框"选择最小化时调用。
+func (g *GuiApp) HideToTray() {
+	if g.window == nil {
+		return
+	}
+	hideWindow(g.window)
+	sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击托盘图标可恢复窗口")
+}
+
+// QuitApp 供前端"关闭按钮对话框"选择退出时调用。
+func (g *GuiApp) QuitApp() {
+	sendOSNotification("Subs Check Pro", "正在退出…")
+	app := application.Get()
+	if app != nil {
+		app.Quit()
+	}
 }
 
 // OpenConfigFile 打开系统文件选择对话框，返回用户选择的配置文件路径。
@@ -183,6 +242,8 @@ func (g *GuiApp) OpenConfigFile() (string, error) {
 	}
 	return result, nil
 }
+
+// ── 端口校验辅助
 
 // normalizePort 去除前缀冒号和空格，统一为纯数字字符串。
 func normalizePort(port string) string {
@@ -221,7 +282,6 @@ func validatePort(port string) error {
 }
 
 // isPortInUse 通过尝试绑定来判断端口是否已被占用。
-// 注意：仅检测 TCP，且存在 TOCTOU 竞争（检测通过不代表绑定一定成功）。
 func isPortInUse(port string) bool {
 	if port == "" {
 		return false

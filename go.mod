@@ -6,6 +6,7 @@ replace github.com/go-ini/ini => gopkg.in/ini.v1 v1.67.2
 
 require (
 	github.com/gin-gonic/gin v1.12.0
+	github.com/goccy/go-yaml v1.19.2
 	github.com/lmittmann/tint v1.1.3
 	github.com/metacubex/mihomo v1.19.25
 	github.com/sinspired/subs-check-pro/v2 v2.5.0-rc.4
@@ -16,6 +17,7 @@ require (
 require (
 	code.gitea.io/sdk/gitea v0.25.1 // indirect
 	dario.cat/mergo v1.0.2 // indirect
+	git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect
 	github.com/42wim/httpsig v1.2.4 // indirect
 	github.com/Masterminds/semver/v3 v3.5.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
@@ -68,7 +70,6 @@ require (
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
-	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/godbus/dbus/v5 v5.2.2 // indirect
 	github.com/gofrs/uuid/v5 v5.4.0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect

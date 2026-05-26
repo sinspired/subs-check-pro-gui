@@ -3,10 +3,20 @@ package main
 
 import (
 	_ "embed"
+	"encoding/json"
+	"fmt"
+	"io"
 	"log/slog"
+	"net/http"
+	"strings"
+	"sync"
 	"sync/atomic"
+	"time"
 
+	coreapp "github.com/sinspired/subs-check-pro/v2/app"
+	"github.com/sinspired/subs-check-pro/v2/config"
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/services/notifications"
 )
 
 // trayIcon 嵌入托盘图标文件（ICO 格式，Windows/Linux 通用）。
@@ -16,20 +26,19 @@ import (
 var trayIcon []byte
 
 // windowVisible 跟踪当前窗口可见状态。
-// 使用 atomic.Bool 保证在 Wails 回调与 WindowEvent 之间的并发安全。
 var windowVisible atomic.Bool
 
 func init() {
-	// 应用启动时窗口默认可见
 	windowVisible.Store(true)
 }
 
+// 退出状态机
+var (
+	gracefulQuitPending atomic.Bool // 首次“结束检测后退出”已触发
+	gracefulQuitOnce    sync.Once   // 保证后台等待 goroutine 只启动一次
+)
+
 // startSysTray 初始化 Wails v3 原生系统托盘。
-//
-// 必须在 wailsApp.Run() 之前调用，Wails 会在 Run() 内部启动托盘。
-// 与 getlantern/systray 不同，此方案的所有回调由 Wails 事件循环调度，
-// 可以安全地调用任何窗口操作。
-//
 // 参数：
 //   - wailsApp : Wails 应用实例
 //   - win      : 主窗口（用于 Show/Hide/Focus）
@@ -39,36 +48,22 @@ func startSysTray(
 	wailsApp *application.App,
 	win *application.WebviewWindow,
 	_ *GuiApp,
+	coreApp *coreapp.App,
+	notifier *notifications.NotificationService,
 	onQuit func(),
 ) {
-	// ── 创建托盘实例 ──────────────────────────────────────────
+	// 创建托盘实例
 	tray := wailsApp.SystemTray.New()
 
 	// 设置图标与悬浮提示（tooltip 仅 Windows/Linux 有效）
 	tray.SetIcon(trayIcon)
 	tray.SetTooltip("Subs Check Pro - 订阅检测管理")
 
-	// ── 构建右键菜单 ──────────────────────────────────────────
-	menu := application.NewMenu()
-
-	// 菜单项：显示主界面
-	menu.Add("显示主界面").OnClick(func(_ *application.Context) {
-		showWindow(win)
-	})
-
-	menu.AddSeparator()
-
-	// 菜单项：退出
-	menu.Add("退出 Subs Check Pro").OnClick(func(_ *application.Context) {
-		slog.Info("用户通过托盘菜单退出")
-		onQuit()
-	})
-
+	// 构建右键菜单
+	menu := buildTrayMenu(wailsApp, win, coreApp, notifier, onQuit)
 	tray.SetMenu(menu)
 
-	// ── 鼠标事件 ─────────────────────────────────────────────
-
-	// 左键单击：切换显示/隐藏（Windows 常见托盘交互习惯）
+	// 左键单击：切换显示/隐藏
 	tray.OnClick(func() {
 		if windowVisible.Load() {
 			hideWindow(win)
@@ -77,12 +72,12 @@ func startSysTray(
 		}
 	})
 
-	// 左键双击：强制显示窗口（防止误操作后找不到窗口）
+	// 左键双击：强制显示
 	tray.OnDoubleClick(func() {
 		showWindow(win)
 	})
 
-	// 右键单击：明确弹出菜单（部分平台默认右键才弹菜单）
+	// 右键单击：弹出菜单
 	tray.OnRightClick(func() {
 		tray.OpenMenu()
 	})
@@ -90,7 +85,137 @@ func startSysTray(
 	slog.Info("系统托盘初始化完成（Wails v3 原生）")
 }
 
-// showWindow 显示并聚焦窗口，同步可见状态标志。
+func buildTrayMenu(
+	wailsApp *application.App,
+	win *application.WebviewWindow,
+	coreApp *coreapp.App,
+	notifier *notifications.NotificationService,
+	onQuit func(),
+) *application.Menu {
+	menu := wailsApp.NewMenu()
+
+	menu.Add("显示主界面").OnClick(func(_ *application.Context) {
+		showWindow(win)
+	})
+
+	menu.Add("隐藏界面").OnClick(func(_ *application.Context) {
+		hideWindow(win)
+		sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击图标可恢复窗口")
+	})
+
+	menu.AddSeparator()
+
+	menu.Add("终止检测").OnClick(func(_ *application.Context) {
+		if err := callBackendForceClose(); err != nil {
+			slog.Warn("终止检测失败", "error", err)
+		} else {
+			sendOSNotification("Subs Check Pro", "已发送终止检测信号\n正在等待结果收集完成")
+			slog.Info("托盘：已触发终止检测")
+		}
+	})
+
+	menu.AddSeparator()
+
+	menu.Add("结束检测后退出").OnClick(func(_ *application.Context) {
+		if gracefulQuitPending.CompareAndSwap(false, true) {
+			sendOSNotification("Subs Check Pro", "正在等待检测完成后退出\n再次点击将立即强制退出")
+			slog.Info("托盘：已请求结束检测后退出")
+
+			gracefulQuitOnce.Do(func() {
+				go func() {
+					if err := callBackendForceClose(); err != nil {
+						slog.Warn("发送 force-close 失败", "error", err)
+					}
+
+					waitForBackendIdle(5 * time.Minute)
+
+					slog.Info("后端检测已完成，开始优雅退出")
+					sendOSNotification("Subs Check Pro", "检测已完成，正在退出…")
+					onQuit()
+				}()
+			})
+		} else {
+			slog.Warn("托盘：用户二次确认，立即退出")
+			sendOSNotification("Subs Check Pro", "正在强制退出…")
+			onQuit()
+		}
+	})
+
+	menu.Add("立即退出").OnClick(func(_ *application.Context) {
+		slog.Info("托盘：立即退出")
+		sendOSNotification("Subs Check Pro", "正在退出…")
+		onQuit()
+	})
+
+	return menu
+}
+
+// 后端 HTTP API 辅助函数
+
+func backendBase() string {
+	port := strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
+	if port == "" {
+		port = "8199"
+	}
+	return "http://127.0.0.1:" + port
+}
+
+func callBackendForceClose() error {
+	url := backendBase() + "/api/force-close"
+	req, err := http.NewRequest(http.MethodPost, url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("X-API-Key", config.GlobalConfig.APIKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
+}
+
+func isBackendChecking() bool {
+	url := backendBase() + "/api/status"
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return true
+	}
+	req.Header.Set("X-API-Key", config.GlobalConfig.APIKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return true
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return true
+	}
+
+	var status struct {
+		Checking bool `json:"checking"`
+	}
+	if err := json.Unmarshal(body, &status); err != nil {
+		return true
+	}
+	return status.Checking
+}
+
+func waitForBackendIdle(timeout time.Duration) {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if !isBackendChecking() {
+			return
+		}
+		time.Sleep(2 * time.Second)
+	}
+	slog.Warn("等待后端空闲超时，继续退出流程")
+}
+
+// 窗口显示/隐藏
 func showWindow(win *application.WebviewWindow) {
 	win.Show()
 	win.Focus()
@@ -106,11 +231,13 @@ func hideWindow(win *application.WebviewWindow) {
 }
 
 // NotifyHideToTray 在窗口最小化到托盘时调用，更新可见状态。
-//
-// Wails v3 alpha 阶段尚无内置气泡通知（Balloon Notification）API。
-// 若需要气泡提示，可在此接入平台原生方案（如 Windows toast 或 go-toast）。
-// 当前实现：仅记录日志 + 同步状态标志，保证 OnClick 切换逻辑的正确性。
 func NotifyHideToTray() {
 	windowVisible.Store(false)
+	sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击托盘图标可恢复窗口")
 	slog.Info("已最小化到系统托盘，单击托盘图标可恢复窗口")
+}
+
+func formatSysTrayTooltip() string {
+	return fmt.Sprintf("Subs Check Pro  |  端口 %s",
+		strings.TrimPrefix(config.GlobalConfig.ListenPort, ":"))
 }

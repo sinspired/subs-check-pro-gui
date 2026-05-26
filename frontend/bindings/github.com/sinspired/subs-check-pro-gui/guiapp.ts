@@ -15,6 +15,14 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as $models from "./models.js";
 
 /**
+ * CompleteInit 在用户修正端口冲突后，由前端调用，完成后端初始化。
+ * 仅当 pendingInit==true 时有效；初始化完成后自动清除 pending 状态。
+ */
+export function CompleteInit(): $CancellablePromise<void> {
+    return $Call.ByID(3843184923);
+}
+
+/**
  * GetAppInfo 返回应用运行信息（含端口冲突检测）。
  */
 export function GetAppInfo(): $CancellablePromise<$models.AppInfo> {
@@ -31,6 +39,13 @@ export function GetEnterNonce(remember: boolean): $CancellablePromise<string> {
 }
 
 /**
+ * HideToTray 供前端"关闭按钮对话框"选择最小化时调用。
+ */
+export function HideToTray(): $CancellablePromise<void> {
+    return $Call.ByID(171980759);
+}
+
+/**
  * OpenConfigFile 打开系统文件选择对话框，返回用户选择的配置文件路径。
  * 用户取消时返回空字符串。
  */
@@ -39,16 +54,14 @@ export function OpenConfigFile(): $CancellablePromise<string> {
 }
 
 /**
+ * QuitApp 供前端"关闭按钮对话框"选择退出时调用。
+ */
+export function QuitApp(): $CancellablePromise<void> {
+    return $Call.ByID(1033637092);
+}
+
+/**
  * ResizeToMain 将登录小窗切换为管理界面大窗。
- * 
- * 核心策略：先隐藏窗口 → 调整尺寸并居中 → 短暂异步延迟后再显示。
- * 前端在调用本方法后立即发起页面跳转，窗口将在管理页面开始加载时
- * 以正确尺寸重新出现，彻底避免用户看到拉伸动画（约 1-2 秒的卡顿感）。
- * 
- * 延迟时长说明（500ms）：
- *   - 足够让前端完成 GetEnterNonce + location.replace 调用
- *   - 足够让 Webview 开始加载新 URL
- *   - 保持在用户可接受的"快速切换"感知范围内
  */
 export function ResizeToMain(): $CancellablePromise<void> {
     return $Call.ByID(1128121742);
@@ -64,7 +77,6 @@ export function SetPorts(httpPort: string, subStorePort: string): $CancellablePr
 
 /**
  * ShowWindow 供前端主动调用，显示并聚焦主窗口。
- * 用于管理页面加载完成后的"亮相"时机控制（可选调用）。
  */
 export function ShowWindow(): $CancellablePromise<void> {
     return $Call.ByID(91192051);

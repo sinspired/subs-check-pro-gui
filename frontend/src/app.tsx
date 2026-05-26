@@ -3,10 +3,11 @@
  * 登录窗口根组件 — Wails3 + Preact + TypeScript
  */
 import { useEffect, useState } from 'preact/hooks';
+import { Events } from '@wailsio/runtime';
 
-import { useTheme }     from './hooks/useTheme';
-import { useToast }     from './hooks/useToast';
-import { useWailsReady } from './hooks/useWailsReady';
+import { useTheme }       from './hooks/useTheme';
+import { useToast }       from './hooks/useToast';
+import { useWailsReady }  from './hooks/useWailsReady';
 
 import { Header }          from './components/Header';
 import { KeySection }      from './components/KeySection';
@@ -14,6 +15,7 @@ import { ConfigSection }   from './components/ConfigSection';
 import { PortConflict }    from './components/PortConflict';
 import { PasswordConfirm } from './components/PasswordConfirm';
 import { Toast }           from './components/Toast';
+import { QuitDialog }      from './components/QuitDialog';
 
 import { GuiApp }  from '../bindings/github.com/sinspired/subs-check-pro-gui';
 import { AppInfo } from '../bindings/github.com/sinspired/subs-check-pro-gui';
@@ -26,15 +28,25 @@ export function App() {
   const { theme, toggleTheme }          = useTheme();
   const { msg, visible, toast }         = useToast();
 
-  const [view, setView]     = useState<View>('loading');
-  const [info, setInfo]     = useState<AppInfo | null>(null);
-  const [errMsg, setErrMsg] = useState('');
-  const [cfgPath, setCfgPath] = useState('');
+  const [view, setView]           = useState<View>('loading');
+  const [info, setInfo]           = useState<AppInfo | null>(null);
+  const [errMsg, setErrMsg]       = useState('');
+  const [cfgPath, setCfgPath]     = useState('');
+  const [showQuit, setShowQuit]   = useState(false);
 
-  // Wails 就绪后立即拉取应用信息
+  // ── Wails 就绪后立即拉取应用信息 ────────────────────────────────────────────
   useEffect(() => {
     if (!ready) return;
     loadAppInfo();
+  }, [ready]);
+
+  // ── 监听"窗口关闭"事件（来自 main.go WindowClosing 回调）────────────────────
+  useEffect(() => {
+    if (!ready) return;
+    const unsub = Events.On('window:close-requested', () => {
+      setShowQuit(true);
+    });
+    return () => { unsub && unsub(); };
   }, [ready]);
 
   async function loadAppInfo() {
@@ -53,7 +65,7 @@ export function App() {
     }
   }
 
-  // 端口冲突解决后更新 info 并切换视图
+  // 端口冲突解决（PortConflict 组件调用 CompleteInit 后回调）
   function handlePortsFixed(newInfo: AppInfo) {
     setInfo(newInfo);
     setView('main');
@@ -73,6 +85,7 @@ export function App() {
 
   return (
     <>
+      {/* ── 主视图 ── */}
       {view === 'loading' && (
         <div class="page">
           <div class="card">
@@ -133,6 +146,11 @@ export function App() {
       )}
 
       <Toast msg={msg} visible={visible} />
+
+      {/* ── 关闭确认对话框（窗口关闭按钮触发）── */}
+      {showQuit && (
+        <QuitDialog onClose={() => setShowQuit(false)} />
+      )}
     </>
   );
 }
