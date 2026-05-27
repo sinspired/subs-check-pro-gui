@@ -1,0 +1,386 @@
+/* frontend/src/main.css — Subs Check Pro 登录窗口样式 */
+
+/* ── CSS 变量（主题） ── */
+:root {
+  --bg:        #f2f4f6;
+  --card:      #ffffff;
+  --fg:        #111827;
+  --border:    rgba(0,0,0,0.08);
+  --accent:    #0ea5a0;
+  --muted:     #6b7280;
+  --success:   #10b981;
+  --warn:      #d97706;
+  --info-bg:   rgba(14,165,160,0.08);
+  --warn-bg:   rgba(217,119,6,0.08);
+  --warn-bd:   rgba(217,119,6,0.25);
+  --info-bd:   rgba(14,165,160,0.25);
+  --first-run-bg:  rgba(14,165,160,0.06);
+  --first-run-bd:  rgba(14,165,160,0.30);
+  --code-bg:   rgba(0,0,0,0.06);
+  --radius:    0px;
+  --card-pad:  22px 24px 20px;
+  -webkit-app-region: drag;
+}
+
+:root[data-theme="dark"] {
+  --bg:      #111317;
+  --card:    #15171b;
+  --fg:      #e5e7eb;
+  --border:  rgba(255,255,255,0.07);
+  --muted:   #9ca3af;
+  --code-bg: rgba(255,255,255,0.08);
+  --warn-bg: rgba(217,119,6,0.12);
+  --info-bg: rgba(14,165,160,0.12);
+  --first-run-bg: rgba(14,165,160,0.08);
+  --first-run-bd: rgba(14,165,160,0.28);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--card);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+               'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: background .2s, color .2s;
+  user-select: none;
+  -webkit-user-select: none;
+  overflow: hidden; /* 防止窗口出现滚动条 */
+}
+
+/* 卡片铺满窗口，内容纵向排列，超出时可滚动 */
+.page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  padding: var(--card-pad);
+  /* 内部允许滚动，但不显示外部滚动条 */
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-app-region: no-drag;
+}
+
+/* 自定义滚动条（纤细、与主题匹配） */
+.card::-webkit-scrollbar { width: 4px; }
+.card::-webkit-scrollbar-track { background: transparent; }
+.card::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.card::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── 头部 ── */
+.hdr {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+.logo-icon { width: 36px; height: 36px; flex-shrink: 0; }
+
+.hdr-text .name {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -.2px;
+}
+
+.hdr-text .name .pro {
+  color: var(--accent);
+  font-size: 11px;
+  vertical-align: super;
+  font-weight: 600;
+}
+
+.hdr-text .sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+.theme-btn { margin-left: auto; }
+
+/* ── 图标按钮 ── */
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 7px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  transition: color .15s, background .15s;
+  -webkit-app-region: no-drag;
+}
+.icon-btn:hover { color: var(--accent); background: var(--code-bg); }
+.icon-btn.ok { color: var(--success); }
+
+/* ── 加载状态 ── */
+.state-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── 提示框（精简 padding，减少高度）── */
+.hint {
+  font-size: 12px;
+  border-radius: 8px;
+  padding: 8px 11px;
+  margin-bottom: 10px;
+  line-height: 1.6;
+  flex-shrink: 0;
+}
+
+.hint.warn {
+  color: var(--warn);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-bd);
+}
+
+/* Issue #1：首次运行 banner（单行简洁版） */
+.hint.first-run {
+  color: var(--accent);
+  background: var(--first-run-bg);
+  border: 1px solid var(--first-run-bd);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── 标签 ── */
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  margin-bottom: 6px;
+}
+
+/* ── API Key 区域 ── */
+.key-wrap {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 7px 10px;
+  margin-bottom: 10px;
+}
+
+.key-text {
+  flex: 1;
+  font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 12.5px;
+  word-break: break-all;
+  cursor: pointer;
+  transition: filter .2s;
+  user-select: all;
+  -webkit-user-select: all;
+}
+.key-text.blur { filter: blur(6px); }
+
+/* ── 端口信息格 ── */
+.info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.info-cell {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.info-cell .lbl {
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.info-cell .val {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+/* ── Issue #1：记住密钥行 ── */
+.remember-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+.remember-row input[type="checkbox"] { cursor: pointer; }
+
+/* ── 进入按钮 ── */
+.btn-enter {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: .3px;
+  transition: opacity .15s, transform .1s;
+  -webkit-app-region: no-drag;
+}
+.btn-enter:hover  { opacity: .88; }
+.btn-enter:active { transform: scale(.98); }
+
+/* ── Issue #2：选择配置文件按钮 ── */
+.btn-cfg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+  transition: color .15s, border-color .15s, background .15s;
+  margin-top: 8px;
+  -webkit-app-region: no-drag;
+}
+.btn-cfg:hover { color: var(--accent); border-color: var(--accent); background: var(--info-bg); }
+
+/* ── Issue #2：密码确认框 ── */
+.password-confirm {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 12px 14px;
+  background: var(--bg);
+}
+
+.pw-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.pw-input {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: var(--fg);
+  outline: none;
+  -webkit-app-region: no-drag;
+}
+.pw-input:focus { border-color: var(--accent); }
+
+.cfg-path-hint {
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-all;
+  opacity: .75;
+}
+
+/* ── Issue #3：端口编辑 ── */
+.port-edit-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.port-edit-cell { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 130px; }
+
+.port-lbl { font-size: 11px; color: var(--fg); font-weight: 500; }
+
+.port-input {
+  background: var(--card);
+  border: 1px solid var(--warn-bd);
+  border-radius: 7px;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: var(--fg);
+  width: 100%;
+  outline: none;
+  -webkit-app-region: no-drag;
+}
+.port-input:focus { border-color: var(--accent); }
+
+/* ── 小型按钮 ── */
+.btn-small {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 7px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-app-region: no-drag;
+  transition: opacity .15s;
+}
+.btn-small:hover { opacity: .85; }
+
+/* ── code 标签 ── */
+code {
+  background: var(--code-bg);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 11px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 13px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+  white-space: nowrap;
+  z-index: 9999;
+}
+.toast.show { opacity: 1; }

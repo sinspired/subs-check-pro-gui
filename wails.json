@@ -1,0 +1,17 @@
+{
+  "name": "subs-check-pro-gui",
+  "outputfilename": "subs-check-pro-gui",
+  "frontend:install": "",
+  "frontend:build": "",
+  "info": {
+    "companyName": "sinspired",
+    "productName": "Subs Check Pro",
+    "productVersion": "1.0.0",
+    "copyright": "sinspired",
+    "comments": "订阅检测工具"
+  },
+  "author": {
+    "name": "sinspired",
+    "email": "ggmomo@gmail.com"
+  }
+}
