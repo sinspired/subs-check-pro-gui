@@ -1,5 +1,4 @@
 // Package frontend: run.go
-// Run() 是 Wails GUI 的唯一入口，由 main_wails.go 调用。
 package frontend
 
 import (
@@ -103,6 +102,11 @@ func Run() {
 		},
 
 		OnBeforeClose: func(ctx context.Context) (prevent bool) {
+			// Linux 不支持系统托盘：允许窗口正常关闭，由 OnShutdown 做清理。
+			// Windows / macOS：隐藏到托盘，阻止关闭。
+			if !platformHasTray {
+				return false
+			}
 			runtime.WindowHide(ctx)
 			go NotifyHideToTray(ctx)
 			return true

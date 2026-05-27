@@ -1,15 +1,5 @@
-// Package frontend: tray.go
-//
-// 系统托盘支持（Issue #6）。
-// 使用 github.com/getlantern/systray 实现跨平台系统托盘。
-//
-// 添加依赖：
-//   go get github.com/getlantern/systray
-//
-// 功能：
-//   - 关闭窗口时最小化到托盘（OnBeforeClose 返回 true）
-//   - 托盘菜单：显示/隐藏、开机自启切换、退出
-//   - 首次最小化时通过 MessageDialog 提示用户
+//go:build windows || darwin
+
 package frontend
 
 import (
@@ -20,6 +10,9 @@ import (
 	"github.com/getlantern/systray"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
+
+// platformHasTray Windows/macOS 支持系统托盘。
+const platformHasTray = true
 
 //go:embed tray.ico
 var trayIconPNG []byte
