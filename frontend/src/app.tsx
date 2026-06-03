@@ -17,7 +17,6 @@ import { useWailsReady }  from './hooks/useWailsReady';
 
 import { Header }          from './components/Header';
 import { KeySection }      from './components/KeySection';
-import { ConfigSection }   from './components/ConfigSection';
 import { PortConflict }    from './components/PortConflict';
 import { PasswordConfirm } from './components/PasswordConfirm';
 import { Toast }           from './components/Toast';
@@ -216,14 +215,8 @@ export function App() {
           <section class="login-panel">
             <PanelToolbar />
             <div class="login-content">
-              <KeySection info={info} toast={toast} />
+              <KeySection info={info} toast={toast} onSelectConfig={handleSelectConfig} />
             </div>
-            <ConfigSection
-              onSelect={handleSelectConfig}
-              toast={toast}
-              autostartEnabled={autostartEnabled}
-              onToggleAutostart={setAutostart}
-            />
           </section>
         </div>
       )}
@@ -241,12 +234,6 @@ export function App() {
                 onDone={handlePasswordDone}
               />
             </div>
-            <ConfigSection
-              onSelect={handleSelectConfig}
-              toast={toast}
-              autostartEnabled={autostartEnabled}
-              onToggleAutostart={setAutostart}
-            />
           </section>
         </div>
       )}

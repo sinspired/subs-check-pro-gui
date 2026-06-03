@@ -6,11 +6,12 @@ import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 
 interface Props {
-  info:  AppInfo;
+  info: AppInfo;
   toast: (msg: string) => void;
+  onSelectConfig: (path: string) => void;
 }
 
-export function KeySection({ info, toast }: Props) {
+export function KeySection({ info, toast, onSelectConfig }: Props) {
   const [keyShown, setKeyShown] = useState(false);
 
   const currentKey = info.apiKey;
@@ -26,6 +27,18 @@ export function KeySection({ info, toast }: Props) {
     } catch {
       toast('复制失败，请手动复制');
     }
+  }
+
+  async function handleSelectConfig() {
+    let path: string;
+    try {
+      path = await GuiApp.OpenConfigFile();
+    } catch (e: any) {
+      toast('打开文件对话框失败: ' + (e?.message ?? '未知错误'));
+      return;
+    }
+    if (!path) return;
+    onSelectConfig(path);
   }
 
   const [launching, setLaunching] = useState(false);
@@ -91,6 +104,14 @@ export function KeySection({ info, toast }: Props) {
           {currentKey}
         </span>
 
+        {/* 选择配置文件 */}
+        <button class="icon-btn" onClick={handleSelectConfig} title="选择其他配置文件">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
+        </button>
+
         {/* 显示/隐藏 */}
         <button class="icon-btn" onClick={toggleKey} title="显示/隐藏">
           {!keyShown ? (
@@ -119,6 +140,7 @@ export function KeySection({ info, toast }: Props) {
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
           </svg>
         </button>
+
       </div>
 
       {/* 端口信息 */}

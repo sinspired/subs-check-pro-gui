@@ -553,13 +553,13 @@ code {
 .brand-panel {
   width: 220px;
   flex-shrink: 0;
-  background: #111215;
+  background: var(--card);
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 0 0 20px;
   position: relative;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid var(--border);
   overflow: hidden;
   -webkit-app-region: drag;
 }
@@ -591,7 +591,8 @@ code {
   font-size: 9.5px;
   font-weight: 600;
   letter-spacing: 2px;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--muted);
+  opacity: 0.5;
   text-transform: uppercase;
   user-select: none;
   -webkit-user-select: none;
@@ -638,14 +639,16 @@ code {
   padding: 4px;
   border-radius: 5px;
   cursor: pointer;
-  color: rgba(255, 255, 255, 0.28);
-  transition: color 0.2s, background 0.2s;
+  color: var(--muted);
+  opacity: 0.45;
+  transition: color 0.2s, background 0.2s, opacity 0.2s;
   -webkit-app-region: no-drag;
   flex-shrink: 0;
 }
 .brand-autostart:hover {
-  color: rgba(255, 255, 255, 0.70);
-  background: rgba(255, 255, 255, 0.06);
+  color: var(--fg);
+  opacity: 1;
+  background: var(--border);
 }
 /* 开启态：用绿色高亮，不用 accent */
 .brand-autostart.active {
@@ -660,7 +663,7 @@ code {
   display: block;
   width: 1px;
   height: 12px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--border);
   flex-shrink: 0;
   margin: 0 2px;
 }
@@ -684,7 +687,10 @@ code {
   height: 14px;
   display: block;
   pointer-events: none;
-  /* 原始 SVG 通常是黑色；先变纯黑再 invert 成白色 */
+  /* 浅色主题：保持原始黑色；深色主题由下方规则翻转为白色 */
+  filter: brightness(0);
+}
+:root[data-theme='dark'] .brand-social-icon {
   filter: brightness(0) invert(1);
 }
 
@@ -750,36 +756,3 @@ code {
   -webkit-app-region: no-drag;
 }
 
-/* 选择配置文件：朴素链接风格，居左 */
-.btn-cfg-link {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: none;
-  border: none;
-  font-size: 11px;
-  color: var(--muted);
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 5px;
-  transition: color 0.15s, background 0.15s;
-  -webkit-app-region: no-drag;
-  letter-spacing: 0.1px;
-  opacity: 0.7;
-}
-.btn-cfg-link:hover {
-  color: var(--fg);
-  background: var(--code-bg);
-  opacity: 1;
-}
-
-/* 居中变体：铺满宽度、水平居中文字、更不显眼 */
-.cfg-bottom--center {
-  padding-bottom: 10px;
-}
-.cfg-bottom--center .btn-cfg-link {
-  width: 100%;
-  justify-content: center;
-  opacity: 0.45;
-  font-size: 10.5px;
-}
