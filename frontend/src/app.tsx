@@ -51,12 +51,12 @@ export function App() {
   useEffect(() => {
     if (!ready) return;
     loadAppInfo();
+    // 实时查询开机自启状态（不依赖 GetAppInfo 缓存值，确保与托盘菜单一致）
+    GuiApp.GetAutoStartEnabled()
+      .then(enabled => setAutostart(enabled))
+      .catch(() => { /* 平台不支持时静默忽略 */ });
   }, [ready]);
 
-  // ── 初始化 autostart 状态（从 info 同步）──────────────────────
-  useEffect(() => {
-    if (info) setAutostart(info.autostartEnabled);
-  }, [info]);
 
   // ── 监听"窗口关闭"事件 ────────────────────────────────────────
   useEffect(() => {
@@ -91,9 +91,11 @@ export function App() {
   async function handleToggleAutostart() {
     const next = !autostartEnabled;
     try {
-      await (GuiApp as any).SetAutoStart(next);
-      setAutostart(next);
-      toast(next ? '已开启开机自启' : '已关闭开机自启');
+      await GuiApp.SetAutoStart(next);
+      // 回查确保前端与系统状态一致（托盘菜单下次点击时也会读取系统状态）
+      const actual = await GuiApp.GetAutoStartEnabled();
+      setAutostart(actual);
+      toast(actual ? '已开启开机自启' : '已关闭开机自启');
     } catch (e: any) {
       toast('设置失败：' + (e?.message ?? '功能暂不可用'));
     }

@@ -27,7 +27,7 @@ export function ConfigSection({ onSelect, toast }: Props): JSX.Element {
   }
 
   return (
-    <div class="cfg-bottom">
+    <div class="cfg-bottom cfg-bottom--center">
       <button class="btn-cfg-link" onClick={handleSelect} title="选择其他配置文件">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round">

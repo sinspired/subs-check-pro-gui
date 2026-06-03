@@ -105,6 +105,8 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 		conflictSubStore = g.backend.PortConflictSubStore()
 	}
 
+	autostartEnabled, _ := queryAutoStart()
+
 	return AppInfo{
 		APIKey:               config.GlobalConfig.APIKey,
 		ListenPort:           port,
@@ -115,6 +117,7 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 		PortConflictHTTP:     conflictHTTP,
 		PortConflictSubStore: conflictSubStore,
 		PendingInit:          g.pendingInit,
+		AutostartEnabled:     autostartEnabled,
 	}
 }
 

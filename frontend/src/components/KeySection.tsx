@@ -61,7 +61,7 @@ export function KeySection({ info, toast }: Props) {
   }
 
   return (
-    <div id="keySection">
+    <div id="keySection" class="key-section-flex">
       {/* 首次运行 banner */}
       {info.isFirstRun && (
         <div class="hint first-run">
@@ -133,10 +133,12 @@ export function KeySection({ info, toast }: Props) {
         </div>
       </div>
 
-      {/* 进入按钮 */}
-      <button class="btn-enter" onClick={enterWebUI} disabled={launching}>
-        {launching ? '正在进入…' : '进入管理界面 →'}
-      </button>
+      {/* 进入按钮：垂直居中于端口行下方的剩余空间 */}
+      <div class="enter-spacer">
+        <button class="btn-enter" onClick={enterWebUI} disabled={launching}>
+          {launching ? '正在进入…' : '进入管理界面 →'}
+        </button>
+      </div>
 
       {/*
         不再使用全屏 TransitionOverlay：
