@@ -105,6 +105,46 @@ func buildTrayMenu(
 
 	menu.AddSeparator()
 
+	// ── 开机自启（动态标签，点击切换）────────────────────────────
+	autostartItem := menu.Add("开机自启：检测中…")
+	autostartItem.OnClick(func(_ *application.Context) {
+		enabled, err := guiApp.GetAutoStartEnabled()
+		if err != nil {
+			slog.Warn("读取开机自启状态失败", "error", err)
+			sendOSNotification("Subs Check Pro", "读取开机自启状态失败")
+			return
+		}
+		next := !enabled
+		if err := guiApp.SetAutoStartEnabled(next); err != nil {
+			slog.Warn("设置开机自启失败", "error", err)
+			sendOSNotification("Subs Check Pro", "设置开机自启失败："+err.Error())
+			return
+		}
+		if next {
+			autostartItem.SetLabel("✓ 开机自启：已开启")
+			sendOSNotification("Subs Check Pro", "已开启开机自启")
+		} else {
+			autostartItem.SetLabel("  开机自启：已关闭")
+			sendOSNotification("Subs Check Pro", "已关闭开机自启")
+		}
+	})
+
+	// 初始化标签（异步）
+	go func() {
+		enabled, err := guiApp.GetAutoStartEnabled()
+		if err != nil {
+			autostartItem.SetLabel("  开机自启：未知")
+			return
+		}
+		if enabled {
+			autostartItem.SetLabel("✓ 开机自启：已开启")
+		} else {
+			autostartItem.SetLabel("  开机自启：已关闭")
+		}
+	}()
+
+	menu.AddSeparator()
+
 	menu.Add("终止检测").OnClick(func(_ *application.Context) {
 		if err := callBackendForceClose(); err != nil {
 			slog.Warn("终止检测失败", "error", err)

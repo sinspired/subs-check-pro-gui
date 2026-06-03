@@ -12,8 +12,6 @@ interface Props {
 
 export function KeySection({ info, toast }: Props) {
   const [keyShown, setKeyShown] = useState(false);
-  // 随机 key 时默认勾选「记住密钥」；固定 key 默认不勾选
-  const [remember, setRemember] = useState(info.keyIsRandom);
 
   const currentKey = info.apiKey;
 
@@ -45,7 +43,7 @@ export function KeySection({ info, toast }: Props) {
 
     let nonce: string;
     try {
-      nonce = await GuiApp.GetEnterNonce(remember);
+      nonce = await GuiApp.GetEnterNonce(true);
     } catch (e: any) {
       toast('获取登录凭证失败: ' + (e?.message ?? ''));
       setLaunching(false);
@@ -134,16 +132,6 @@ export function KeySection({ info, toast }: Props) {
           <div class="val">{info.subStorePort || '未启用'}</div>
         </div>
       </div>
-
-      {/* 记住密钥 */}
-      <label class="remember-row">
-        <input
-          type="checkbox"
-          checked={remember}
-          onChange={e => setRemember((e.target as HTMLInputElement).checked)}
-        />
-        <span>记住密钥（下次自动登录）</span>
-      </label>
 
       {/* 进入按钮 */}
       <button class="btn-enter" onClick={enterWebUI} disabled={launching}>

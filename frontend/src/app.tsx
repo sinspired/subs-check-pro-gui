@@ -1,9 +1,15 @@
 /**
  * frontend/src/app.tsx
  * 登录窗口根组件 — Wails3 + Preact + TypeScript
+ *
+ * 布局：左右分栏
+ *  左栏 brand-panel  ：纯黑背景，顶部仿标题栏（mini logo + 应用名），
+ *                      中央大 Logo（无光晕），底部社交链接
+ *  右栏 login-panel  ：顶部工具栏（自定义 SVG 窗口控制按钮 + 主题切换），
+ *                      中部 KeySection，底部 ConfigSection（配置 + 开机自启）
  */
 import { useEffect, useState } from 'preact/hooks';
-import { Events } from '@wailsio/runtime';
+import { Events }              from '@wailsio/runtime';
 
 import { useTheme }       from './hooks/useTheme';
 import { useToast }       from './hooks/useToast';
@@ -23,24 +29,36 @@ import { AppInfo } from '../bindings/github.com/sinspired/subs-check-pro-gui';
 // UI 状态机：每个状态对应一个独立视图
 type View = 'loading' | 'error' | 'portConflict' | 'main' | 'password';
 
+// 在系统默认浏览器中打开链接
+function openLink(url: string) {
+  window.open(url, '_blank');
+}
+
 export function App() {
-  const ready                           = useWailsReady();
-  const { theme, toggleTheme }          = useTheme();
-  const { msg, visible, toast }         = useToast();
+  const ready                   = useWailsReady();
+  const { theme, toggleTheme }  = useTheme();
+  const { msg, visible, toast } = useToast();
+  const isDark = theme === 'dark';
 
-  const [view, setView]           = useState<View>('loading');
-  const [info, setInfo]           = useState<AppInfo | null>(null);
-  const [errMsg, setErrMsg]       = useState('');
-  const [cfgPath, setCfgPath]     = useState('');
-  const [showQuit, setShowQuit]   = useState(false);
+  const [view, setView]                   = useState<View>('loading');
+  const [info, setInfo]                   = useState<AppInfo | null>(null);
+  const [errMsg, setErrMsg]               = useState('');
+  const [cfgPath, setCfgPath]             = useState('');
+  const [showQuit, setShowQuit]           = useState(false);
+  const [autostartEnabled, setAutostart]  = useState(false);
 
-  // ── Wails 就绪后立即拉取应用信息 ────────────────────────────────────────────
+  // ── Wails 就绪后立即拉取应用信息 ──────────────────────────────
   useEffect(() => {
     if (!ready) return;
     loadAppInfo();
   }, [ready]);
 
-  // ── 监听"窗口关闭"事件（来自 main.go WindowClosing 回调）────────────────────
+  // ── 初始化 autostart 状态（从 info 同步）──────────────────────
+  useEffect(() => {
+    if (info) setAutostart(info.autostartEnabled);
+  }, [info]);
+
+  // ── 监听"窗口关闭"事件 ────────────────────────────────────────
   useEffect(() => {
     if (!ready) return;
     const unsub = Events.On('window:close-requested', () => {
@@ -65,31 +83,100 @@ export function App() {
     }
   }
 
-  // 端口冲突解决（PortConflict 组件调用 CompleteInit 后回调）
-  function handlePortsFixed(newInfo: AppInfo) {
-    setInfo(newInfo);
-    setView('main');
+  function handlePortsFixed(newInfo: AppInfo)       { setInfo(newInfo); setView('main'); }
+  function handleSelectConfig(path: string)          { setCfgPath(path); setView('password'); }
+  function handlePasswordDone(newInfo: AppInfo|null) { if (newInfo) setInfo(newInfo); setView('main'); }
+  const requestClose = () => setShowQuit(true);
+
+  async function handleToggleAutostart() {
+    const next = !autostartEnabled;
+    try {
+      await (GuiApp as any).SetAutoStart(next);
+      setAutostart(next);
+      toast(next ? '已开启开机自启' : '已关闭开机自启');
+    } catch (e: any) {
+      toast('设置失败：' + (e?.message ?? '功能暂不可用'));
+    }
   }
 
-  // 选择配置文件 → 进入密码确认
-  function handleSelectConfig(path: string) {
-    setCfgPath(path);
-    setView('password');
-  }
+  // ── 左侧品牌面板（分栏视图专用）────────────────────────────────
+  const BrandPanel = () => (
+    <aside class="brand-panel">
+      {/* 品牌主体：大 Logo */}
+      <div class="brand-body">
+        <img src="/logo.svg" alt="logo" class="brand-icon" />
+      </div>
 
-  // 密码确认完成后（已跳转，这里做降级回退）
-  function handlePasswordDone(newInfo: AppInfo | null) {
-    if (newInfo) setInfo(newInfo);
-    setView('main');
-  }
+      {/* 底部工具行：开机自启 | 竖线 | github | tg | docker */}
+      <nav class="brand-links">
+        {/* 开机自启图标按钮 */}
+        <button
+          class={`brand-autostart${autostartEnabled ? ' active' : ''}`}
+          onClick={handleToggleAutostart}
+          title={autostartEnabled ? '开机自启：已开启（点击关闭）' : '开机自启：已关闭（点击开启）'}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
+            <line x1="12" y1="2" x2="12" y2="12" />
+          </svg>
+        </button>
+
+        {/* 竖线分割 */}
+        <span class="brand-sep" />
+
+        {/* 社交链接：img + CSS filter 实现主题适配 */}
+        <a class="brand-link" onClick={() => openLink('https://github.com/sinspired/subs-check-pro')} title="GitHub">
+          <img src="/github.svg" alt="GitHub" class="brand-social-icon" />
+        </a>
+        <a class="brand-link" onClick={() => openLink('https://t.me/sinspired')} title="Telegram">
+          <img src="/telegram.svg" alt="Telegram" class="brand-social-icon" />
+        </a>
+        <a class="brand-link" onClick={() => openLink('https://hub.docker.com/r/sinspired/subs-check-pro')} title="Docker Hub">
+          <img src="/docker.svg" alt="Docker" class="brand-social-icon" />
+        </a>
+      </nav>
+    </aside>
+  );
+
+  // ── 右侧面板顶栏：主题切换（原生标题栏负责窗口控制）───────────
+  const PanelToolbar = () => (
+    <div class="lp-toolbar">
+      {/* 拖拽区（弹性填充剩余空间） */}
+      <div class="lp-drag-area" />
+
+      {/* 主题切换 */}
+      <button class="icon-btn theme-btn" onClick={toggleTheme} title="切换主题">
+        {!isDark ? (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        ) : (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1"  x2="12" y2="3"  />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22"   x2="5.64" y2="5.64"   />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78"  x2="5.64" y2="18.36"  />
+            <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"  />
+          </svg>
+        )}
+      </button>
+    </div>
+  );
 
   return (
     <>
-      {/* ── 主视图 ── */}
+      {/* ── loading ── */}
       {view === 'loading' && (
         <div class="page">
           <div class="card">
-            <Header theme={theme} toggleTheme={toggleTheme} />
+            <Header theme={theme} toggleTheme={toggleTheme} onRequestClose={requestClose} />
             <div class="state-box">
               <div class="spinner" />
               <span>正在加载应用信息…</span>
@@ -98,10 +185,11 @@ export function App() {
         </div>
       )}
 
+      {/* ── error ── */}
       {view === 'error' && (
         <div class="page">
           <div class="card">
-            <Header theme={theme} toggleTheme={toggleTheme} />
+            <Header theme={theme} toggleTheme={toggleTheme} onRequestClose={requestClose} />
             <div class="state-box" style="color:var(--warn)">
               ⚠️ 初始化失败：{errMsg}
             </div>
@@ -109,45 +197,60 @@ export function App() {
         </div>
       )}
 
+      {/* ── portConflict ── */}
       {view === 'portConflict' && info && (
         <div class="page">
           <div class="card">
-            <Header theme={theme} toggleTheme={toggleTheme} />
-            <PortConflict
-              info={info}
-              toast={toast}
-              onFixed={handlePortsFixed}
-            />
+            <Header theme={theme} toggleTheme={toggleTheme} onRequestClose={requestClose} />
+            <PortConflict info={info} toast={toast} onFixed={handlePortsFixed} />
           </div>
         </div>
       )}
 
+      {/* ── main — 左右分栏布局 ── */}
       {view === 'main' && info && (
-        <div class="page">
-          <div class="card">
-            <Header theme={theme} toggleTheme={toggleTheme} />
-            <KeySection info={info} toast={toast} />
-            <ConfigSection onSelect={handleSelectConfig} toast={toast} />
-          </div>
+        <div class="page split-page">
+          <BrandPanel />
+          <section class="login-panel">
+            <PanelToolbar />
+            <div class="login-content">
+              <KeySection info={info} toast={toast} />
+            </div>
+            <ConfigSection
+              onSelect={handleSelectConfig}
+              toast={toast}
+              autostartEnabled={autostartEnabled}
+              onToggleAutostart={setAutostart}
+            />
+          </section>
         </div>
       )}
 
+      {/* ── password — 左右分栏布局 ── */}
       {view === 'password' && (
-        <div class="page">
-          <div class="card">
-            <Header theme={theme} toggleTheme={toggleTheme} />
-            <PasswordConfirm
-              cfgPath={cfgPath}
+        <div class="page split-page">
+          <BrandPanel />
+          <section class="login-panel">
+            <PanelToolbar />
+            <div class="login-content">
+              <PasswordConfirm
+                cfgPath={cfgPath}
+                toast={toast}
+                onDone={handlePasswordDone}
+              />
+            </div>
+            <ConfigSection
+              onSelect={handleSelectConfig}
               toast={toast}
-              onDone={handlePasswordDone}
+              autostartEnabled={autostartEnabled}
+              onToggleAutostart={setAutostart}
             />
-          </div>
+          </section>
         </div>
       )}
 
       <Toast msg={msg} visible={visible} />
 
-      {/* ── 关闭确认对话框（窗口关闭按钮触发）── */}
       {showQuit && (
         <QuitDialog onClose={() => setShowQuit(false)} />
       )}

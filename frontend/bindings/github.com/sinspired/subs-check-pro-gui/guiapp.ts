@@ -46,6 +46,13 @@ export function GetAppInfo(): $CancellablePromise<$models.AppInfo> {
 }
 
 /**
+ * GetAutoStartEnabled 查询当前开机自启状态（供托盘菜单调用）。
+ */
+export function GetAutoStartEnabled(): $CancellablePromise<boolean> {
+    return $Call.ByID(2283529356);
+}
+
+/**
  * GetEnterNonce 生成一次性 nonce，用于 /gui/enter 安全跳转。
  */
 export function GetEnterNonce(remember: boolean): $CancellablePromise<string> {
@@ -88,6 +95,20 @@ export function QuitApp(): $CancellablePromise<void> {
  */
 export function ResizeToMain(): $CancellablePromise<void> {
     return $Call.ByID(1128121742);
+}
+
+/**
+ * SetAutoStart 供前端 JS 绑定调用，切换开机自启。
+ */
+export function SetAutoStart(enable: boolean): $CancellablePromise<void> {
+    return $Call.ByID(940964243, enable);
+}
+
+/**
+ * SetAutoStartEnabled 设置开机自启状态（供托盘菜单调用）。
+ */
+export function SetAutoStartEnabled(enable: boolean): $CancellablePromise<void> {
+    return $Call.ByID(197427528, enable);
 }
 
 /**

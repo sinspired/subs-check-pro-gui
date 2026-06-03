@@ -40,15 +40,15 @@ func main() {
 	loginWin := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:          "login",
 		Title:         "Subs Check Pro",
-		Width:         500,
-		Height:        470,
-		MinWidth:      460,
-		MinHeight:     420,
+		Width:         540,
+		Height:        420,
+		MinWidth:      480,
+		MinHeight:     380,
 		DisableResize: false,
 		Frameless:     false,
 		URL:           "/",
 		Mac: application.MacWindow{
-			InvisibleTitleBarHeight: 50,
+			InvisibleTitleBarHeight: 30,
 			Backdrop:                application.MacBackdropTranslucent,
 			TitleBar:                application.MacTitleBarHiddenInset,
 		},
@@ -62,9 +62,6 @@ func main() {
 	})
 
 	// ── 窗口2：WebUI 大窗（加载外部 Gin 服务，初始隐藏）─────────────────────
-	// Hidden: true 确保窗口创建时不可见，避免 about:blank 短暂出现。
-	// EnterWebUI() 调用后才会 SetURL + Show。
-	// 关闭行为由下方 RegisterHook(WindowClosing) 处理：隐藏到托盘而非退出。
 	webUIWin := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:          "webui",
 		Title:         "Subs Check Pro",
@@ -96,16 +93,12 @@ func main() {
 	guiApp.window = loginWin // 兼容旧托盘引用
 
 	// ── 登录窗口关闭钩子：转发给前端 QuitDialog ──────────────────────────────
-	// loginWin 始终加载 Wails 前端，JS runtime 可用，可用 EmitEvent 驱动前端弹窗。
 	loginWin.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
 		e.Cancel()
 		loginWin.EmitEvent("window:close-requested", nil)
 	})
 
 	// ── WebUI 窗口关闭钩子：隐藏到托盘 ───────────────────────────────────────
-	// Wails v3 alpha 已移除 ShouldClose 选项字段，官方推荐改用 RegisterHook。
-	// webUIWin 加载外部 Gin 页面，JS runtime 不可用，无法 EmitEvent 给前端。
-	// 正确做法：Hide() + e.Cancel()，程序退出请通过托盘菜单「立即退出」。
 	webUIWin.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
 		hideWindow(webUIWin)
 		e.Cancel()

@@ -372,3 +372,19 @@ func isPortInUse(port string) bool {
 	_ = ln.Close()
 	return false
 }
+// ── 开机自启辅助方法（平台实现在 autostart_*.go）────────────────
+
+// GetAutoStartEnabled 查询当前开机自启状态（供托盘菜单调用）。
+func (g *GuiApp) GetAutoStartEnabled() (bool, error) {
+	return queryAutoStart()
+}
+
+// SetAutoStartEnabled 设置开机自启状态（供托盘菜单调用）。
+func (g *GuiApp) SetAutoStartEnabled(enable bool) error {
+	return applyAutoStart(enable)
+}
+
+// SetAutoStart 供前端 JS 绑定调用，切换开机自启。
+func (g *GuiApp) SetAutoStart(enable bool) error {
+	return applyAutoStart(enable)
+}
