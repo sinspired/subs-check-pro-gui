@@ -25,6 +25,9 @@ import (
 //go:embed tray.ico
 var trayIcon []byte
 
+//go:embed logo_32x32.png
+var logo_32 []byte
+
 // windowVisible 跟踪当前窗口可见状态。
 var windowVisible atomic.Bool
 
@@ -94,6 +97,8 @@ func buildTrayMenu(
 ) *application.Menu {
 	menu := wailsApp.NewMenu()
 
+	menu.Add("Subs Check Pro 桌面端").SetBitmap(logo_32).SetEnabled(false)
+	menu.AddSeparator()
 	menu.Add("显示主界面").OnClick(func(_ *application.Context) {
 		guiApp.showActiveWindow()
 	})

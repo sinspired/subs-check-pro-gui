@@ -122,7 +122,7 @@ body {
   padding: var(--card-pad);
   overflow-y: auto;
   overflow-x: hidden;
-  -webkit-app-region: no-drag;
+
 }
 
 /* 细滚动条 */
@@ -155,7 +155,6 @@ input,
 textarea,
 select,
 a {
-  -webkit-app-region: no-drag;
 }
 
 .hdr .win-controls {
@@ -602,7 +601,6 @@ code {
     background 0.14s ease,
     box-shadow 0.14s ease;
   text-align: left;
-  -webkit-app-region: no-drag;
 }
 .quit-btn:hover {
   border-color: rgba(14, 165, 160, 0.35);
@@ -739,7 +737,7 @@ code {
   flex-shrink: 0;
   opacity: 0.55;
   pointer-events: none;
-  -webkit-app-region: no-drag;
+  -webkit-app-region: drag;
 }
 
 /* 应用名称文本 */
@@ -764,7 +762,7 @@ code {
   align-items: center;
   justify-content: center;
   padding: 0 20px;
-  -webkit-app-region: no-drag;
+  -webkit-app-region: drag;
   pointer-events: none;
 }
 
@@ -781,7 +779,6 @@ code {
   display: flex;
   gap: 10px;
   align-items: center;
-  -webkit-app-region: no-drag;
   padding-bottom: 2px;
 }
 
@@ -801,7 +798,6 @@ code {
     color 0.2s,
     background 0.2s,
     opacity 0.2s;
-  -webkit-app-region: no-drag;
   flex-shrink: 0;
 }
 .brand-autostart:hover {
@@ -836,7 +832,6 @@ code {
   transition: opacity 0.2s;
   border-radius: 5px;
   padding: 4px;
-  -webkit-app-region: no-drag;
 }
 .brand-link:hover {
   opacity: 0.72;
@@ -865,7 +860,6 @@ code {
   flex-direction: column;
   background: var(--card);
   overflow: hidden;
-  -webkit-app-region: no-drag;
   transition: background 0.2s;
 }
 
@@ -877,19 +871,16 @@ code {
   flex-shrink: 0;
   padding: 0 10px 0 14px;
   gap: 2px;
-  -webkit-app-region: drag;
 }
 
 /* 拖拽区（弹性填充） */
 .lp-drag-area {
   flex: 1;
   height: 100%;
-  -webkit-app-region: drag;
 }
 
 /* 工具栏内的可交互按钮均排除拖拽 */
 .lp-toolbar .icon-btn {
-  -webkit-app-region: no-drag;
 }
 
 /* ── 右侧内容区（含 KeySection） ── */
@@ -898,7 +889,6 @@ code {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 4px 18px 0;
-  -webkit-app-region: no-drag;
   display: flex;
   flex-direction: column;
 }
@@ -923,5 +913,4 @@ code {
 .cfg-bottom {
   flex-shrink: 0;
   padding: 0 14px 12px;
-  -webkit-app-region: no-drag;
 }
