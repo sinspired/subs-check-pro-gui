@@ -98,20 +98,21 @@ func buildTrayMenu(
 	menu := wailsApp.NewMenu()
 
 	menu.Add("Subs Check Pro 桌面端").SetBitmap(logo_32).SetEnabled(false)
+
 	menu.AddSeparator()
 
 	menu.Add("显示主界面").OnClick(func(_ *application.Context) {
 		guiApp.showActiveWindow()
 	})
 
-	menu.Add("隐藏界面").OnClick(func(_ *application.Context) {
+	menu.Add("隐藏主界面").OnClick(func(_ *application.Context) {
 		guiApp.hideActiveWindow()
 		sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击图标可恢复窗口")
 	})
 
 	menu.AddSeparator()
 
-	menu.Add("停止检测任务").OnClick(func(_ *application.Context) {
+	menu.Add("停止检测").OnClick(func(_ *application.Context) {
 		if err := callBackendForceClose(); err != nil {
 			slog.Warn("检测任务停止失败", "error", err)
 		} else {
@@ -120,7 +121,7 @@ func buildTrayMenu(
 		}
 	})
 
-	menu.Add("结束检测后退出").OnClick(func(_ *application.Context) {
+	menu.Add("结束检测并退出").OnClick(func(_ *application.Context) {
 		if gracefulQuitPending.CompareAndSwap(false, true) {
 			sendOSNotification("Subs Check Pro", "正在等待检测完成后退出\n再次点击将立即强制退出")
 			slog.Info("托盘：已发送停止检测信号，等待检测完成后退出")
@@ -146,7 +147,6 @@ func buildTrayMenu(
 	})
 
 	menu.AddSeparator()
-
 	// ── 开机自启（Checkbox 菜单项，自动显示对勾）────────────────────
 	autostartItem := menu.Add("开机自启")
 	autostartItem.SetChecked(false) // 默认未勾选，异步更新
@@ -189,6 +189,8 @@ func buildTrayMenu(
 		autostartItem.SetChecked(enabled)
 	}()
 
+	menu.AddSeparator()
+
 	// About menu
 	menu.Add("关于").OnClick(func(ctx *application.Context) {
 		wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
@@ -201,14 +203,11 @@ func buildTrayMenu(
 		})
 	})
 
-	menu.AddSeparator()
-
 	menu.Add("退出").OnClick(func(_ *application.Context) {
 		slog.Info("托盘：立即退出")
 		sendOSNotification("Subs Check Pro", "正在退出…")
 		onQuit()
 	})
-
 	return menu
 }
 
