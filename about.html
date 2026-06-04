@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关于 Subs Check Pro GUI</title>
+  <style>
+    /* 全局重置，严格限制尺寸，禁止滚动 */
+    * {
+      box-sizing: border-box;
+      user-select: none; /* 桌面端应用通常不可选中文本，提升原生感 */
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden; /* 绝对禁止滚动条 */
+      background-color: #F5F4F0;
+      color: #4A4A48;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      font-weight: 300;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 优雅的淡入动画 */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ====== 1. 顶部信息栏 (Header) ====== */
+    .header {
+      height: 90px;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .brand img {
+      height: 45px;
+      mix-blend-mode: multiply;
+      opacity: 0.9;
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 400;
+      color: #33322E;
+      letter-spacing: 1px;
+    }
+
+    .brand-text p {
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: #8C8B88;
+    }
+
+    .badges {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-end;
+    }
+
+    .badges img {
+      height: 18px;
+      filter: grayscale(85%) opacity(0.6);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .badges img:hover {
+      filter: grayscale(0%) opacity(1);
+    }
+
+    /* ====== 2. 标签导航栏 (Tabs) ====== */
+    .tabs {
+      height: 40px;
+      display: flex;
+      padding: 0 30px;
+      border-bottom: 1px solid #E3E2DC;
+      flex-shrink: 0;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 0 20px;
+      font-size: 13px;
+      color: #8C8B88;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.3s;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .tab-btn:hover {
+      color: #5C5C5A;
+    }
+
+    .tab-btn.active {
+      color: #33322E;
+      font-weight: 400;
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 10px;
+      right: 10px;
+      height: 2px;
+      background-color: #5C5C5A;
+      border-radius: 2px;
+    }
+
+    /* ====== 3. 视图面板区 (Panels) ====== */
+    .panels {
+      flex: 1;
+      position: relative;
+      padding: 20px 30px;
+      background: linear-gradient(to bottom, #fcfcfb 0%, #F5F4F0 100%);
+    }
+
+    .panel {
+      position: absolute;
+      top: 20px;
+      left: 30px;
+      right: 30px;
+      bottom: 20px;
+      display: none; /* 默认隐藏 */
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .panel.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- 面板 1: 简介 --- */
+    .panel-intro {
+      gap: 15px;
+    }
+    
+    .intro-text {
+      font-size: 13px;
+      color: #5C5C5A;
+      text-align: justify;
+      padding: 15px;
+      background: rgba(255,255,255,0.4);
+      border: 1px solid #E3E2DC;
+      border-radius: 6px;
+    }
+
+    .arch-grid {
+      display: flex;
+      gap: 15px;
+      flex: 1;
+    }
+
+    .arch-card {
+      flex: 1;
+      border: 1px solid #E3E2DC;
+      border-radius: 6px;
+      padding: 15px;
+      background: rgba(255,255,255,0.6);
+    }
+
+    .arch-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 13px;
+      font-weight: 400;
+      color: #33322E;
+      border-bottom: 1px dashed #D5D4CE;
+      padding-bottom: 5px;
+    }
+
+    .arch-card p, .arch-card ul {
+      margin: 0;
+      padding: 0;
+      font-size: 12px;
+      color: #7A7975;
+      list-style-type: none;
+    }
+
+    .arch-card li { margin-bottom: 4px; }
+    .arch-card li::before { content: '·'; margin-right: 5px; color: #A3A29E; }
+
+    /* --- 面板 2: 高密度特性列表 --- */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px 20px;
+      height: 100%;
+      align-content: start;
+    }
+
+    .feature-item {
+      font-size: 13px;
+      color: #5C5C5A;
+      display: flex;
+      align-items: center;
+      background: rgba(255,255,255,0.3);
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .feature-item:hover {
+      border-color: #E3E2DC;
+      background: rgba(255,255,255,0.7);
+    }
+
+    .feature-item .emoji {
+      opacity: 0.4;
+      margin-right: 8px;
+      font-size: 14px;
+    }
+
+    /* --- 面板 3: 资源导航 --- */
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .link-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 15px;
+      text-decoration: none;
+      color: #5C5C5A;
+      border: 1px solid #E3E2DC;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.5);
+      transition: all 0.3s;
+    }
+
+    .link-card:hover {
+      background: #FFFFFF;
+      border-color: #D5D4CE;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+
+    .link-card strong {
+      font-size: 14px;
+      font-weight: 400;
+      color: #33322E;
+    }
+
+    .link-card span {
+      font-size: 12px;
+      color: #8C8B88;
+      margin-top: 4px;
+    }
+
+    /* ====== 4. 页脚 (Footer) ====== */
+    .footer {
+      height: 35px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 30px;
+      border-top: 1px solid #E3E2DC;
+      font-size: 11px;
+      color: #A3A29E;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部信息栏 -->
+  <header class="header">
+    <div class="brand">
+      <img src="https://raw.githubusercontent.com/sinspired/subs-check-pro/main/doc/logo/logo.png" alt="Logo">
+      <div class="brand-text">
+        <h1>Subs-Check⁺ PRO GUI</h1>
+        <p>高并发网络代理质量检测桌面终端</p>
+      </div>
+    </div>
+    <div class="badges">
+      <img alt="GUI Release" src="https://img.shields.io/github/v/release/sinspired/subs-check-pro-gui?display_name=release&style=flat&logo=wails&label=GUI&color=E2434B">
+      <img src="https://img.shields.io/github/v/release/sinspired/subs-check-pro?logo=github&include_prereleases" alt="Core Release">
+    </div>
+  </header>
+
+  <!-- Wails3 风格的标签栏 -->
+  <nav class="tabs">
+    <button class="tab-btn active" onclick="switchTab('intro')">应用概览</button>
+    <button class="tab-btn" onclick="switchTab('features')">核心特性</button>
+    <button class="tab-btn" onclick="switchTab('resources')">资源与社区</button>
+  </nav>
+
+  <!-- 视图面板区 (无滚动) -->
+  <main class="panels">
+    
+    <!-- 面板 1：应用概览 -->
+    <div id="intro" class="panel panel-intro active">
+      <div class="intro-text">
+        本应用是基于 <strong>Wails v3</strong> 现代化框架构建的跨平台桌面客户端。为 Subs-Check Pro 核心提供原生系统级适配与极具呼吸感的免命令操控体验。旨在以最低的系统资源开销，提供千万级节点库的高效检测与纯粹的本地化管理空间。
+      </div>
+      <div class="arch-grid">
+        <div class="arch-card">
+          <h3>前台：Wails v3 GUI</h3>
+          <ul>
+            <li>Windows / macOS / Linux 全平台一致体验</li>
+            <li>系统托盘与原生窗口控件无缝集成</li>
+            <li>侘寂风设计，摒弃多余视觉干扰</li>
+            <li>零配置启动，可视化免命令操作</li>
+          </ul>
+        </div>
+        <div class="arch-card">
+          <h3>后台：Subs-Check Pro 核心</h3>
+          <ul>
+            <li>高并发自适应流水线，测活测速解锁</li>
+            <li>WebUI与终端双引擎配置分析</li>
+            <li>智能检测本地代理与节点乱序</li>
+            <li>极致的内存控制(百万量级低开销)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 面板 2：高密度特性 (网格布局) -->
+    <div id="features" class="panel">
+      <div class="features-grid">
+        <div class="feature-item"><span class="emoji">⚡</span>自适应流水线高并发测试模式</div>
+        <div class="feature-item"><span class="emoji">🔋</span>支持亿级节点库，内存占用极低</div>
+        <div class="feature-item"><span class="emoji">🗺️</span>增强位置标签、原生/广播 IP 识别</div>
+        <div class="feature-item"><span class="emoji">📦</span>自动生成开箱即用的 sing-box 配置</div>
+        <div class="feature-item"><span class="emoji">🎲</span>智能节点乱序与历史可用节点保存</div>
+        <div class="feature-item"><span class="emoji">📊</span>检测结果与协议分布可视化分析报告</div>
+        <div class="feature-item"><span class="emoji">🚦</span>自动检测并智能适配本地网络代理环境</div>
+        <div class="feature-item"><span class="emoji">🧩</span>深度集成 Sub-Store 前后端一键管理</div>
+        <div class="feature-item"><span class="emoji">🔒</span>内置文件分享系统，支持设置分享码</div>
+        <div class="feature-item"><span class="emoji">📣</span>多渠道消息通知 (版本/节点/GeoDB 更新)</div>
+        <div class="feature-item"><span class="emoji">📱</span>全新适配小屏设备的现代 WebUI 面板</div>
+        <div class="feature-item"><span class="emoji">🎁</span>自动无缝静默升级，保持核心处于最新</div>
+      </div>
+    </div>
+
+    <!-- 面板 3：资源与社区 -->
+    <div id="resources" class="panel">
+      <div class="links-grid">
+        <a href="https://github.com/sinspired/subs-check-pro-gui" class="link-card" target="_blank">
+          <strong>🖥️ GUI 开源仓库</strong>
+          <span>获取桌面客户端最新源码与构建版本</span>
+        </a>
+        <a href="https://github.com/sinspired/subs-check-pro" class="link-card" target="_blank">
+          <strong>⚙️ 核心内核主页</strong>
+          <span>查阅底层引擎代码与 Docker 镜像</span>
+        </a>
+        <a href="https://github.com/sinspired/subs-check-pro/wiki" class="link-card" target="_blank">
+          <strong>📖 官方使用文档</strong>
+          <span>部署教程、订阅指南与高级配置 Wiki</span>
+        </a>
+        <a href="https://t.me/subs_check_pro" class="link-card" target="_blank">
+          <strong>💬 Telegram 交流群</strong>
+          <span>技术探讨、Issue 反馈与使用互助</span>
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 极简页脚 -->
+  <footer class="footer">
+    <span>© 2026 Subs Check Pro. All rights reserved.</span>
+    <span>⚖️ 仅供学习与网络测速研究使用，请遵守相关法规。</span>
+  </footer>
+
+  <script>
+    // 极简的标签页切换逻辑
+    function switchTab(tabId) {
+      // 1. 重置所有 Tab 按钮状态
+      const btns = document.querySelectorAll('.tab-btn');
+      btns.forEach(btn => btn.classList.remove('active'));
+      
+      // 2. 隐藏所有面板
+      const panels = document.querySelectorAll('.panel');
+      panels.forEach(panel => panel.classList.remove('active'));
+      
+      // 3. 激活当前点击的 Tab 和对应的面板
+      event.target.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+  </script>
+
+</body>
+</html>

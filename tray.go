@@ -28,6 +28,9 @@ var trayIcon []byte
 //go:embed logo_32x32.png
 var logo_32 []byte
 
+//go:embed about.html
+var aboutHTML string
+
 // windowVisible 跟踪当前窗口可见状态。
 var windowVisible atomic.Bool
 
@@ -195,11 +198,11 @@ func buildTrayMenu(
 	menu.Add("关于").OnClick(func(ctx *application.Context) {
 		wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Title:  "Subs Check Pro - 关于",
-			Width:  500,
-			Height: 400,
+			Width:  800,
+			Height: 600,
 			X:      400,
 			Y:      300,
-			HTML:   "<html><head><title>About</title><style>body{font-family:Arial,sans-serif;padding:20px;background:#f0f0f0;color:#333;text-align:center;}</style></head><body><h1>Window Visibility Test</h1><p>This application tests the fixes for Wails v3 issue #2861</p><p><strong>Windows 10 Pro Efficiency Mode Fix</strong></p><p>Tests window container vs WebView content visibility</p><hr><p><em>Created for testing robust window visibility patterns</em></p></body></html>",
+			HTML:   aboutHTML,
 		})
 	})
 
