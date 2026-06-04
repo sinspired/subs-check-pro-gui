@@ -409,6 +409,55 @@ button:focus-visible {
   opacity: 0.75;
 }
 
+/* ── 配置文件路径行（key-wrap 正下方）── */
+.cfg-path-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 20px;
+  padding: 0 4px;
+  min-width: 0;
+  -webkit-app-region: drag;
+}
+
+/* 文件图标：固定宽度，不参与收缩 */
+.cfg-path-icon {
+  flex-shrink: 0;
+  color: var(--muted);
+  opacity: 0.45;
+  display: none;
+}
+
+/* 路径文本：
+   direction:rtl  → text-overflow ellipsis 出现在左侧（左截断），保留文件名尾部
+   text-align:left → 内容紧靠左侧对齐，视觉上从左向右读
+   unicode-bidi:plaintext → 保留路径字符自然的 LTR 渲染方向 */
+.cfg-path-text {
+  flex: 1;
+  min-width: 0;
+  font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+  font-size: 10.5px;
+  color: var(--muted);
+  opacity: 0.2;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+  unicode-bidi: plaintext;
+}
+
+/* 选择配置按钮：紧贴路径右侧，尺寸略小，低调展示 */
+.cfg-path-btn {
+  flex-shrink: 0;
+  padding: 3px;
+  opacity: 0.45;
+  transition: opacity 0.15s, color 0.15s, background 0.15s;
+}
+.cfg-path-btn:hover {
+  opacity: 1;
+}
+
 /* ── 端口编辑 ── */
 .port-edit-row {
   display: flex;

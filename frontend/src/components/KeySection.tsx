@@ -104,13 +104,6 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
           {currentKey}
         </span>
 
-        {/* 选择配置文件 */}
-        <button class="icon-btn" onClick={handleSelectConfig} title="选择其他配置文件">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-          </svg>
-        </button>
 
         {/* 显示/隐藏 */}
         <button class="icon-btn" onClick={toggleKey} title="显示/隐藏">
@@ -142,6 +135,29 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
         </button>
 
       </div>
+
+      {/* 配置文件路径行：左截断显示当前配置路径 + 选择按钮 */}
+      {info.configPath && (
+        <div class="cfg-path-row">
+          {/* 文件图标 */}
+          <svg class="cfg-path-icon" width="11" height="11" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          {/* 路径文本：direction:rtl 使 text-overflow ellipsis 出现在左侧，保留文件名尾部 */}
+          <span class="cfg-path-text" title={info.configPath}>
+            {info.configPath}
+          </span>
+          {/* 选择其他配置文件（从 key-wrap 移至此处，操作与来源信息紧邻）*/}
+          <button class="icon-btn cfg-path-btn" onClick={handleSelectConfig} title="选择其他配置文件">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* 端口信息 */}
       <div class="info-row">
