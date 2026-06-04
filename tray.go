@@ -99,6 +99,7 @@ func buildTrayMenu(
 
 	menu.Add("Subs Check Pro 桌面端").SetBitmap(logo_32).SetEnabled(false)
 	menu.AddSeparator()
+
 	menu.Add("显示主界面").OnClick(func(_ *application.Context) {
 		guiApp.showActiveWindow()
 	})
@@ -106,6 +107,42 @@ func buildTrayMenu(
 	menu.Add("隐藏界面").OnClick(func(_ *application.Context) {
 		guiApp.hideActiveWindow()
 		sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击图标可恢复窗口")
+	})
+
+	menu.AddSeparator()
+
+	menu.Add("停止检测任务").OnClick(func(_ *application.Context) {
+		if err := callBackendForceClose(); err != nil {
+			slog.Warn("检测任务停止失败", "error", err)
+		} else {
+			sendOSNotification("Subs Check Pro", "已发送停止检测信号\n正在等待结果收集完成")
+			slog.Info("托盘：已发送停止检测信号")
+		}
+	})
+
+	menu.Add("结束检测后退出").OnClick(func(_ *application.Context) {
+		if gracefulQuitPending.CompareAndSwap(false, true) {
+			sendOSNotification("Subs Check Pro", "正在等待检测完成后退出\n再次点击将立即强制退出")
+			slog.Info("托盘：已发送停止检测信号，等待检测完成后退出")
+
+			gracefulQuitOnce.Do(func() {
+				go func() {
+					if err := callBackendForceClose(); err != nil {
+						slog.Warn("发送 force-close 失败", "error", err)
+					}
+
+					waitForBackendIdle(5 * time.Minute)
+
+					slog.Info("后端检测已完成，开始优雅退出")
+					sendOSNotification("Subs Check Pro", "检测已完成，正在退出…")
+					onQuit()
+				}()
+			})
+		} else {
+			slog.Warn("托盘：用户二次确认，立即退出")
+			sendOSNotification("Subs Check Pro", "正在强制退出…")
+			onQuit()
+		}
 	})
 
 	menu.AddSeparator()
@@ -152,45 +189,21 @@ func buildTrayMenu(
 		autostartItem.SetChecked(enabled)
 	}()
 
-	menu.AddSeparator()
-
-	menu.Add("终止检测").OnClick(func(_ *application.Context) {
-		if err := callBackendForceClose(); err != nil {
-			slog.Warn("终止检测失败", "error", err)
-		} else {
-			sendOSNotification("Subs Check Pro", "已发送终止检测信号\n正在等待结果收集完成")
-			slog.Info("托盘：已触发终止检测")
-		}
+	// About menu
+	menu.Add("关于").OnClick(func(ctx *application.Context) {
+		wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+			Title:  "Subs Check Pro - 关于",
+			Width:  500,
+			Height: 400,
+			X:      400,
+			Y:      300,
+			HTML:   "<html><head><title>About</title><style>body{font-family:Arial,sans-serif;padding:20px;background:#f0f0f0;color:#333;text-align:center;}</style></head><body><h1>Window Visibility Test</h1><p>This application tests the fixes for Wails v3 issue #2861</p><p><strong>Windows 10 Pro Efficiency Mode Fix</strong></p><p>Tests window container vs WebView content visibility</p><hr><p><em>Created for testing robust window visibility patterns</em></p></body></html>",
+		})
 	})
 
 	menu.AddSeparator()
 
-	menu.Add("结束检测后退出").OnClick(func(_ *application.Context) {
-		if gracefulQuitPending.CompareAndSwap(false, true) {
-			sendOSNotification("Subs Check Pro", "正在等待检测完成后退出\n再次点击将立即强制退出")
-			slog.Info("托盘：已请求结束检测后退出")
-
-			gracefulQuitOnce.Do(func() {
-				go func() {
-					if err := callBackendForceClose(); err != nil {
-						slog.Warn("发送 force-close 失败", "error", err)
-					}
-
-					waitForBackendIdle(5 * time.Minute)
-
-					slog.Info("后端检测已完成，开始优雅退出")
-					sendOSNotification("Subs Check Pro", "检测已完成，正在退出…")
-					onQuit()
-				}()
-			})
-		} else {
-			slog.Warn("托盘：用户二次确认，立即退出")
-			sendOSNotification("Subs Check Pro", "正在强制退出…")
-			onQuit()
-		}
-	})
-
-	menu.Add("立即退出").OnClick(func(_ *application.Context) {
+	menu.Add("退出").OnClick(func(_ *application.Context) {
 		slog.Info("托盘：立即退出")
 		sendOSNotification("Subs Check Pro", "正在退出…")
 		onQuit()
