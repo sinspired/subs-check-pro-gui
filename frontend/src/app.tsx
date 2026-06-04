@@ -3,20 +3,20 @@
  * 登录窗口根组件 — Wails3 + Preact + TypeScript
  */
 import { useEffect, useState } from 'preact/hooks';
-import { Events }              from '@wailsio/runtime';
+import { Events } from '@wailsio/runtime';
 
-import { useTheme }       from './hooks/useTheme';
-import { useToast }       from './hooks/useToast';
-import { useWailsReady }  from './hooks/useWailsReady';
+import { useTheme } from './hooks/useTheme';
+import { useToast } from './hooks/useToast';
+import { useWailsReady } from './hooks/useWailsReady';
 
-import { Header }          from './components/Header';
-import { KeySection }      from './components/KeySection';
-import { PortConflict }    from './components/PortConflict';
+import { Header } from './components/Header';
+import { KeySection } from './components/KeySection';
+import { PortConflict } from './components/PortConflict';
 import { PasswordConfirm } from './components/PasswordConfirm';
-import { Toast }           from './components/Toast';
-import { QuitDialog }      from './components/QuitDialog';
+import { Toast } from './components/Toast';
+import { QuitDialog } from './components/QuitDialog';
 
-import { GuiApp }  from '../bindings/github.com/sinspired/subs-check-pro-gui';
+import { GuiApp } from '../bindings/github.com/sinspired/subs-check-pro-gui';
 import { AppInfo } from '../bindings/github.com/sinspired/subs-check-pro-gui';
 
 // UI 状态机：每个状态对应一个独立视图
@@ -28,17 +28,17 @@ function openLink(url: string) {
 }
 
 export function App() {
-  const ready                   = useWailsReady();
-  const { theme, toggleTheme }  = useTheme();
+  const ready = useWailsReady();
+  const { theme, toggleTheme } = useTheme();
   const { msg, visible, toast } = useToast();
   const isDark = theme === 'dark';
 
-  const [view, setView]                   = useState<View>('loading');
-  const [info, setInfo]                   = useState<AppInfo | null>(null);
-  const [errMsg, setErrMsg]               = useState('');
-  const [cfgPath, setCfgPath]             = useState('');
-  const [showQuit, setShowQuit]           = useState(false);
-  const [autostartEnabled, setAutostart]  = useState(false);
+  const [view, setView] = useState<View>('loading');
+  const [info, setInfo] = useState<AppInfo | null>(null);
+  const [errMsg, setErrMsg] = useState('');
+  const [cfgPath, setCfgPath] = useState('');
+  const [showQuit, setShowQuit] = useState(false);
+  const [autostartEnabled, setAutostart] = useState(false);
 
   // ── Wails 就绪后立即拉取应用信息 ──────────────────────────────
   useEffect(() => {
@@ -91,9 +91,11 @@ export function App() {
     }
   }
 
-  function handlePortsFixed(newInfo: AppInfo)       { setInfo(newInfo); setView('main'); }
-  function handleSelectConfig(path: string)          { setCfgPath(path); setView('password'); }
-  function handlePasswordDone(newInfo: AppInfo|null) { if (newInfo) setInfo(newInfo); setView('main'); }
+  function handlePortsFixed(newInfo: AppInfo) { setInfo(newInfo); setView('main'); }
+  function handleSelectConfig(path: string) { setCfgPath(path); setView('password'); }
+  function handlePasswordDone(newInfo: AppInfo | null) { if (newInfo) setInfo(newInfo); setView('main'); }
+  function handlePasswordBack() { setView('main'); }
+  function handlePasswordReselect(path: string) { setCfgPath(path); /* 保持 password 视图，只更新路径 */ }
   const requestClose = () => setShowQuit(true);
 
   async function handleToggleAutostart() {
@@ -184,14 +186,14 @@ export function App() {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <circle cx="12" cy="12" r="5" />
-            <line x1="12" y1="1"  x2="12" y2="3"  />
+            <line x1="12" y1="1" x2="12" y2="3" />
             <line x1="12" y1="21" x2="12" y2="23" />
-            <line x1="4.22" y1="4.22"   x2="5.64" y2="5.64"   />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
             <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
             <line x1="1" y1="12" x2="3" y2="12" />
             <line x1="21" y1="12" x2="23" y2="12" />
-            <line x1="4.22" y1="19.78"  x2="5.64" y2="18.36"  />
-            <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"  />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
           </svg>
         )}
       </button>
@@ -284,6 +286,8 @@ export function App() {
                 cfgPath={cfgPath}
                 toast={toast}
                 onDone={handlePasswordDone}
+                onBack={handlePasswordBack}
+                onReselect={handlePasswordReselect}
               />
             </div>
             <LpFooter />

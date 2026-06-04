@@ -361,6 +361,10 @@ button:focus-visible {
   min-height: 0;
 }
 
+.back-btn-row {
+  text-align: center;
+}
+
 /* 进入按钮区：固定间距贴近底部版本栏，不参与 flex 拉伸 */
 .enter-spacer {
   flex-shrink: 0;
@@ -400,6 +404,25 @@ button:focus-visible {
   cursor: default;
 }
 
+.btn-back{
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  opacity: 0.4;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+  letter-spacing: 0.4px;
+}
+
+.btn-back:hover {
+  color: var(--fg);
+  opacity: 0.6;
+  transform: scale(1.01);
+}
+
 /* KeySection 弹性布局：让进入按钮垂直居中于端口行以下的剩余空间 */
 .key-section-flex {
   display: flex;
@@ -430,14 +453,12 @@ button:focus-visible {
 
 .pw-input {
   flex: 1;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  padding: 7px 10px;
-  font-size: 13px;
-  color: var(--fg);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  font-size: 12px;
   outline: none;
-  -webkit-app-region: no-drag;
 }
 .pw-input:focus {
   border-color: var(--accent);
@@ -638,6 +659,7 @@ code {
   padding: 18px 18px 14px;
   border-bottom: 1px solid var(--border);
 }
+
 .quit-icon-wrap {
   width: 42px;
   height: 42px;
