@@ -113,6 +113,10 @@ func buildTrayMenu(
 	// ── 开机自启（Checkbox 菜单项，自动显示对勾）────────────────────
 	autostartItem := menu.Add("开机自启")
 	autostartItem.SetChecked(false) // 默认未勾选，异步更新
+
+	// 将菜单项引用存入 guiApp，供前端调用 SetAutoStart 后反向同步 checkbox
+	guiApp.autostartMenuItem = autostartItem
+
 	autostartItem.OnClick(func(_ *application.Context) {
 		enabled, err := guiApp.GetAutoStartEnabled()
 		if err != nil {
@@ -127,6 +131,10 @@ func buildTrayMenu(
 			return
 		}
 		autostartItem.SetChecked(next)
+		// 向前端登录窗口发射事件，同步开机自启按钮状态
+		if guiApp.loginWin != nil {
+			guiApp.loginWin.EmitEvent("autostart:changed", next)
+		}
 		if next {
 			sendOSNotification("Subs Check Pro", "已开启开机自启")
 		} else {

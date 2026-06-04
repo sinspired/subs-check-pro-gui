@@ -99,13 +99,14 @@ export function ResizeToMain(): $CancellablePromise<void> {
 
 /**
  * SetAutoStart 供前端 JS 绑定调用，切换开机自启。
+ * 成功后同步更新托盘菜单 checkbox，保证两侧状态一致。
  */
 export function SetAutoStart(enable: boolean): $CancellablePromise<void> {
     return $Call.ByID(940964243, enable);
 }
 
 /**
- * SetAutoStartEnabled 设置开机自启状态（供托盘菜单调用）。
+ * SetAutoStartEnabled 设置开机自启状态（供托盘菜单内部调用，不重复更新托盘 checkbox）。
  */
 export function SetAutoStartEnabled(enable: boolean): $CancellablePromise<void> {
     return $Call.ByID(197427528, enable);

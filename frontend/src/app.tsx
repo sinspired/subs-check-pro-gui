@@ -66,6 +66,21 @@ export function App() {
     return () => { unsub && unsub(); };
   }, [ready]);
 
+  // ── 监听托盘「开机自启」切换事件，回查系统真实状态后同步按钮 ──────────
+  // 注意：不直接使用事件 payload（Go bool 经 Wails v3 序列化后在 JS 侧
+  // 可能被包裹为 [false]，Boolean([false]) === true，导致「关闭」失效）。
+  // 改为事件仅作触发信号，收到后立即向 Go 回查真实状态，彻底规避此问题。
+  useEffect(() => {
+    if (!ready) return;
+    const unsub = Events.On('autostart:changed', async () => {
+      try {
+        const actual = await GuiApp.GetAutoStartEnabled();
+        setAutostart(actual);
+      } catch { /* 平台不支持时静默忽略 */ }
+    });
+    return () => { unsub && unsub(); };
+  }, [ready]);
+
   async function loadAppInfo() {
     setView('loading');
     try {
@@ -140,24 +155,11 @@ export function App() {
     </aside>
   );
 
-  // ── 右侧面板顶栏：版本信息 + 主题切换（原生标题栏负责窗口控制）───────────
+  // ── 右侧面板顶栏：仅拖拽区 + 主题切换（版本信息已移至独立 VersionBar）──
   const PanelToolbar = () => (
     <div class="lp-toolbar">
       {/* 拖拽区（弹性填充剩余空间） */}
       <div class="lp-drag-area" />
-
-      {/* 版本信息徽章 */}
-      {info && (
-        <div class="ver-badges">
-          <span class="ver-tag ver-gui" title={`GUI 版本：${info.guiVersion || 'dev'}`}>
-            GUI&nbsp;{info.guiVersion || 'dev'}
-          </span>
-          <span class="ver-dot">·</span>
-          <span class="ver-tag ver-core" title={`内核版本：${info.coreVersion || 'dev'}`}>
-            Core&nbsp;{info.coreVersion || 'dev'}
-          </span>
-        </div>
-      )}
 
       {/* 主题切换 */}
       <button class="icon-btn theme-btn" onClick={toggleTheme} title="切换主题">
@@ -183,6 +185,30 @@ export function App() {
       </button>
     </div>
   );
+
+  // ── 版本信息栏：独立一行，靠左对齐，两个标签分别链接到对应 GitHub 仓库 ──
+  const VersionBar = () => {
+    if (!info) return null;
+    return (
+      <div class="ver-bar">
+        <a
+          class="ver-tag ver-gui"
+          onClick={() => openLink('https://github.com/sinspired/subs-check-pro-gui')}
+          title={`GUI 版本：${info.guiVersion || 'dev'}  →  sinspired/subs-check-pro-gui`}
+        >
+          GUI&nbsp;{info.guiVersion || 'dev'}
+        </a>
+        <span class="ver-dot">·</span>
+        <a
+          class="ver-tag ver-core"
+          onClick={() => openLink('https://github.com/sinspired/subs-check-pro')}
+          title={`Core 版本：${info.coreVersion || 'dev'}  →  sinspired/subs-check-pro`}
+        >
+          Core&nbsp;{info.coreVersion || 'dev'}
+        </a>
+      </div>
+    );
+  };
 
   return (
     <>
@@ -227,6 +253,7 @@ export function App() {
           <BrandPanel />
           <section class="login-panel">
             <PanelToolbar />
+            <VersionBar />
             <div class="login-content">
               <KeySection info={info} toast={toast} onSelectConfig={handleSelectConfig} />
             </div>
@@ -240,6 +267,7 @@ export function App() {
           <BrandPanel />
           <section class="login-panel">
             <PanelToolbar />
+            <VersionBar />
             <div class="login-content">
               <PasswordConfirm
                 cfgPath={cfgPath}

@@ -883,7 +883,16 @@ code {
 .lp-toolbar .icon-btn {
 }
 
-/* ── 版本信息徽章（GUI 版 + 内核版） ── */
+/* ── 版本信息栏：独立一行，左对齐，位于工具栏下方 ── */
+.ver-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 14px 30px;
+  flex-shrink: 0;
+}
+
+/* ver-badges 保留以兼容旧引用，实际已由 ver-bar 替代 */
 .ver-badges {
   display: flex;
   align-items: center;
@@ -900,13 +909,18 @@ code {
   border-radius: 3px;
   letter-spacing: 0.01em;
   white-space: nowrap;
-  cursor: default;
-  transition: opacity 0.15s;
+  /* 版本标签现为可点击链接，显示指针手形 */
+  cursor: pointer;
+  transition: opacity 0.15s, text-decoration-color 0.15s;
   opacity: 0.55;
+  text-decoration: none;
+  -webkit-app-region: no-drag;
 }
 
 .ver-tag:hover {
   opacity: 0.85;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .ver-gui {

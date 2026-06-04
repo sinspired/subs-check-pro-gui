@@ -30,6 +30,11 @@ type GuiApp struct {
 	// 由 main.go 在创建窗口后注入。
 	webUIWin *application.WebviewWindow
 
+	// autostartMenuItem 托盘菜单中"开机自启"菜单项的引用。
+	// 由 tray.go 的 buildTrayMenu 在创建菜单项后注入，
+	// 供前端调用 SetAutoStart 时同步回托盘 checkbox 状态。
+	autostartMenuItem *application.MenuItem
+
 	// pendingInit 为 true 时表示端口预检发现冲突，Initialize() 尚未调用。
 	pendingInit     bool
 	preConflictHTTP bool
@@ -393,12 +398,20 @@ func (g *GuiApp) GetAutoStartEnabled() (bool, error) {
 	return queryAutoStart()
 }
 
-// SetAutoStartEnabled 设置开机自启状态（供托盘菜单调用）。
+// SetAutoStartEnabled 设置开机自启状态（供托盘菜单内部调用，不重复更新托盘 checkbox）。
 func (g *GuiApp) SetAutoStartEnabled(enable bool) error {
 	return applyAutoStart(enable)
 }
 
 // SetAutoStart 供前端 JS 绑定调用，切换开机自启。
+// 成功后同步更新托盘菜单 checkbox，保证两侧状态一致。
 func (g *GuiApp) SetAutoStart(enable bool) error {
-	return applyAutoStart(enable)
+	if err := applyAutoStart(enable); err != nil {
+		return err
+	}
+	// 同步托盘菜单项 checkbox（若托盘已初始化）
+	if g.autostartMenuItem != nil {
+		g.autostartMenuItem.SetChecked(enable)
+	}
+	return nil
 }
