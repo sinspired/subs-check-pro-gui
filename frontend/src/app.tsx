@@ -1,12 +1,6 @@
 /**
  * frontend/src/app.tsx
  * 登录窗口根组件 — Wails3 + Preact + TypeScript
- *
- * 布局：左右分栏
- *  左栏 brand-panel  ：纯黑背景，顶部仿标题栏（mini logo + 应用名），
- *                      中央大 Logo（无光晕），底部社交链接
- *  右栏 login-panel  ：顶部工具栏（自定义 SVG 窗口控制按钮 + 主题切换），
- *                      中部 KeySection，底部 ConfigSection（配置 + 开机自启）
  */
 import { useEffect, useState } from 'preact/hooks';
 import { Events }              from '@wailsio/runtime';
@@ -155,13 +149,31 @@ export function App() {
     </aside>
   );
 
-  // ── 右侧面板顶栏：仅拖拽区 + 主题切换（版本信息已移至独立 VersionBar）──
-  const PanelToolbar = () => (
+  // ── 右侧顶部工具栏：左侧端口状态 + 拖拽区 + 右侧主题切换 ──
+  const PanelToolbar = ({ portInfo }: { portInfo?: AppInfo | null }) => (
     <div class="lp-toolbar">
-      {/* 拖拽区（弹性填充剩余空间） */}
+      {/* 左侧：端口状态（有 info 时显示） */}
+      {portInfo && (
+        <div class="lp-ports">
+          <span class="port-badge">
+            <span class="port-dot" />
+            <span class="port-badge-lbl">HTTP</span>
+            <span class="port-badge-val">{portInfo.listenPort || '8199'}</span>
+          </span>
+          {portInfo.subStorePort && (
+            <span class="port-badge">
+              <span class="port-dot" />
+              <span class="port-badge-lbl">Sub-Store</span>
+              <span class="port-badge-val">{portInfo.subStorePort}</span>
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* 拖拽区（弹性填充） */}
       <div class="lp-drag-area" />
 
-      {/* 主题切换 */}
+      {/* 右侧：主题切换 */}
       <button class="icon-btn theme-btn" onClick={toggleTheme} title="切换主题">
         {!isDark ? (
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
@@ -186,11 +198,11 @@ export function App() {
     </div>
   );
 
-  // ── 版本信息栏：独立一行，靠左对齐，两个标签分别链接到对应 GitHub 仓库 ──
-  const VersionBar = () => {
-    if (!info) return null;
+  // ── 右侧底栏：版本标签，水平居中，与左侧 brand-links 垂直对齐 ──
+  const LpFooter = () => {
+    if (!info) return <div class="lp-footer" />;
     return (
-      <div class="ver-bar">
+      <div class="lp-footer">
         <a
           class="ver-tag ver-gui"
           onClick={() => openLink('https://github.com/sinspired/subs-check-pro-gui')}
@@ -252,11 +264,11 @@ export function App() {
         <div class="page split-page">
           <BrandPanel />
           <section class="login-panel">
-            <PanelToolbar />
-            <VersionBar />
+            <PanelToolbar portInfo={info} />
             <div class="login-content">
               <KeySection info={info} toast={toast} onSelectConfig={handleSelectConfig} />
             </div>
+            <LpFooter />
           </section>
         </div>
       )}
@@ -266,8 +278,7 @@ export function App() {
         <div class="page split-page">
           <BrandPanel />
           <section class="login-panel">
-            <PanelToolbar />
-            <VersionBar />
+            <PanelToolbar portInfo={info} />
             <div class="login-content">
               <PasswordConfirm
                 cfgPath={cfgPath}
@@ -275,6 +286,7 @@ export function App() {
                 onDone={handlePasswordDone}
               />
             </div>
+            <LpFooter />
           </section>
         </div>
       )}

@@ -1,15 +1,28 @@
 {
 	"fixed": {
-		"file_version": "0.0.1"
+		"file_version": "0.1.0"
 	},
 	"info": {
 		"0000": {
-			"ProductVersion": "0.0.1",
-			"CompanyName": "sinspired",
-			"FileDescription": "A modern GUI of Subs-Check-Pro",
-			"LegalCopyright": "(c) 2025, sinspired",
 			"ProductName": "subs-check-pro-gui",
+			"ProductVersion": "1.0.0-alpha.97",
+			"CompanyName": "sinspired",
+			"InternalName": "subs-check-pro-gui",
+			"OriginalFilename": "subs-check-pro-gui.exe",
+			"LegalCopyright": "(c) 2026, sinspired",
+			"LegalTrademarks": "sinspired"
+		},
+		"0800": {
+			"FileDescription": "Subs-Check-Pro 桌面版，跨平台现代gui，适用于高性能代理管理、检测和订阅管理生成",
+			"Comments": "适用于高性能代理管理、检测和订阅管理生成的 Subs-Check-Pro 跨平台现代 GUI 桌面应用"
+		},
+		"0409": {
+			"FileDescription": "A modern GUI of Subs-Check-Pro, for high-performance proxy management, check, and subscription management and generation",
 			"Comments": "A modern GUI of Subs-Check-Pro, for high-performance proxy management, check, and subscription management and generation"
+		},
+		"0c04": {
+			"FileDescription": "Subs-Check-Pro 桌面版，跨平台现代gui，适用于高性能代理管理、检测和订阅管理生成",
+			"Comments": "适用于高性能代理管理、检测和订阅管理生成的 Subs-Check-Pro 跨平台现代 GUI 桌面应用"
 		}
 	}
 }

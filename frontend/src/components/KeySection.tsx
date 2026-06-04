@@ -13,13 +13,11 @@ interface Props {
 
 export function KeySection({ info, toast, onSelectConfig }: Props) {
   const [keyShown, setKeyShown] = useState(false);
+  const [launching, setLaunching] = useState(false);
 
   const currentKey = info.apiKey;
-
-  // 显示/隐藏
   const toggleKey = () => setKeyShown(v => !v);
 
-  // 复制
   async function copyKey() {
     try {
       await navigator.clipboard.writeText(currentKey);
@@ -41,19 +39,9 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
     onSelectConfig(path);
   }
 
-  const [launching, setLaunching] = useState(false);
-
-  // 进入 WebUI（双窗口方案，彻底无闪烁）
-  //
-  // 流程：
-  //   1. 前端获取带 nonce 的完整 URL
-  //   2. 调用 EnterWebUI(url) —— Go 端在 webUIWin 上 Navigate + Show，
-  //      同时隐藏 loginWin；全程原子操作，无定时器
-  //   3. loginWin 隐藏后前端代码不再执行，launching 无需重置
   async function enterWebUI() {
     if (launching) return;
     setLaunching(true);
-
     let nonce: string;
     try {
       nonce = await GuiApp.GetEnterNonce(true);
@@ -62,11 +50,9 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
       setLaunching(false);
       return;
     }
-
     const enterURL = `http://localhost:${info.listenPort}/gui/enter?n=${encodeURIComponent(nonce)}`;
     try {
       await GuiApp.EnterWebUI(enterURL);
-      // Go 端完成 Navigate+Show+Hide，loginWin 已不可见
     } catch (e: any) {
       toast('进入管理界面失败: ' + (e?.message ?? ''));
       setLaunching(false);
@@ -75,103 +61,85 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
 
   return (
     <div id="keySection" class="key-section-flex">
-      {/* 首次运行 banner */}
-      {info.isFirstRun && (
-        <div class="hint first-run">
-          🎉 首次运行 — 配置文件已创建：
-          <code>{info.configPath || 'config/config.yaml'}</code>
-        </div>
-      )}
 
-      {/* 随机 key 提示（非首次运行时显示） */}
-      {info.keyIsRandom && !info.isFirstRun && (
-        <div class="hint warn">
-          ⚠️ 当前密钥随机生成，重启后将变更。建议在{' '}
-          <code>config.yaml</code> 中固定 <code>api-key</code>。
-        </div>
-      )}
+      {/* ── key 主体区：flex:1 + justify-content:center 垂直居中 ── */}
+      <div class="key-body">
 
-      {/* API Key 标签 */}
-      <div class="label">API 密钥</div>
+        {info.isFirstRun && (
+          <div class="hint first-run">
+            🎉 首次运行 — 配置文件已创建：
+            <code>{info.configPath || 'config/config.yaml'}</code>
+          </div>
+        )}
 
-      {/* Key 展示行 */}
-      <div class="key-wrap">
-        <span
-          class={`key-text${keyShown ? '' : ' blur'}`}
-          onClick={toggleKey}
-          title="点击显示/隐藏"
-        >
-          {currentKey}
-        </span>
+        {info.keyIsRandom && !info.isFirstRun && (
+          <div class="hint warn">
+            ⚠️ 当前密钥随机生成，重启后将变更。建议在{' '}
+            <code>config.yaml</code> 中固定 <code>api-key</code>。
+          </div>
+        )}
 
+        <div class="label">API 密钥</div>
 
-        {/* 显示/隐藏 */}
-        <button class="icon-btn" onClick={toggleKey} title="显示/隐藏">
-          {!keyShown ? (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2">
-              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8
-                a18.45 18.45 0 0 1 5.06-5.94" />
-              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8
-                a18.5 18.5 0 0 1-2.16 3.19" />
-              <line x1="1" y1="1" x2="23" y2="23" />
-            </svg>
-          ) : (
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-          )}
-        </button>
-
-        {/* 复制 */}
-        <button class="icon-btn" onClick={copyKey} title="复制密钥">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-          </svg>
-        </button>
-
-      </div>
-
-      {/* 配置文件路径行：左截断显示当前配置路径 + 选择按钮 */}
-      {info.configPath && (
-        <div class="cfg-path-row">
-          {/* 文件图标 */}
-          <svg class="cfg-path-icon" width="11" height="11" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-          {/* 路径文本：direction:rtl 使 text-overflow ellipsis 出现在左侧，保留文件名尾部 */}
-          <span class="cfg-path-text" title={info.configPath}>
-            {info.configPath}
+        <div class="key-wrap">
+          <span
+            class={`key-text${keyShown ? '' : ' blur'}`}
+            onClick={toggleKey}
+            title="点击显示/隐藏"
+          >
+            {currentKey}
           </span>
-          {/* 选择其他配置文件（从 key-wrap 移至此处，操作与来源信息紧邻）*/}
-          <button class="icon-btn cfg-path-btn" onClick={handleSelectConfig} title="选择其他配置文件">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+
+          <button class="icon-btn" onClick={toggleKey} title="显示/隐藏">
+            {!keyShown ? (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8
+                  a18.45 18.45 0 0 1 5.06-5.94" />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8
+                  a18.5 18.5 0 0 1-2.16 3.19" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            ) : (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            )}
+          </button>
+
+          <button class="icon-btn" onClick={copyKey} title="复制密钥">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
             </svg>
           </button>
         </div>
-      )}
 
-      {/* 端口信息 */}
-      <div class="info-row">
-        <div class="info-cell">
-          <div class="lbl">HTTP 端口</div>
-          <div class="val">{info.listenPort || '8199'}</div>
-        </div>
-        <div class="info-cell">
-          <div class="lbl">Sub-Store</div>
-          <div class="val">{info.subStorePort || '未启用'}</div>
-        </div>
+        {info.configPath && (
+          <div class="cfg-path-row">
+            <svg class="cfg-path-icon" width="11" height="11" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+            <span class="cfg-path-text" title={info.configPath}>
+              {info.configPath}
+            </span>
+            <button class="icon-btn cfg-path-btn" onClick={handleSelectConfig} title="选择其他配置文件">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* 进入按钮：垂直居中于端口行下方的剩余空间 */}
+      {/* ── 进入按钮：固定在底部，与版本栏保持固定间距 ── */}
       <div class="enter-spacer">
         <button class="btn-enter" onClick={enterWebUI} disabled={launching}>
           {launching ? '正在进入…' : '进入管理界面 →'}

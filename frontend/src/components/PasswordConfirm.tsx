@@ -7,12 +7,12 @@ import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui'
 
 interface Props {
   cfgPath: string;
-  toast:   (msg: string) => void;
-  onDone:  (newInfo: AppInfo | null) => void;
+  toast: (msg: string) => void;
+  onDone: (newInfo: AppInfo | null) => void;
 }
 
 export function PasswordConfirm({ cfgPath, toast, onDone }: Props) {
-  const [key,     setKey]     = useState('');
+  const [key, setKey] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function confirm() {
@@ -42,13 +42,14 @@ export function PasswordConfirm({ cfgPath, toast, onDone }: Props) {
       newInfo = await GuiApp.GetAppInfo();
     } catch { /* 降级：使用默认端口 */ }
 
-    const port     = newInfo?.listenPort || '8199';
+    const port = newInfo?.listenPort || '8199';
     const enterURL = `http://localhost:${port}/gui/enter?n=${encodeURIComponent(nonce)}`;
 
     // 使用双窗口方案：Go 端在 webUIWin Navigate+Show，loginWin 由 Go 端隐藏。
     // loginWin 的 Wails 运行时全程保持活跃，关闭按钮不会失效。
     try {
       await GuiApp.EnterWebUI(enterURL);
+      // Go 端完成切换，loginWin 已被隐藏，后续代码不再执行
     } catch (e: any) {
       toast('进入管理界面失败: ' + (e?.message ?? ''));
       setLoading(false);
@@ -56,27 +57,29 @@ export function PasswordConfirm({ cfgPath, toast, onDone }: Props) {
   }
 
   return (
-    <div class="password-confirm">
-      <div class="label" style="margin-bottom:8px">
-        请输入该配置文件的 API 密钥：
-      </div>
+    <div class="password-confirm-container">
+      <div class="password-confirm">
+        <div class="label" style="margin-bottom:8px">
+          请输入该配置文件的 API 密钥：
+        </div>
 
-      <div class="pw-row">
-        <input
-          class="pw-input"
-          type="password"
-          placeholder="API 密钥"
-          value={key}
-          autoFocus
-          onInput={e => setKey((e.target as HTMLInputElement).value)}
-          onKeyDown={e => { if (e.key === 'Enter') confirm(); }}
-        />
-        <button class="btn-small" onClick={confirm} disabled={loading}>
-          {loading ? '验证中…' : '确认进入'}
-        </button>
-      </div>
+        <div class="pw-row">
+          <input
+            class="pw-input"
+            type="password"
+            placeholder="API 密钥"
+            value={key}
+            autoFocus
+            onInput={e => setKey((e.target as HTMLInputElement).value)}
+            onKeyDown={e => { if (e.key === 'Enter') confirm(); }}
+          />
 
-      <div class="cfg-path-hint">{cfgPath}</div>
+          <div class="cfg-path-text">{cfgPath}</div>
+          <button class="btn-small" onClick={confirm} disabled={loading}>
+            {loading ? '验证中…' : '确认进入'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

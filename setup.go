@@ -11,8 +11,14 @@ import (
 )
 
 var (
-	// GuiVersion 桌面客户端自身版本，由构建脚本通过 -ldflags 注入：
-	//   -X main.GuiVersion=v1.2.0
+	// GuiVersion 桌面客户端自身版本，由构建脚本通过 -ldflags 注入，无需手动修改。
+	//
+	// 注入方式（Taskfile 已自动处理，推送 git tag 后触发 CI）：
+	//   go build -ldflags "-X main.GuiVersion=$(git describe --tags --abbrev=0)"
+	//
+	// 本地 `wails3 dev` 开发模式不注入 ldflags，显示 "dev" 属正常行为。
+	// 如需本地测试版本显示，可手动执行：
+	//   GUI_VERSION=v1.2.0 task build
 	GuiVersion = "dev"
 
 	// Version 内核（subs-check-pro）版本号，由构建脚本通过 -ldflags 注入：

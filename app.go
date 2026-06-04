@@ -118,7 +118,7 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 
 	coreVer := Version
 	if CurrentCommit != "" && CurrentCommit != "unknown" {
-		coreVer = Version + "@" + CurrentCommit
+		coreVer = Version + "-" + CurrentCommit
 	}
 
 	return AppInfo{
