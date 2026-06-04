@@ -202,9 +202,9 @@ export function App() {
         <a
           class="ver-tag ver-core"
           onClick={() => openLink('https://github.com/sinspired/subs-check-pro')}
-          title={`Core 版本：${info.coreVersion || 'dev'}  →  sinspired/subs-check-pro`}
+          title={`内核 版本：${info.coreVersion || 'dev'}  →  sinspired/subs-check-pro`}
         >
-          Core&nbsp;{info.coreVersion || 'dev'}
+          内核&nbsp;{info.coreVersion || 'dev'}
         </a>
       </div>
     );
