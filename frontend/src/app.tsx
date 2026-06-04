@@ -140,11 +140,24 @@ export function App() {
     </aside>
   );
 
-  // ── 右侧面板顶栏：主题切换（原生标题栏负责窗口控制）───────────
+  // ── 右侧面板顶栏：版本信息 + 主题切换（原生标题栏负责窗口控制）───────────
   const PanelToolbar = () => (
     <div class="lp-toolbar">
       {/* 拖拽区（弹性填充剩余空间） */}
       <div class="lp-drag-area" />
+
+      {/* 版本信息徽章 */}
+      {info && (
+        <div class="ver-badges">
+          <span class="ver-tag ver-gui" title={`GUI 版本：${info.guiVersion || 'dev'}`}>
+            GUI&nbsp;{info.guiVersion || 'dev'}
+          </span>
+          <span class="ver-dot">·</span>
+          <span class="ver-tag ver-core" title={`内核版本：${info.coreVersion || 'dev'}`}>
+            Core&nbsp;{info.coreVersion || 'dev'}
+          </span>
+        </div>
+      )}
 
       {/* 主题切换 */}
       <button class="icon-btn theme-btn" onClick={toggleTheme} title="切换主题">

@@ -883,6 +883,51 @@ code {
 .lp-toolbar .icon-btn {
 }
 
+/* ── 版本信息徽章（GUI 版 + 内核版） ── */
+.ver-badges {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.ver-tag {
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: default;
+  transition: opacity 0.15s;
+  opacity: 0.55;
+}
+
+.ver-tag:hover {
+  opacity: 0.85;
+}
+
+.ver-gui {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.ver-core {
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--muted) 18%, transparent);
+}
+
+.ver-dot {
+  font-size: 9px;
+  color: var(--border);
+  line-height: 1;
+  user-select: none;
+}
+
 /* ── 右侧内容区（含 KeySection） ── */
 .login-content {
   flex: 1;
