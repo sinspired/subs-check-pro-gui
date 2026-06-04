@@ -404,7 +404,7 @@ button:focus-visible {
   cursor: default;
 }
 
-.btn-back{
+.btn-back {
   width: 100%;
   padding: 10px;
   border: none;
@@ -464,21 +464,15 @@ button:focus-visible {
   border-color: var(--accent);
 }
 
-.cfg-path-hint {
-  font-size: 11px;
-  color: var(--muted);
-  word-break: break-all;
-  opacity: 0.75;
-}
-
 /* ── 配置文件路径行（key-wrap 正下方）── */
 .cfg-path-row {
   display: flex;
   align-items: center;
   gap: 5px;
   padding: 4px 4px;
+  margin-top: 6px;
   min-width: 0;
-  -webkit-app-region: drag;
+  -webkit-app-region: no-drag;
 }
 
 /* 文件图标：固定宽度，不参与收缩 */
@@ -498,8 +492,9 @@ button:focus-visible {
   min-width: 0;
   font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
   font-size: 10.5px;
+  font-weight: 300;
   color: var(--muted);
-  opacity: 0.4;
+  opacity: 0.7;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -511,8 +506,8 @@ button:focus-visible {
 /* 选择配置按钮：紧贴路径右侧，尺寸略小，低调展示 */
 .cfg-path-btn {
   flex-shrink: 0;
-  padding: 3px;
-  opacity: 0.45;
+  padding: 2px;
+  opacity: 0.8;
   transition:
     opacity 0.15s,
     color 0.15s,
