@@ -177,12 +177,6 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
           {launching ? '正在进入…' : '进入管理界面 →'}
         </button>
       </div>
-
-      {/*
-        不再使用全屏 TransitionOverlay：
-        窗口在 ResizeToMain() 后立即被 Go 端隐藏，用户看不到任何过渡状态，
-        无需遮罩。按钮文字 "正在进入…" + disabled 提供足够的交互反馈。
-      */}
     </div>
   );
 }

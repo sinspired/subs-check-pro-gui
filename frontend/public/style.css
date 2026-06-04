@@ -122,7 +122,6 @@ body {
   padding: var(--card-pad);
   overflow-y: auto;
   overflow-x: hidden;
-
 }
 
 /* 细滚动条 */
@@ -452,7 +451,10 @@ button:focus-visible {
   flex-shrink: 0;
   padding: 3px;
   opacity: 0.45;
-  transition: opacity 0.15s, color 0.15s, background 0.15s;
+  transition:
+    opacity 0.15s,
+    color 0.15s,
+    background 0.15s;
 }
 .cfg-path-btn:hover {
   opacity: 1;
@@ -598,12 +600,8 @@ code {
 .quit-icon-wrap {
   width: 42px;
   height: 42px;
-  border-radius: 12px;
-  background: linear-gradient(
-    135deg,
-    rgba(14, 165, 160, 0.18),
-    rgba(14, 165, 160, 0.08)
-  );
+  border-radius: 10px;
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -613,7 +611,19 @@ code {
   font-size: 20px;
   color: var(--accent);
 }
+
+.quit-Dialog-icon {
+  width: 42px;
+  height: 42px;
+  margin-top: 4px;
+  opacity: 0.9; /* 柔和效果 */
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
+}
+
 .quit-headings {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* 让标题+描述整体居中 */
   min-width: 0;
 }
 .quit-title {
@@ -673,6 +683,7 @@ code {
   justify-content: center;
   font-size: 18px;
   background: rgba(255, 255, 255, 0.04);
+  color: var(--fg);
   flex-shrink: 0;
 }
 .quit-btn-content {
@@ -960,7 +971,9 @@ code {
   white-space: nowrap;
   /* 版本标签现为可点击链接，显示指针手形 */
   cursor: pointer;
-  transition: opacity 0.15s, text-decoration-color 0.15s;
+  transition:
+    opacity 0.15s,
+    text-decoration-color 0.15s;
   opacity: 0.55;
   text-decoration: none;
   -webkit-app-region: no-drag;

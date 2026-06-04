@@ -26,11 +26,13 @@ export function QuitDialog({ onClose }: Props) {
       >
         <div class="quit-header">
           <div class="quit-icon-wrap">
-            <div class="quit-icon">⚙</div>
+            <div class="quit-icon">
+              <img src="/logo.svg" alt="logo" class="quit-Dialog-icon" />
+            </div>
           </div>
 
           <div class="quit-headings">
-            <div class="quit-title">关闭 Subs Check Pro</div>
+            <div class="quit-title">关闭程序</div>
             <div class="quit-desc">
               请选择关闭方式
             </div>
