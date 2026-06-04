@@ -28,9 +28,6 @@ var trayIcon []byte
 //go:embed logo_32x32.png
 var logo_32 []byte
 
-//go:embed about.html
-var aboutHTML string
-
 // windowVisible 跟踪当前窗口可见状态。
 var windowVisible atomic.Bool
 
@@ -195,15 +192,8 @@ func buildTrayMenu(
 	menu.AddSeparator()
 
 	// About menu
-	menu.Add("关于").OnClick(func(ctx *application.Context) {
-		wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-			Title:  "Subs Check Pro - 关于",
-			Width:  800,
-			Height: 600,
-			X:      400,
-			Y:      300,
-			HTML:   aboutHTML,
-		})
+	menu.Add("关于").OnClick(func(_ *application.Context) {
+		guiApp.OpenAboutWindow()
 	})
 
 	menu.Add("退出").OnClick(func(_ *application.Context) {

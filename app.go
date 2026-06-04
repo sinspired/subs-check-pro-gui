@@ -12,6 +12,7 @@ import (
 	coreapp "github.com/sinspired/subs-check-pro/v2/app"
 	"github.com/sinspired/subs-check-pro/v2/config"
 	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 // GuiApp Wails 绑定结构体。
@@ -43,6 +44,10 @@ type GuiApp struct {
 	// inWebUI 为 true 表示窗口已切换到外部 WebUI 页面。
 	// 此时 Wails JS runtime 不可用，关闭事件须走 Go 原生对话框。
 	inWebUI atomic.Bool
+
+	// aboutWin 「关于」独立窗口，单例引用。
+	// nil 表示窗口已关闭或尚未创建；OpenAboutWindow 负责创建和复用。
+	aboutWin *application.WebviewWindow
 }
 
 // AppInfo 前端展示所需的应用运行信息。
@@ -431,6 +436,7 @@ func isPortInUse(port string) bool {
 	_ = ln.Close()
 	return false
 }
+
 // ── 开机自启辅助方法（平台实现在 autostart_*.go）────────────────
 
 // GetAutoStartEnabled 查询当前开机自启状态（供托盘菜单调用）。
@@ -454,4 +460,49 @@ func (g *GuiApp) SetAutoStart(enable bool) error {
 		g.autostartMenuItem.SetChecked(enable)
 	}
 	return nil
+}
+
+// OpenAboutWindow 打开或聚焦「关于」独立窗口（单例模式）。
+//
+// 调用来源：
+//   - 系统托盘「关于」菜单项（tray.go）
+//   - 主窗口前端「关于」按钮（about-info-btn）
+//
+// 使用 application.InvokeAsync 确保所有窗口操作在 Wails 主线程执行，
+// 避免从 Go binding 调用线程直接操作 UI 导致的竞态问题。
+func (g *GuiApp) OpenAboutWindow() {
+	wailsApp := application.Get()
+	if wailsApp == nil {
+		return
+	}
+	application.InvokeAsync(func() {
+		// 窗口已存在：直接显示并聚焦，不重复创建
+		if g.aboutWin != nil {
+			g.aboutWin.Show()
+			g.aboutWin.Focus()
+			return
+		}
+		// 创建新的「关于」窗口
+		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+			Name:          "about", // 窗口唯一名称
+			Title:         "Subs Check Pro — 关于",
+			Width:         800,
+			Height:        600,
+			MinWidth:      640,
+			MinHeight:     480,
+			DisableResize: false,
+			Frameless:     false,
+			URL:           "/about.html", // Vite MPA 构建输出的入口
+			Mac: application.MacWindow{
+				InvisibleTitleBarHeight: 30,
+				Backdrop:                application.MacBackdropTranslucent,
+				TitleBar:                application.MacTitleBarHiddenInset,
+			},
+		})
+		g.aboutWin = win
+		// 窗口关闭时清除单例引用，以便下次重新创建
+		win.RegisterHook(events.Common.WindowClosing, func(_ *application.WindowEvent) {
+			g.aboutWin = nil
+		})
+	})
 }

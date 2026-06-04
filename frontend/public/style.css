@@ -1082,3 +1082,218 @@ code {
 .login-content::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
 }
+/* ══════════════════════════════════════════════════
+   关于页面（About）
+   与主视图同 split-page 结构，复用 key-section-flex 模式
+   ══════════════════════════════════════════════════ */
+
+/* ── 根容器：高度撑满 login-content，flex 纵向布局 ── */
+.about-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ── 主体内容区：flex:1，内容垂直居中 ── */
+.about-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  min-height: 0;
+  padding-top: 12px;
+}
+
+/* ── 应用标识 ── */
+.about-header {
+  text-align: center;
+}
+
+.about-app-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--fg);
+  line-height: 1.2;
+}
+
+.about-pro {
+  color: var(--accent);
+  font-size: 11px;
+  vertical-align: super;
+  font-weight: 600;
+}
+
+.about-tagline {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+/* ── 版本信息组 ── */
+.about-versions {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.about-ver-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.about-ver-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  flex-shrink: 0;
+}
+
+.about-ver-val {
+  font-size: 11px;
+  font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0.7;
+  text-decoration: none;
+  transition: opacity 0.15s, text-decoration-color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.about-ver-val.accent {
+  color: var(--accent);
+}
+
+.about-ver-val:hover {
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── 链接区 ── */
+.about-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+  opacity: 0.6;
+}
+
+.about-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.about-link-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--fg);
+  opacity: 0.65;
+  transition: opacity 0.15s, background 0.15s;
+  -webkit-app-region: no-drag;
+}
+
+.about-link-row:hover {
+  opacity: 1;
+  background: var(--bg);
+}
+
+.about-link-icon {
+  display: flex;
+  align-items: center;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.about-link-label {
+  flex: 1;
+  font-size: 11.5px;
+  font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.about-link-arrow {
+  flex-shrink: 0;
+  color: var(--muted);
+  opacity: 0.4;
+}
+
+/* ── 技术栈徽章 ── */
+.about-tech {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+}
+
+.about-tech-badge {
+  font-size: 9.5px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 4px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--muted) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--muted) 14%, transparent);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  opacity: 0.75;
+}
+
+/* ── 版权行 ── */
+.about-copyright {
+  text-align: center;
+  font-size: 10px;
+  color: var(--muted);
+  opacity: 0.4;
+  letter-spacing: 0.1px;
+}
+
+/* ── 返回按钮（复用 btn-back，加宽为全宽样式） ── */
+.btn-back-about {
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+  -webkit-app-region: no-drag;
+}
+
+.btn-back-about:hover {
+  opacity: 0.9;
+  color: var(--fg);
+  border-color: color-mix(in srgb, var(--fg) 20%, transparent);
+}
+
+/* ── toolbar 关于按钮：与 theme-btn 视觉一致 ── */
+.about-btn {
+  -webkit-app-region: no-drag;
+}

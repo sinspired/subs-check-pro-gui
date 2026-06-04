@@ -67,6 +67,20 @@ export function HideToTray(): $CancellablePromise<void> {
 }
 
 /**
+ * OpenAboutWindow 打开或聚焦「关于」独立窗口（单例模式）。
+ * 
+ * 调用来源：
+ *   - 系统托盘「关于」菜单项（tray.go）
+ *   - 主窗口前端「关于」按钮（about-info-btn）
+ * 
+ * 使用 application.InvokeAsync 确保所有窗口操作在 Wails 主线程执行，
+ * 避免从 Go binding 调用线程直接操作 UI 导致的竞态问题。
+ */
+export function OpenAboutWindow(): $CancellablePromise<void> {
+    return $Call.ByID(3115421951);
+}
+
+/**
  * OpenBrandURL 在 Wails 无地址栏窗口中打开品牌 / 社交链接。
  * 前端品牌面板（GitHub、Telegram、Docker Hub）及版本标签点击时调用，
  * 替代 window.open，避免打开系统默认浏览器，保持应用内体验一致。

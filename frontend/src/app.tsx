@@ -18,9 +18,10 @@ import { QuitDialog } from './components/QuitDialog';
 
 import { GuiApp } from '../bindings/github.com/sinspired/subs-check-pro-gui';
 import { AppInfo } from '../bindings/github.com/sinspired/subs-check-pro-gui';
+import { OpenAboutWindow } from '../bindings/github.com/sinspired/subs-check-pro-gui/guiapp';
 
 // UI 状态机：每个状态对应一个独立视图
-type View = 'loading' | 'error' | 'portConflict' | 'main' | 'password';
+type View = 'loading' | 'error' | 'portConflict' | 'main' | 'password' | 'about';
 
 // 在 Wails 无地址栏窗口中打开链接（不唤起系统浏览器）。
 // 若 Go 调用失败（极少情况），降级到系统浏览器作为兜底。
@@ -205,11 +206,24 @@ export function App() {
     </div>
   );
 
-  // ── 右侧底栏：版本标签，水平居中，与左侧 brand-links 垂直对齐 ──
+  // ── 右侧底栏：ⓘ 关于按钮 + 版本标签，水平居中，与左侧 brand-links 垂直对齐 ──
   const LpFooter = () => {
     if (!info) return <div class="lp-footer" />;
     return (
       <div class="lp-footer">
+        {/* ⓘ 关于按钮，紧靠版本号左侧 */}
+        <button
+          class="icon-btn about-info-btn"
+          title="关于 Subs Check Pro"
+          onClick={OpenAboutWindow}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+        </button>
         <a
           class="ver-tag ver-gui"
           onClick={() => openLink('https://github.com/sinspired/subs-check-pro-gui')}
