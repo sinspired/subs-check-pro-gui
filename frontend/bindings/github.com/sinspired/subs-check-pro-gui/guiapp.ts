@@ -67,6 +67,15 @@ export function HideToTray(): $CancellablePromise<void> {
 }
 
 /**
+ * OpenBrandURL 在 Wails 无地址栏窗口中打开品牌 / 社交链接。
+ * 前端品牌面板（GitHub、Telegram、Docker Hub）及版本标签点击时调用，
+ * 替代 window.open，避免打开系统默认浏览器，保持应用内体验一致。
+ */
+export function OpenBrandURL(url: string): $CancellablePromise<void> {
+    return $Call.ByID(541730476, url);
+}
+
+/**
  * OpenConfigFile 打开系统文件选择对话框，返回用户选择的配置文件路径。
  * 用户取消时返回空字符串（不返回错误）。
  */

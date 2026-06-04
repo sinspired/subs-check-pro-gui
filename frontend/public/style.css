@@ -484,9 +484,10 @@ button:focus-visible {
 }
 
 /* 路径文本：
-   direction:rtl  → text-overflow ellipsis 出现在左侧（左截断），保留文件名尾部
-   text-align:left → 内容紧靠左侧对齐，视觉上从左向右读
-   unicode-bidi:plaintext → 保留路径字符自然的 LTR 渲染方向 */
+   截断逻辑由 JS（useTruncatedPath hook）负责，实现"中间省略"效果：
+     保留路径头部（盘符/根目录）+ … + 尾部（目录+文件名）
+   CSS 仅保留 overflow:hidden + white-space:nowrap 作为安全兜底。
+   不使用 direction:rtl / unicode-bidi，避免影响 offsetWidth 测量精度。 */
 .cfg-path-text {
   flex: 1;
   min-width: 0;
@@ -497,10 +498,6 @@ button:focus-visible {
   opacity: 0.7;
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
-  direction: rtl;
-  text-align: left;
-  unicode-bidi: plaintext;
 }
 
 /* 选择配置按钮：紧贴路径右侧，尺寸略小，低调展示 */

@@ -70,6 +70,46 @@ type AppInfo struct {
 	CoreVersion string `json:"coreVersion"`
 }
 
+// OpenBrandURL 在 Wails 无地址栏窗口中打开品牌 / 社交链接。
+// 前端品牌面板（GitHub、Telegram、Docker Hub）及版本标签点击时调用，
+// 替代 window.open，避免打开系统默认浏览器，保持应用内体验一致。
+func (g *GuiApp) OpenBrandURL(url string) {
+	if url == "" {
+		return
+	}
+	// 安全校验：只允许 http/https 协议
+	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
+		return
+	}
+	wailsApp := application.Get()
+	if wailsApp == nil {
+		return
+	}
+	// application.InvokeAsync 确保窗口创建在 Wails 主线程执行
+	capturedURL := url
+	application.InvokeAsync(func() {
+		// 先加载本地 loading 页（即时显示，无白屏）。
+		// loading.html 读取 hash 中的目标 URL 后自动 replace 跳转。
+		loadingURL := "/loading.html#" + capturedURL
+		popup := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+			Title:     "Subs Check Pro",
+			Width:     1200,
+			Height:    800,
+			MinWidth:  600,
+			MinHeight: 400,
+			URL:       loadingURL,
+			Mac: application.MacWindow{
+				InvisibleTitleBarHeight: 50,
+				Backdrop:                application.MacBackdropTranslucent,
+				TitleBar:                application.MacTitleBarHiddenInset,
+			},
+		})
+		popup.Show()
+		popup.Center()
+		popup.Focus()
+	})
+}
+
 // EnterWebUI 由前端调用：导航 WebUI 窗口、显示它、隐藏登录窗口。
 // 完全无定时器，无闪烁。
 func (g *GuiApp) EnterWebUI(enterURL string) {

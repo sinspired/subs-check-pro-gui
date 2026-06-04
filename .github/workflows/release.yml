@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            task: darwin:build
+            artifact: subs-check-pro-gui-darwin
+          - os: windows-latest
+            task: windows:build
+            artifact: subs-check-pro-gui-windows.exe
+          - os: ubuntu-latest
+            task: linux:build
+            artifact: subs-check-pro-gui-linux
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 必须拉取完整历史，git describe 才能找到 tag
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+
+      # GUI_VERSION 由 Taskfile 中 `git describe --tags --abbrev=0` 自动读取
+      # 等同于当前推送的 tag（如 v1.2.3），无需手动传入
+      - name: Build
+        run: task ${{ matrix.task }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: bin/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*

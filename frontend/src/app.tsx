@@ -22,9 +22,14 @@ import { AppInfo } from '../bindings/github.com/sinspired/subs-check-pro-gui';
 // UI 状态机：每个状态对应一个独立视图
 type View = 'loading' | 'error' | 'portConflict' | 'main' | 'password';
 
-// 在系统默认浏览器中打开链接
-function openLink(url: string) {
-  window.open(url, '_blank');
+// 在 Wails 无地址栏窗口中打开链接（不唤起系统浏览器）。
+// 若 Go 调用失败（极少情况），降级到系统浏览器作为兜底。
+async function openLink(url: string) {
+  try {
+    await GuiApp.OpenBrandURL(url);
+  } catch {
+    window.open(url, '_blank');
+  }
 }
 
 export function App() {

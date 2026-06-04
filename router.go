@@ -112,13 +112,14 @@ func handleGuiPopup(c *gin.Context) {
 	// wailsApp.InvokeOnMainThread 在 v3 中已不存在
 	capturedURL := rawURL
 	application.InvokeAsync(func() {
+		loadingURL := "/loading.html#" + capturedURL
 		popup := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Title:     "Subs Check Pro",
 			Width:     1100,
 			Height:    750,
 			MinWidth:  600,
 			MinHeight: 400,
-			URL:       capturedURL,
+			URL:       loadingURL,
 			Mac: application.MacWindow{
 				InvisibleTitleBarHeight: 50,
 				Backdrop:                application.MacBackdropTranslucent,

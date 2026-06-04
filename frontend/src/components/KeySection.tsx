@@ -1,7 +1,7 @@
 /**
  * frontend/src/components/KeySection.tsx
  */
-import { useState } from 'preact/hooks';
+import { useState, useRef, useEffect } from 'preact/hooks';
 import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 
@@ -11,9 +11,105 @@ interface Props {
   onSelectConfig: (path: string) => void;
 }
 
+// ── 路径中间截断 Hook ───────────────────────────────────────────────────────
+// 使用 canvas measureText 精确测量像素宽度，通过二分查找找到最大可显示字符数，
+// 并在路径中间插入省略号，保留路径的头部（盘符/根目录）和尾部（文件名）。
+// ResizeObserver 监听容器尺寸变化，自动重新计算。
+function useTruncatedPath(path: string): {
+  spanRef: ReturnType<typeof useRef<HTMLSpanElement | undefined>>;
+  display: string;
+} {
+  const spanRef = useRef<HTMLSpanElement | undefined>(undefined);
+  const [display, setDisplay] = useState(path);
+
+  useEffect(() => {
+    const el = spanRef.current;
+    if (!el || !path) {
+      setDisplay(path);
+      return;
+    }
+
+    function compute() {
+      const el2 = spanRef.current;
+      if (!el2) return;
+
+      // offsetWidth 是 flex 布局分配给该 span 的实际可用像素宽度
+      const availW = el2.offsetWidth;
+      if (availW <= 0) {
+        setDisplay(path);
+        return;
+      }
+
+      // 读取实际应用的字体属性，确保 canvas 测量与屏幕渲染一致
+      const style = window.getComputedStyle(el2);
+      const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        setDisplay(path);
+        return;
+      }
+      ctx.font = font;
+
+      // 如果完整路径能放下，直接显示
+      if (ctx.measureText(path).width <= availW) {
+        setDisplay(path);
+        return;
+      }
+
+      // 二分查找：找到最多可保留的总字符数 lo，使 front+ellipsis+back 恰好放得下
+      // front = ceil(lo/2) 来自路径头部，back = floor(lo/2) 来自路径尾部（文件名侧）
+      const ellipsis = '…';
+      let lo = 0;
+      let hi = path.length;
+
+      while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        const f = Math.ceil(mid / 2);
+        const b = Math.floor(mid / 2);
+        const candidate =
+          path.slice(0, f) + ellipsis + (b > 0 ? path.slice(-b) : '');
+        if (ctx.measureText(candidate).width <= availW) {
+          lo = mid;
+        } else {
+          hi = mid;
+        }
+      }
+
+      if (lo === 0) {
+        // 连最短组合也放不下，只显示省略号
+        setDisplay(ellipsis);
+      } else {
+        const f = Math.ceil(lo / 2);
+        const b = Math.floor(lo / 2);
+        setDisplay(
+          path.slice(0, f) + ellipsis + (b > 0 ? path.slice(-b) : ''),
+        );
+      }
+    }
+
+    compute();
+
+    // 容器宽度变化时重新计算（窗口缩放、布局变化等场景）
+    const ro = new ResizeObserver(compute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [path]);
+
+  return { spanRef, display };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function KeySection({ info, toast, onSelectConfig }: Props) {
   const [keyShown, setKeyShown] = useState(false);
   const [launching, setLaunching] = useState(false);
+
+  // 路径中间截断
+  const { spanRef: pathRef, display: pathDisplay } = useTruncatedPath(
+    info.configPath || '',
+  );
 
   const currentKey = info.apiKey;
   const toggleKey = () => setKeyShown(v => !v);
@@ -125,8 +221,9 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
             </svg>
-            <span class="cfg-path-text" title={info.configPath}>
-              {info.configPath}
+            {/* ref 绑定到 span 上，useTruncatedPath 通过 offsetWidth 获取可用宽度 */}
+            <span class="cfg-path-text" ref={pathRef as any} title={info.configPath}>
+              {pathDisplay}
             </span>
             <button class="icon-btn cfg-path-btn" onClick={handleSelectConfig} title="选择其他配置文件">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none"

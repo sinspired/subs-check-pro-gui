@@ -14,7 +14,7 @@ vars:
       if [ -n "$CORE_VERSION" ]; then
         echo "$CORE_VERSION"; exit 0
       fi
-      RESP=$(curl -sf --max-time 10 \
+      RESP=$(curl -sfL --max-time 10 -H "Authorization: Bearer $GITHUB_TOKEN" \
         "https://api.github.com/repos/sinspired/subs-check-pro/releases/latest" 2>/dev/null)
       if [ -z "$RESP" ]; then echo "dev"; exit 0; fi
       # Python3 解析 JSON（跨平台可靠）
@@ -26,7 +26,7 @@ vars:
       if [ -n "$CORE_COMMIT" ]; then
         echo "$CORE_COMMIT"; exit 0
       fi
-      RESP=$(curl -sf --max-time 10 \
+      RESP=$(curl -sfL --max-time 10 -H "Authorization: Bearer $GITHUB_TOKEN" \
         "https://api.github.com/repos/sinspired/subs-check-pro/commits?per_page=1" 2>/dev/null)
       if [ -z "$RESP" ]; then echo "unknown"; exit 0; fi
       SHA=$(printf '%s' "$RESP" | \
