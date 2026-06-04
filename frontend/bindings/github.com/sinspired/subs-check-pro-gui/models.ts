@@ -48,6 +48,16 @@ export class AppInfo {
      */
     "autostartEnabled": boolean;
 
+    /**
+     * GuiVersion 桌面客户端版本（ldflags 注入，如 "v1.2.0"）
+     */
+    "guiVersion": string;
+
+    /**
+     * CoreVersion 内核版本+短提交哈希（如 "v2.5.4@7c23868"）
+     */
+    "coreVersion": string;
+
     /** Creates a new AppInfo instance. */
     constructor($$source: Partial<AppInfo> = {}) {
         if (!("apiKey" in $$source)) {
@@ -79,6 +89,12 @@ export class AppInfo {
         }
         if (!("autostartEnabled" in $$source)) {
             this["autostartEnabled"] = false;
+        }
+        if (!("guiVersion" in $$source)) {
+            this["guiVersion"] = "";
+        }
+        if (!("coreVersion" in $$source)) {
+            this["coreVersion"] = "";
         }
 
         Object.assign(this, $$source);

@@ -10,6 +10,22 @@ import (
 	"github.com/sinspired/subs-check-pro/v2/app"
 )
 
+var (
+	// GuiVersion 桌面客户端自身版本，由构建脚本通过 -ldflags 注入：
+	//   -X main.GuiVersion=v1.2.0
+	GuiVersion = "dev"
+
+	// Version 内核（subs-check-pro）版本号，由构建脚本通过 -ldflags 注入：
+	//   -X main.Version=v2.5.4
+	// 取自 github.com/sinspired/subs-check-pro 最新 Release 标签。
+	Version = "dev"
+
+	// CurrentCommit 内核最新提交的前 7 位 SHA，由构建脚本通过 -ldflags 注入：
+	//   -X main.CurrentCommit=7c23868
+	// 取自 github.com/sinspired/subs-check-pro 主分支最新提交。
+	CurrentCommit = "unknown"
+)
+
 // setupApp 完成业务层初始化，返回三个值供 main() 使用：
 //
 //   - coreApp   核心应用实例（用于 Shutdown）
@@ -31,7 +47,7 @@ func setupApp() (*app.App, *GuiApp, bool) {
 	configPath := getEnvOrDefault("CONFIG_PATH", "")
 
 	guiApp := &GuiApp{configPath: configPath}
-	coreApp := app.New(originVersion, version, configPath)
+	coreApp := app.New(Version, Version+CurrentCommit, configPath)
 
 	// 端口预检
 	// 在 Initialize() 之前尝试读取配置文件中的端口，如果端口已被占用则跳过初始化，

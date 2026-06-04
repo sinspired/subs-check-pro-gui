@@ -6,6 +6,37 @@ vars:
   PACKAGE_MANAGER: '{{.PACKAGE_MANAGER | default "npm"}}'
   VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
 
+  # ── 内核版本：从 github.com/sinspired/subs-check-pro 最新 Release 获取 ──
+  # 构建时自动拉取，也可通过环境变量手动覆盖（跳过网络请求）：
+  #   CORE_VERSION=v2.5.4 CORE_COMMIT=7c23868 task build
+  CORE_VERSION:
+    sh: |
+      if [ -n "$CORE_VERSION" ]; then
+        echo "$CORE_VERSION"; exit 0
+      fi
+      RESP=$(curl -sf --max-time 10 \
+        "https://api.github.com/repos/sinspired/subs-check-pro/releases/latest" 2>/dev/null)
+      if [ -z "$RESP" ]; then echo "dev"; exit 0; fi
+      # Python3 解析 JSON（跨平台可靠）
+      VER=$(printf '%s' "$RESP" | \
+        python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tag_name','dev'))" 2>/dev/null)
+      echo "${VER:-dev}"
+  CORE_COMMIT:
+    sh: |
+      if [ -n "$CORE_COMMIT" ]; then
+        echo "$CORE_COMMIT"; exit 0
+      fi
+      RESP=$(curl -sf --max-time 10 \
+        "https://api.github.com/repos/sinspired/subs-check-pro/commits?per_page=1" 2>/dev/null)
+      if [ -z "$RESP" ]; then echo "unknown"; exit 0; fi
+      SHA=$(printf '%s' "$RESP" | \
+        python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['sha'][:7])" 2>/dev/null)
+      echo "${SHA:-unknown}"
+
+  # ── GUI 自身版本：从当前仓库 git tag 获取 ──
+  GUI_VERSION:
+    sh: git describe --tags --abbrev=0 2>/dev/null || echo "dev"
+
 includes:
   common: ./build/Taskfile.yml
   windows: ./build/windows/Taskfile.yml
@@ -19,11 +50,19 @@ tasks:
     summary: Builds the application
     cmds:
       - task: "{{OS}}:build"
+        vars:
+          CORE_VERSION: "{{.CORE_VERSION}}"
+          CORE_COMMIT: "{{.CORE_COMMIT}}"
+          GUI_VERSION: "{{.GUI_VERSION}}"
 
   package:
     summary: Packages a production build of the application
     cmds:
       - task: "{{OS}}:package"
+        vars:
+          CORE_VERSION: "{{.CORE_VERSION}}"
+          CORE_COMMIT: "{{.CORE_COMMIT}}"
+          GUI_VERSION: "{{.GUI_VERSION}}"
 
   run:
     summary: Runs the application

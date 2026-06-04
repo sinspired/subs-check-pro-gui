@@ -59,6 +59,10 @@ type AppInfo struct {
 	PendingInit bool `json:"pendingInit"`
 	// AutostartEnabled 当前平台开机自启状态
 	AutostartEnabled bool `json:"autostartEnabled"`
+	// GuiVersion 桌面客户端版本（ldflags 注入，如 "v1.2.0"）
+	GuiVersion string `json:"guiVersion"`
+	// CoreVersion 内核版本+短提交哈希（如 "v2.5.4@7c23868"）
+	CoreVersion string `json:"coreVersion"`
 }
 
 // EnterWebUI 由前端调用：导航 WebUI 窗口、显示它、隐藏登录窗口。
@@ -107,6 +111,11 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 
 	autostartEnabled, _ := queryAutoStart()
 
+	coreVer := Version
+	if CurrentCommit != "" && CurrentCommit != "unknown" {
+		coreVer = Version + "@" + CurrentCommit
+	}
+
 	return AppInfo{
 		APIKey:               config.GlobalConfig.APIKey,
 		ListenPort:           port,
@@ -118,6 +127,8 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 		PortConflictSubStore: conflictSubStore,
 		PendingInit:          g.pendingInit,
 		AutostartEnabled:     autostartEnabled,
+		GuiVersion:           GuiVersion,
+		CoreVersion:          coreVer,
 	}
 }
 
