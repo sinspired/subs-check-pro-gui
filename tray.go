@@ -110,8 +110,9 @@ func buildTrayMenu(
 
 	menu.AddSeparator()
 
-	// ── 开机自启（动态标签，点击切换）────────────────────────────
-	autostartItem := menu.Add("开机自启：检测中…")
+	// ── 开机自启（Checkbox 菜单项，自动显示对勾）────────────────────
+	autostartItem := menu.Add("开机自启")
+	autostartItem.SetChecked(false) // 默认未勾选，异步更新
 	autostartItem.OnClick(func(_ *application.Context) {
 		enabled, err := guiApp.GetAutoStartEnabled()
 		if err != nil {
@@ -125,27 +126,22 @@ func buildTrayMenu(
 			sendOSNotification("Subs Check Pro", "设置开机自启失败："+err.Error())
 			return
 		}
+		autostartItem.SetChecked(next)
 		if next {
-			autostartItem.SetLabel("✓ 开机自启：已开启")
 			sendOSNotification("Subs Check Pro", "已开启开机自启")
 		} else {
-			autostartItem.SetLabel("  开机自启：已关闭")
 			sendOSNotification("Subs Check Pro", "已关闭开机自启")
 		}
 	})
 
-	// 初始化标签（异步）
+	// 异步查询当前系统状态并同步到 checkbox
 	go func() {
 		enabled, err := guiApp.GetAutoStartEnabled()
 		if err != nil {
-			autostartItem.SetLabel("  开机自启：未知")
+			slog.Warn("初始化开机自启 checkbox 失败", "error", err)
 			return
 		}
-		if enabled {
-			autostartItem.SetLabel("✓ 开机自启：已开启")
-		} else {
-			autostartItem.SetLabel("  开机自启：已关闭")
-		}
+		autostartItem.SetChecked(enabled)
 	}()
 
 	menu.AddSeparator()
