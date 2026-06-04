@@ -2,7 +2,6 @@
  * frontend/src/components/PasswordConfirm.tsx
  */
 import { useState } from 'preact/hooks';
-import { TransitionOverlay } from './TransitionOverlay';
 import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 
@@ -25,6 +24,7 @@ export function PasswordConfirm({ cfgPath, toast, onDone }: Props) {
     if (loading) return;
 
     setLoading(true);
+    // 让 loading 状态先渲染出来
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
     let nonce: string;
@@ -36,20 +36,23 @@ export function PasswordConfirm({ cfgPath, toast, onDone }: Props) {
       return;
     }
 
-    // 先进入过渡态，再调整窗口尺寸。
-    try { await GuiApp.ResizeToMain(); } catch { /* 可选 */ }
-
-    // 获取最新 AppInfo
+    // 获取最新 AppInfo（用于构造 enterURL）
     let newInfo: AppInfo | null = null;
     try {
       newInfo = await GuiApp.GetAppInfo();
-    } catch { /* 降级处理 */ }
+    } catch { /* 降级：使用默认端口 */ }
 
-    const port = newInfo?.listenPort || '8199';
-    window.location.replace(
-      `http://localhost:${port}/gui/enter?n=${encodeURIComponent(nonce)}`
-    );
+    const port     = newInfo?.listenPort || '8199';
+    const enterURL = `http://localhost:${port}/gui/enter?n=${encodeURIComponent(nonce)}`;
 
+    // 使用双窗口方案：Go 端在 webUIWin Navigate+Show，loginWin 由 Go 端隐藏。
+    // loginWin 的 Wails 运行时全程保持活跃，关闭按钮不会失效。
+    try {
+      await GuiApp.EnterWebUI(enterURL);
+    } catch (e: any) {
+      toast('进入管理界面失败: ' + (e?.message ?? ''));
+      setLoading(false);
+    }
   }
 
   return (
@@ -74,8 +77,6 @@ export function PasswordConfirm({ cfgPath, toast, onDone }: Props) {
       </div>
 
       <div class="cfg-path-hint">{cfgPath}</div>
-
-      {loading && <TransitionOverlay message="正在验证并进入管理界面…" />}
     </div>
   );
 }
