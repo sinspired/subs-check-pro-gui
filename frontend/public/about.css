@@ -5,12 +5,24 @@
 
 /* ── 全局动画 ── */
 @keyframes aw-fade-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0);    }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 @keyframes aw-slide-right {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0);    }
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 /* ══════════════════════════════════════════════════════
@@ -46,7 +58,7 @@
 
 /* 右侧细分隔线（渐变淡入淡出，避免截断感） */
 .aw-sidebar::after {
-  content: '';
+  content: "";
   position: absolute;
   right: 0;
   top: 48px;
@@ -137,7 +149,9 @@
   border-radius: 5px;
   transition: opacity 0.15s;
 }
-.aw-ver-row:hover { opacity: 0.7; }
+.aw-ver-row:hover {
+  opacity: 0.7;
+}
 
 /* 状态指示点 */
 .aw-ver-dot {
@@ -211,7 +225,9 @@
   color: var(--muted);
   cursor: pointer;
   border-radius: 8px;
-  transition: color 0.2s, background 0.2s;
+  transition:
+    color 0.2s,
+    background 0.2s;
   outline: none;
   text-align: left;
   gap: 8px;
@@ -229,7 +245,7 @@
 
 /* 激活指示条（左侧 2px 竖线） */
 .aw-nav-item::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 4px;
   top: 50%;
@@ -320,7 +336,7 @@
 .aw-panel {
   position: absolute;
   inset: 0;
-  padding: 28px 36px 20px;
+  padding: 12px 36px 20px;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -329,10 +345,19 @@
   -webkit-app-region: no-drag;
 }
 
-.aw-panel::-webkit-scrollbar          { width: 3px; }
-.aw-panel::-webkit-scrollbar-track    { background: transparent; }
-.aw-panel::-webkit-scrollbar-thumb    { background: var(--border); border-radius: 2px; }
-.aw-panel::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+.aw-panel::-webkit-scrollbar {
+  width: 3px;
+}
+.aw-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+.aw-panel::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+.aw-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
 
 /* ─────────────────────────────────────────
    面板 1：系统概览
@@ -374,8 +399,14 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
-.aw-arch-col h3 .dot.gui  { background: var(--accent); box-shadow: 0 0 5px color-mix(in srgb, var(--accent) 45%, transparent); }
-.aw-arch-col h3 .dot.core { background: var(--muted); opacity: 0.55; }
+.aw-arch-col h3 .dot.gui {
+  background: var(--accent);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.aw-arch-col h3 .dot.core {
+  background: var(--muted);
+  opacity: 0.55;
+}
 
 .aw-arch-col ul {
   list-style: none;
@@ -391,7 +422,7 @@
 }
 /* 极简项目符号：小圆点 */
 .aw-arch-col ul li::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 1px;
   top: 50%;
@@ -419,7 +450,10 @@
   padding: 6px 6px;
   border-radius: 7px;
   cursor: default;
-  transition: color 0.18s ease, transform 0.18s ease, background 0.18s ease;
+  transition:
+    color 0.18s ease,
+    transform 0.18s ease,
+    background 0.18s ease;
 }
 .aw-feature-item:hover {
   transform: translateX(3px);
@@ -436,7 +470,9 @@
   flex-shrink: 0;
   opacity: 0.3;
   filter: grayscale(100%);
-  transition: opacity 0.2s ease, filter 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease;
 }
 .aw-feature-item:hover .aw-feature-emoji {
   opacity: 0.9;
@@ -463,6 +499,16 @@
   height: 100%;
 }
 
+/* 主要两项：等宽并排，固定高度 */
+.aw-res-primary {
+  display: grid;
+  flex: 0 0 auto; /* 上部固定高度，不参与伸缩 */
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
 /* 次要三项：等宽并排，占据剩余高度 */
 .aw-res-secondary {
   display: grid;
@@ -470,6 +516,7 @@
   gap: 12px;
   flex: 1;
   min-height: 0;
+  padding-top: 10px;
 }
 
 /* ── 通用卡片基础 ── */
@@ -482,11 +529,13 @@
   position: relative;
   overflow: hidden;
 }
-.aw-link-card:active { transform: scale(0.98); }
+.aw-link-card:active {
+  transform: scale(0.98);
+}
 
 /* 左侧 accent 入场条（弹性伸缩） */
 .aw-link-card::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 18%;
@@ -496,9 +545,14 @@
   background: var(--accent);
   opacity: 0;
   transform: scaleY(0.3);
-  transition: opacity 0.2s, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition:
+    opacity 0.2s,
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.aw-link-card:hover::before { opacity: 1; transform: scaleY(1); }
+.aw-link-card:hover::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
 
 /* ── 主推卡：水平布局 + accent 底色 ── */
 .aw-link-card.aw-featured {
@@ -509,6 +563,9 @@
   flex-shrink: 0;
   background: color-mix(in srgb, var(--accent) 5%, var(--card));
   border-color: color-mix(in srgb, var(--accent) 22%, transparent);
+  border: none;
+  background: transparent;
+  padding: 12px;
 }
 .aw-link-card.aw-featured:hover {
   background: color-mix(in srgb, var(--accent) 10%, var(--card));
@@ -516,8 +573,13 @@
   transform: translateY(-2px);
   box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 10%, transparent);
 }
-.aw-link-card.aw-featured .aw-link-title { font-size: 14px; }
-.aw-link-card.aw-featured .aw-link-desc  { font-size: 12px; margin-top: 3px; }
+.aw-link-card.aw-featured .aw-link-title {
+  font-size: 14px;
+}
+.aw-link-card.aw-featured .aw-link-desc {
+  font-size: 12px;
+  margin-top: 3px;
+}
 
 /* 主推卡图标（更大） */
 .aw-link-icon-wrap.aw-featured-icon {
@@ -527,7 +589,9 @@
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   border-color: color-mix(in srgb, var(--accent) 24%, transparent);
 }
-.aw-link-card.aw-featured:hover .aw-link-icon-wrap { transform: scale(1.08); }
+.aw-link-card.aw-featured:hover .aw-link-icon-wrap {
+  transform: scale(1.08);
+}
 
 /* ── 次要卡：竖向布局，撑满行高 ── */
 .aw-link-card.aw-compact {
@@ -543,10 +607,18 @@
   transform: translateY(-3px);
   box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 7%, transparent);
 }
-.aw-link-card.aw-compact .aw-link-title { font-size: 12.5px; }
-.aw-link-card.aw-compact .aw-link-desc  { font-size: 11px; flex: 1; line-height: 1.5; }
+.aw-link-card.aw-compact .aw-link-title {
+  font-size: 12.5px;
+}
+.aw-link-card.aw-compact .aw-link-desc {
+  font-size: 11px;
+  flex: 1;
+  line-height: 1.5;
+}
 /* 箭头贴底部右侧 */
-.aw-link-card.aw-compact .aw-link-arrow { align-self: flex-end; }
+.aw-link-card.aw-compact .aw-link-arrow {
+  align-self: flex-end;
+}
 
 /* ── 图标容器（通用） ── */
 .aw-link-icon-wrap {
@@ -559,7 +631,10 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
 }
 .aw-link-card:hover .aw-link-icon-wrap {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
@@ -579,13 +654,17 @@
 :root[data-theme="dark"] .aw-link-svg {
   filter: brightness(0) invert(1);
 }
-.aw-link-card:hover .aw-link-svg { opacity: 0.9; }
+.aw-link-card:hover .aw-link-svg {
+  opacity: 0.9;
+}
 
 /* WikiIcon 使用 stroke="currentColor"，直接 color 控制 */
 .aw-link-icon-wrap svg {
   color: var(--muted);
   opacity: 0.6;
-  transition: color 0.2s, opacity 0.2s;
+  transition:
+    color 0.2s,
+    opacity 0.2s;
 }
 .aw-link-card:hover .aw-link-icon-wrap svg {
   color: var(--accent);
@@ -621,7 +700,9 @@
   color: var(--muted);
   opacity: 0;
   transform: translate(-3px, 3px);
-  transition: opacity 0.2s, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    opacity 0.2s,
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .aw-link-card:hover .aw-link-arrow {
   opacity: 0.55;
@@ -659,6 +740,7 @@
   flex-direction: column;
   padding-top: 8px;
   border-top: 1px solid var(--border);
+  flex: 0 0 auto;
 }
 
 /* 分组标题 */
@@ -707,7 +789,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.15s, opacity 0.15s;
+  transition:
+    color 0.15s,
+    opacity 0.15s;
 }
 
 /* 固定宽度标签，统一对齐 */
@@ -750,4 +834,6 @@
 }
 
 /* quickref 在面板内使用时，与上方内容保持间距 */
-.aw-panel .aw-quickref { margin-top: 20px; }
+.aw-panel .aw-quickref {
+  margin-top: 20px;
+}

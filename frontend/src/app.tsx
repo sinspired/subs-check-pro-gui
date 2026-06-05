@@ -143,13 +143,13 @@ export function App() {
         <span class="brand-sep" />
 
         {/* 社交链接 */}
-        <a class="brand-link" onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro')} title="GitHub">
+        <a class="brand-link" onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro')} title="GitHub 仓库，欢迎 Star 和提 Issue">
           <img src="/github.svg" alt="GitHub" class="brand-social-icon" />
         </a>
-        <a class="brand-link" onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://t.me/sinspired_ai', 'tiny')} title="Telegram">
+        <a class="brand-link" onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://t.me/subs_check_pro', 'tiny')} title="Telegram 群组，建议加入以获取最新动态和使用帮助">
           <img src="/telegram.svg" alt="Telegram" class="brand-social-icon" />
         </a>
-        <a class="brand-link" onClick={() => openLink('https://hub.docker.com/r/sinspired/subs-check-pro')} title="Docker Hub">
+        <a class="brand-link" onClick={() => openLink('https://hub.docker.com/r/sinspired/subs-check-pro')} title="Docker Hub 仓库，提供官方镜像">
           <img src="/docker.svg" alt="Docker" class="brand-social-icon" />
         </a>
 

@@ -54,9 +54,14 @@ const FEATURES = [
 ];
 
 // 资源链接：主推（Telegram）+ 次要三项
-const TG_LINK = {
+const TG_CHANNEL = {
+  title: 'Telegram 频道',
+  desc: '版本更新通知',
+  url: 'https://proxy.linkpc.dpdns.org/https://t.me/sinspired_ai',
+};
+const TG_GROUP = {
   title: 'Telegram 群组',
-  desc: '实时技术探讨 · Issue 跟踪 · 版本更新推送 · 欢迎加入',
+  desc: '技术交流 · Issue 反馈',
   url: 'https://proxy.linkpc.dpdns.org/https://t.me/subs_check_pro',
 };
 
@@ -347,17 +352,30 @@ export function AboutApp() {
           {activeTab === 'resources' && (
             <div class="aw-panel" key="resources">
               <div class="aw-res-layout">
+                <div class="aw-res-primary">
+                  {/* ── Telegram 频道 ── */}
+                  < div class="aw-link-card aw-featured" onClick={() => openLink(TG_CHANNEL.url, 'tiny')}>
+                    <div class="aw-link-icon-wrap aw-featured-icon">
+                      <img src="/telegram.svg" class="aw-link-svg" alt="Telegram" />
+                    </div>
+                    <div class="aw-link-body">
+                      <strong class="aw-link-title">{TG_CHANNEL.title}</strong>
+                      <span class="aw-link-desc">{TG_CHANNEL.desc}</span>
+                    </div>
+                    <ArrowIcon />
+                  </div>
 
-                {/* ── Telegram 主推卡（突出） ── */}
-                <div class="aw-link-card aw-featured" onClick={() => openLink(TG_LINK.url, 'tiny')}>
-                  <div class="aw-link-icon-wrap aw-featured-icon">
-                    <img src="/telegram.svg" class="aw-link-svg" alt="Telegram" />
+                  {/* ── Telegram 群组 ── */}
+                  < div class="aw-link-card aw-featured" onClick={() => openLink(TG_GROUP.url, 'tiny')}>
+                    <div class="aw-link-icon-wrap aw-featured-icon">
+                      <img src="/telegram.svg" class="aw-link-svg" alt="Telegram" />
+                    </div>
+                    <div class="aw-link-body">
+                      <strong class="aw-link-title">{TG_GROUP.title}</strong>
+                      <span class="aw-link-desc">{TG_GROUP.desc}</span>
+                    </div>
+                    <ArrowIcon />
                   </div>
-                  <div class="aw-link-body">
-                    <strong class="aw-link-title">{TG_LINK.title}</strong>
-                    <span class="aw-link-desc">{TG_LINK.desc}</span>
-                  </div>
-                  <ArrowIcon />
                 </div>
 
                 {/* ── 次要三项（等宽并排） ── */}
@@ -485,9 +503,9 @@ export function AboutApp() {
           </span>
           &nbsp;·&nbsp;仅供学习与调试研究，请遵守相关法律法规
         </footer>
-      </div>
+      </div >
 
       <Toast msg={msg} visible={visible} />
-    </div>
+    </div >
   );
 }
