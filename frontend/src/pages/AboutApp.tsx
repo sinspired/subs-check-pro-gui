@@ -31,21 +31,31 @@ const NAV_ITEMS: { id: Tab; label: string; hint: string }[] = [
 ];
 
 const FEATURES = [
+  { emoji: '📱', label: '现代 Web UI 和 跨平台桌面客户端' },
   { emoji: '⚡', label: '自适应流水线高并发测试模式' },
-  { emoji: '🔋', label: '极致内存调度，支持亿级节点' },
-  { emoji: '🗺️', label: 'GeoDB 增强与广播 IP 深度识别' },
-  { emoji: '📦', label: '自动生成开箱即用 sing-box 模板' },
-  { emoji: '🎲', label: '智能乱序重排与历史存活校验' },
-  { emoji: '📊', label: '质量分布与协议类型可视化面板' },
-  { emoji: '🚦', label: '局域网代理嗅探与无感防冲突' },
-  { emoji: '🧩', label: '深度继承 Sub-Store 节点生态' },
+  { emoji: '🔋', label: '极致内存调度，千万节点低内存占用' },
+  { emoji: '🗺️', label: 'GeoDB 增强地理位置标签' },
+  { emoji: '📡', label: 'ISP / 原生 IP 类型检测' },
+  { emoji: '📦', label: '自动生成开箱即用 sing-box 订阅' },
+  { emoji: '📦', label: '自动生成开箱即用 mihomo 订阅' },
+  { emoji: '🎲', label: '智能乱序重排' },
+  { emoji: '🕒', label: '历史可用节点缓存复用' },
+  { emoji: '📊', label: '检测结果分析报告 & 位置与协议分布可视化' },
+  { emoji: '🚦', label: '自动检测系统代理环境' },
+  { emoji: '🧩', label: '深度集成 Sub-Store 前后端' },
   { emoji: '🔒', label: '内置文件分发，支持独立防盗码' },
-  { emoji: '📱', label: '适配多端屏幕的现代 Web UI 看板' },
+  { emoji: '📣', label: '多渠道消息通知推送' },
+  { emoji: '🚦', label: '自动检测系统代理环境' },
+  { emoji: '🎁', label: '自动无缝版本更新' },
+  { emoji: '✏️', label: '配置编辑器 & 自动补全' },
+  { emoji: '🔗', label: '多种非标订阅格式超级解码' },
+  { emoji: '6️⃣', label: '支持 IPv6 代理节点' },
+  { emoji: '🛠️', label: '开源免费，社区驱动持续迭代' },
 ];
 
 // 资源链接：主推（Telegram）+ 次要三项
 const TG_LINK = {
-  title: 'Telegram 交流群',
+  title: 'Telegram 群组',
   desc: '实时技术探讨 · Issue 跟踪 · 版本更新推送 · 欢迎加入',
   url: 'https://t.me/subs_check_pro',
 };
@@ -59,8 +69,8 @@ const SEC_LINKS = [
   },
   {
     svgSrc: '/github.svg' as string | null,
-    title: '内核仓库',
-    desc: '查阅内核引擎源码及官方 Docker 镜像',
+    title: '内核引擎仓库',
+    desc: '查阅内核引擎源码，版本发布及官方 Docker 镜像',
     url: 'https://github.com/sinspired/subs-check-pro',
   },
   {
@@ -167,7 +177,7 @@ export function AboutApp() {
           <div
             class="aw-ver-row"
             onClick={() => openLink('https://github.com/sinspired/subs-check-pro')}
-            title="打开 Core 仓库"
+            title="打开 内核 仓库"
           >
             <span class="aw-ver-dot core-dot" />
             <span class="aw-ver-label">Core</span>
@@ -215,31 +225,94 @@ export function AboutApp() {
           {/* ── 概览 ── */}
           {activeTab === 'intro' && (
             <div class="aw-panel" key="intro">
+
+              {/* 引言：从 README 精炼 */}
               <p class="aw-intro-lead">
-                基于 <strong>Wails v3</strong> 现代化框架构建。告别繁杂的命令行，
-                通过极具呼吸感的免配置界面，为底层引擎提供系统级原生适配，
-                体验千万级节点的高效自适应测速测活。
+                基于 <strong>Wails v3</strong> 现代化框架构建，为底层引擎提供系统级原生适配。支持 <strong>定时检测</strong> 任务，自动生成 <strong>mihomo</strong> 与 <strong>sing-box</strong> 订阅，一键复制订阅链接。
               </p>
+
+              {/* 双栏架构 */}
               <div class="aw-arch-grid">
                 <div class="aw-arch-col">
-                  <h3><span class="dot gui" />表现层 (GUI)</h3>
+                  <h3><span class="dot gui" />桌面客户端</h3>
                   <ul>
                     <li>Win / Mac / Linux 原生渲染</li>
                     <li>系统托盘与 OS 生命周期集成</li>
-                    <li>沉浸式侘寂风与深色模式变幻</li>
+                    <li>沉浸式侘寂风与深色模式</li>
                     <li>零配置即刻启动与沙盒化驻留</li>
+                    <li>Wails v3 跨平台框架</li>
+                    <li>React + TypeScript 前端</li>
+                    <li>系统级原生窗口适配</li>
                   </ul>
                 </div>
                 <div class="aw-arch-col">
-                  <h3><span class="dot core" />通信层 (Core)</h3>
+                  <h3><span class="dot core" />高性能内核</h3>
                   <ul>
-                    <li>高并发自适应流与极限内存控制</li>
-                    <li>智能局域网嗅探与乱序纠错纠偏</li>
-                    <li>多面板：GUI 终端与现代 WebUI</li>
-                    <li>原生 GeoDB 增强与广播 IP 识别</li>
+                    <li>自适应流水线高并发引擎</li>
+                    <li>支持千万级节点池</li>
+                    <li>低内存占用</li>
+                    <li>现代 WebUI 管理界面</li>
+                    <li>Docker 容器部署支持</li>
+                    <li>自动无缝版本更新</li>
+                    <li>支持 IPv6 代理节点</li>
                   </ul>
                 </div>
               </div>
+
+              {/* 本地服务快捷入口（复用 quickref 样式，动态端口） */}
+              {(() => {
+                // 动态端口，降级 8199
+                const port = info?.listenPort || '8199';
+
+                // 外链 SVG：右上角箭头（统一复用）
+                const IconExternal = () => (
+                  <svg class="aw-qr-action" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                );
+                return (
+                  <div class="aw-quickref">
+                    <div class="aw-qr-group">本地服务</div>
+
+                    <div class="aw-qr-item" onClick={() => openLink(`http://localhost:${port}/admin`)}>
+                      <svg class="aw-qr-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                      </svg>
+                      <span class="aw-qr-label">管理界面</span>
+                      <span class="aw-qr-val">localhost:{port}/admin</span>
+                      <IconExternal />
+                    </div>
+
+                    <div class="aw-qr-item" onClick={() => openLink(`http://localhost:${port}/analysis`)}>
+                      <svg class="aw-qr-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                      </svg>
+                      <span class="aw-qr-label">分析报告</span>
+                      <span class="aw-qr-val">localhost:{port}/analysis</span>
+                      <IconExternal />
+                    </div>
+
+                    <div class="aw-qr-item" onClick={() => openLink(`http://localhost:${port}/files`)}>
+                      <svg class="aw-qr-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                      </svg>
+                      <span class="aw-qr-label">文件服务</span>
+                      <span class="aw-qr-val">localhost:{port}/files</span>
+                      <IconExternal />
+                    </div>
+                  </div>
+                );
+              })()}
+
             </div>
           )}
 
@@ -291,79 +364,98 @@ export function AboutApp() {
                   ))}
                 </div>
 
-                {/* ── 快速参考：Docker / 链接直达 ── */}
-                <div class="aw-quickref">
+                {/* ── 快速参考区 ── */}
+                {(() => {
+                  // 外链 SVG：右上角箭头（统一复用）
+                  const IconExternal = () => (
+                    <svg class="aw-qr-action" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  );
 
-                  {/* Docker 拉取命令（点击复制） */}
-                  <div class="aw-qr-item" onClick={() =>
-                    navigator.clipboard.writeText('docker pull sinspired/subs-check-pro')
-                      .then(() => toast('已复制 Docker 命令'))
-                  }>
-                    <span class="aw-qr-label">Docker</span>
-                    <span class="aw-qr-val aw-qr-cmd">docker pull sinspired/subs-check-pro</span>
-                    {/* 复制图标 */}
-                    <svg class="aw-qr-action" width="11" height="11" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                    </svg>
-                  </div>
+                  return (
+                    <div class="aw-quickref">
+                      {/* ── 部署 & 资源 ── */}
+                      <div class="aw-qr-group">部署</div>
 
-                  {/* 通知渠道配置教程 */}
-                  <div class="aw-qr-item" onClick={() =>
-                    openLink('https://github.com/sinspired/subs-check-pro/wiki/Notifications')
-                  }>
-                    <span class="aw-qr-label">通知配置</span>
-                    <span class="aw-qr-val">github.com/sinspired/subs-check-pro/wiki/Notifications</span>
-                    <svg class="aw-qr-action" width="11" height="11" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                      <polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-                    </svg>
-                  </div>
+                      {/* Docker：点击复制命令 */}
+                      <div class="aw-qr-item"
+                        onClick={() =>
+                          navigator.clipboard
+                            .writeText('docker pull sinspired/subs-check-pro')
+                            .then(() => toast('已复制 Docker 命令'))
+                        }>
 
-                  {/* 现代 WebUI 管理界面 */}
-                  <div class="aw-qr-item" onClick={() => openLink('http://localhost:8199/admin')}>
-                    <span class="aw-qr-label">WebUI</span>
-                    <span class="aw-qr-val">localhost:8199/admin</span>
-                    <svg class="aw-qr-action" width="11" height="11" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                      <polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-                    </svg>
-                  </div>
-                  {/* 检测结果分析报告 */}
-                  <div class="aw-qr-item" onClick={() => openLink('http://localhost:8199/analysis')}>
-                    <span class="aw-qr-label">分析报告</span>
-                    <span class="aw-qr-val">localhost:8199/analysis</span>
-                    <svg class="aw-qr-action" width="11" height="11" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                      <polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-                    </svg>
-                  </div>
-                  {/* 内置文件服务 */}
-                  <div class="aw-qr-item" onClick={() => openLink('http://localhost:8199/files')}>
-                    <span class="aw-qr-label">文件服务</span>
-                    <span class="aw-qr-val">localhost:8199/files</span>
-                    <svg class="aw-qr-action" width="11" height="11" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                      <polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-                    </svg>
-                  </div>
-                  {/* 自建 GitHub 加速代理 */}
-                  <div class="aw-qr-item" onClick={() => openLink('https://github.com/sinspired/CF-Proxy')}>
-                    <span class="aw-qr-label">CF Proxy</span>
-                    <span class="aw-qr-val">github.com/sinspired/CF-Proxy</span>
-                    <svg class="aw-qr-action" width="11" height="11" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                      <polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-                    </svg>
-                  </div>
+                        <svg class="aw-qr-icon"
+                          width="800px"
+                          height="800px"
+                          viewBox="0 0 15 15"
+                          fill="currentColor"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M0.5 5.5V5H0V5.5H0.5ZM2.5 3.5V3H2V3.5H2.5ZM6.5 1.5V1H6V1.5H6.5ZM8.5 1.5H9V1H8.5V1.5ZM12.5 7.5H12V8H12.5V7.5ZM1 7.5V5.5H0V7.5H1ZM3 7.5V3.5H2V7.5H3ZM2.5 4H8.5V3H2.5V4ZM8 3.5V7.5H9V3.5H8ZM5 7.5V3.5H4V7.5H5ZM7 7.5V1.5H6V7.5H7ZM6.5 2H8.5V1H6.5V2ZM8 1.5V3.5H9V1.5H8ZM13.7361 10H15V9H13.7361V10ZM10 5V5.5H11V5H10ZM12 6.5V7.5H13V6.5H12ZM12.5 8H13.5V7H12.5V8ZM14 8.5V9.5H15V8.5H14ZM13.5 8C13.7761 8 14 8.22386 14 8.5H15C15 7.67157 14.3284 7 13.5 7V8ZM11.5 6C11.7761 6 12 6.22386 12 6.5H13C13 5.67157 12.3284 5 11.5 5V6ZM3 10H4V9H3V10ZM8.5 7H0.5V8H8.5V7ZM0 7.5V8.5H1V7.5H0ZM5.5 14H6.02786V13H5.5V14ZM6.02786 14C8.51265 14 10.8164 12.8096 12.2585 10.8496L11.4531 10.257C10.1974 11.9636 8.19126 13 6.02786 13V14ZM0 8.5C0 11.5376 2.46243 14 5.5 14V13C3.01472 13 1 10.9853 1 8.5H0ZM0.5 6H11.5V5H0.5V6ZM10 5.5C10 6.32843 9.32843 7 8.5 7V8C9.88071 8 11 6.88071 11 5.5H10ZM13.7361 9C12.7762 9 11.9673 9.55817 11.4531 10.257L12.2585 10.8496C12.6423 10.3281 13.1808 10 13.7361 10V9Z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                        <span class="aw-qr-label">Docker</span>
+                        <span class="aw-qr-val aw-qr-cmd">docker pull sinspired/subs-check-pro</span>
+                        {/* 复制图标 */}
+                        <svg class="aw-qr-action" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                      </div>
+                      {/* ── 资源 ── */}
+                      <div class="aw-qr-group">资源</div>
+                      {/* Docker Hub */}
+                      <div class="aw-qr-item"
+                        onClick={() => openLink('https://hub.docker.com/r/sinspired/subs-check-pro')}>
+                        <svg class="aw-qr-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 2 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                          <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                          <line x1="12" y1="22.08" x2="12" y2="12" />
+                        </svg>
+                        <span class="aw-qr-label">DockerHub</span>
+                        <span class="aw-qr-val">sinspired/subs-check-pro</span>
+                        <IconExternal />
+                      </div>
 
-                </div>
+                      {/* 通知渠道配置 */}
+                      <div class="aw-qr-item"
+                        onClick={() => openLink('https://github.com/sinspired/subs-check-pro/wiki/Notifications')}>
+                        <svg class="aw-qr-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                        <span class="aw-qr-label">通知配置</span>
+                        <span class="aw-qr-val">…/wiki/Notifications</span>
+                        <IconExternal />
+                      </div>
+
+                      {/* 自建 GitHub 加速代理 */}
+                      <div class="aw-qr-item"
+                        onClick={() => openLink('https://github.com/sinspired/CF-Proxy')}>
+                        <svg class="aw-qr-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="2" y1="12" x2="22" y2="12" />
+                          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        </svg>
+                        <span class="aw-qr-label">CF 加速</span>
+                        <span class="aw-qr-val">sinspired/CF-Proxy</span>
+                        <IconExternal />
+                      </div>
+
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}
@@ -374,8 +466,8 @@ export function AboutApp() {
         <footer class="aw-content-footer">
           仅供学习与调试研究，请遵守相关法律法规。
         </footer>
-
       </div>
+
       <Toast msg={msg} visible={visible} />
     </div>
   );

@@ -416,7 +416,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 6px;
+  padding: 6px 6px;
   border-radius: 7px;
   cursor: default;
   transition: color 0.18s ease, transform 0.18s ease, background 0.18s ease;
@@ -644,31 +644,42 @@
 
 /* ══════════════════════════════════════════════════════
    面板 3（生态资源）— 快速参考区
-   三张次要卡片下方，simple 几行，不拉伸，卡片可自然压缩
    ══════════════════════════════════════════════════════ */
 
-/* 调整：次要卡片从 flex:1（强制撑满）改为可收缩模式 */
+/* 次要卡片：有空间时拉伸，空间不足时向下让给 quickref */
 .aw-res-secondary {
-  flex: 1 1 0;          /* 有空间时仍拉伸；空间不足时向下让给 quickref */
-  min-height: 80px;     /* 卡片最低保留高度，不至于被压消失 */
+  flex: 1 1 0;
+  min-height: 80px;
 }
 
 /* ── 快速参考容器 ── */
 .aw-quickref {
-  flex-shrink: 0;           /* 始终保持自然高度，不被压缩 */
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  padding-top: 6px;
+  padding-top: 8px;
   border-top: 1px solid var(--border);
-  opacity: 0.9;
 }
 
-/* 每行：标签 + 值 + 动作图标 */
+/* 分组标题 */
+.aw-qr-group {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: var(--muted);
+  opacity: 0.38;
+  padding: 6px 6px 2px;
+}
+.aw-qr-group:first-child {
+  padding-top: 2px;
+}
+
+/* 每行：图标 + 标签 + 值 + 动作图标 */
 .aw-qr-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   padding: 4px 6px;
   border-radius: 5px;
   cursor: pointer;
@@ -681,18 +692,34 @@
 .aw-qr-item:hover .aw-qr-action {
   opacity: 0.5;
 }
+.aw-qr-item:hover .aw-qr-icon {
+  opacity: 0.75;
+  color: var(--accent);
+}
 
-/* 左侧固定宽度标签 */
+/* 左侧分类图标 */
+.aw-qr-icon {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  color: var(--muted);
+  opacity: 0.38;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, opacity 0.15s;
+}
+
+/* 固定宽度标签，统一对齐 */
 .aw-qr-label {
   flex-shrink: 0;
-  width: 62px;               /* 统一对齐 */
+  width: 54px;
   font-size: 10px;
   font-weight: 600;
   color: var(--muted);
-  opacity: 0.55;
-  letter-spacing: 0.2px;
+  opacity: 0.5;
+  letter-spacing: 0.15px;
   white-space: nowrap;
-  text-transform: uppercase;
 }
 
 /* 值：等宽字体，超长截断 */
@@ -702,22 +729,25 @@
   font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
   font-size: 10px;
   color: var(--muted);
-  opacity: 0.7;
+  opacity: 0.65;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Docker 命令行：前景色更亮 */
+/* Docker 命令行：前景色加重，暗示可复制 */
 .aw-qr-val.aw-qr-cmd {
   color: var(--fg);
-  opacity: 0.75;
+  opacity: 0.7;
 }
 
-/* 右侧动作图标（copy / 外链箭头） */
+/* 右侧动作图标（hover 才显示） */
 .aw-qr-action {
   flex-shrink: 0;
   color: var(--muted);
   opacity: 0;
   transition: opacity 0.15s;
 }
+
+/* quickref 在面板内使用时，与上方内容保持间距 */
+.aw-panel .aw-quickref { margin-top: 20px; }
