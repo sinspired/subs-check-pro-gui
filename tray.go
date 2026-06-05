@@ -108,46 +108,6 @@ func buildTrayMenu(
 	statusItem := menu.Add("...")
 	statusItem.SetEnabled(false) // 设为不可点击，纯展示用途
 
-	// 启动后台协程，定时（如 1.5 秒）更新状态文本
-	go func() {
-		ticker := time.NewTicker(1500 * time.Millisecond)
-		defer ticker.Stop()
-
-		for range ticker.C {
-			// 同步刷新托盘的 Tooltip 悬浮提示
-			if updateTooltip != nil {
-				updateTooltip()
-			}
-
-			if !appInitOK || coreApp == nil {
-				statusItem.SetLabel("后端未启动")
-				continue
-			}
-
-			// 1. 如果正在检测中
-			if coreApp.IsChecking() {
-				statusItem.SetHidden(false)
-
-				// 生成进度信息
-				progressStr := renderProgressString(coreApp)
-
-				// 在托盘显示检测进度
-				statusItem.SetLabel(progressStr)
-
-				continue
-			}
-
-			// 2. 如果检测已完成（或空闲中）
-			lastResult := coreApp.GetLastCheckResult()
-			if lastResult != "" {
-				statusItem.SetHidden(false)
-				statusItem.SetLabel(lastResult)
-			} else {
-				statusItem.SetHidden(true)
-			}
-		}
-	}()
-
 	menu.AddSeparator()
 
 	menu.Add("显示主界面").OnClick(func(_ *application.Context) {
@@ -168,12 +128,15 @@ func buildTrayMenu(
 
 	menu.AddSeparator()
 
-	menu.Add("开始检测").OnClick(func(_ *application.Context) {
+	triggerCheckMenu := menu.Add("开始检测")
+	triggerCheckMenu.OnClick(func(_ *application.Context) {
 		coreApp.TriggerCheck()
 		sendOSNotification("Subs Check Pro", "已触发检测任务\n可在系统托盘、管理界面查看检测进度")
+		triggerCheckMenu.SetEnabled(false)
 	})
 
-	menu.Add("停止检测").OnClick(func(_ *application.Context) {
+	stopCheckMenu := menu.Add("停止检测")
+	stopCheckMenu.OnClick(func(_ *application.Context) {
 		if err := callBackendForceClose(); err != nil {
 			slog.Warn("检测任务停止失败", "error", err)
 		} else {
@@ -182,7 +145,10 @@ func buildTrayMenu(
 		}
 	})
 
-	menu.Add("结束检测并退出").OnClick(func(_ *application.Context) {
+	menu.AddSeparator()
+
+	stopCheckAndExitMenu := menu.Add("结束检测并退出")
+	stopCheckAndExitMenu.OnClick(func(_ *application.Context) {
 		if gracefulQuitPending.CompareAndSwap(false, true) {
 			sendOSNotification("Subs Check Pro", "正在等待检测完成后退出\n再次点击将立即强制退出")
 			slog.Debug("托盘：已发送停止检测信号，等待检测完成后退出")
@@ -240,16 +206,6 @@ func buildTrayMenu(
 		}
 	})
 
-	// 异步查询当前系统状态并同步到 checkbox
-	go func() {
-		enabled, err := guiApp.GetAutoStartEnabled()
-		if err != nil {
-			slog.Warn("初始化开机自启 checkbox 失败", "error", err)
-			return
-		}
-		autostartItem.SetChecked(enabled)
-	}()
-
 	menu.AddSeparator()
 
 	// About menu
@@ -262,6 +218,60 @@ func buildTrayMenu(
 		sendOSNotification("Subs Check Pro", "正在退出…")
 		onQuit()
 	})
+
+	// 启动后台协程，定时（如 1.5 秒）更新状态文本
+	go func() {
+		enabled, err := guiApp.GetAutoStartEnabled()
+		if err != nil {
+			slog.Warn("初始化开机自启 checkbox 失败", "error", err)
+			return
+		}
+		autostartItem.SetChecked(enabled)
+
+		ticker := time.NewTicker(1500 * time.Millisecond)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			// 同步刷新托盘的 Tooltip 悬浮提示
+			if updateTooltip != nil {
+				updateTooltip()
+			}
+
+			if !appInitOK || coreApp == nil {
+				statusItem.SetLabel("后端未启动")
+				continue
+			}
+
+			// 1. 如果正在检测中
+			if coreApp.IsChecking() {
+				stopCheckMenu.SetEnabled(true)
+				stopCheckAndExitMenu.SetEnabled(true)
+				statusItem.SetHidden(false)
+
+				// 生成进度信息
+				progressStr := renderProgressString(coreApp)
+
+				// 在托盘显示检测进度
+				statusItem.SetLabel(progressStr)
+
+				continue
+			}
+
+			// 2. 如果检测已完成（或空闲中）
+			lastResult := coreApp.GetLastCheckResult()
+			if lastResult != "" {
+				statusItem.SetHidden(false)
+				statusItem.SetLabel(lastResult)
+			} else {
+				statusItem.SetHidden(true)
+			}
+
+			triggerCheckMenu.SetEnabled(true)
+			stopCheckMenu.SetEnabled(false)
+			stopCheckAndExitMenu.SetEnabled(false)
+		}
+	}()
+
 	return menu
 }
 
