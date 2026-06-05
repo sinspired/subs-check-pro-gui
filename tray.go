@@ -59,10 +59,15 @@ func startSysTray(
 
 	// 设置图标与悬浮提示（tooltip 仅 Windows/Linux 有效）
 	tray.SetIcon(trayIcon)
-	tray.SetTooltip("Subs Check Pro - 订阅检测管理")
+	tray.SetTooltip(formatSysTrayTooltip(coreApp, appInitOK)) // 传入参数以获取状态
+
+	// 提供更新 Tooltip 的回调，传递给 buildTrayMenu 以便定时同步刷新
+	updateTooltip := func() {
+		tray.SetTooltip(formatSysTrayTooltip(coreApp, appInitOK))
+	}
 
 	// 构建右键菜单
-	menu := buildTrayMenu(wailsApp, guiApp, coreApp, appInitOK, onQuit)
+	menu := buildTrayMenu(wailsApp, guiApp, coreApp, appInitOK, onQuit, updateTooltip)
 	tray.SetMenu(menu)
 
 	// 左键单击：切换当前活跃窗口的显示/隐藏
@@ -93,10 +98,55 @@ func buildTrayMenu(
 	coreApp *app.App,
 	appInitOK bool,
 	onQuit func(),
+	updateTooltip func(),
 ) *application.Menu {
 	menu := wailsApp.NewMenu()
 
 	menu.Add("Subs Check Pro 桌面端").SetBitmap(logo32).SetEnabled(false)
+
+	// 状态显示菜单项
+	statusItem := menu.Add("...")
+	statusItem.SetEnabled(false) // 设为不可点击，纯展示用途
+
+	// 启动后台协程，定时（如 1.5 秒）更新状态文本
+	go func() {
+		ticker := time.NewTicker(1500 * time.Millisecond)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			// 同步刷新托盘的 Tooltip 悬浮提示
+			if updateTooltip != nil {
+				updateTooltip()
+			}
+
+			if !appInitOK || coreApp == nil {
+				statusItem.SetLabel("后端未启动")
+				continue
+			}
+
+			// 1. 如果正在检测中
+			if coreApp.IsChecking() {
+				statusItem.SetHidden(false)
+
+				// 生成进度信息
+				progressStr := renderProgressString(coreApp)
+
+				// 在托盘显示检测进度
+				statusItem.SetLabel(progressStr)
+
+				continue
+			}
+
+			// 2. 如果检测已完成（或空闲中）
+			lastResult := coreApp.GetLastCheckResult()
+			if lastResult != "" {
+				statusItem.SetHidden(false)
+				statusItem.SetLabel(lastResult)
+			} else {
+				statusItem.SetHidden(true)
+			}
+		}
+	}()
 
 	menu.AddSeparator()
 
@@ -108,6 +158,8 @@ func buildTrayMenu(
 		guiApp.hideActiveWindow()
 		sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击图标可恢复窗口")
 	})
+
+	menu.AddSeparator()
 
 	menu.Add("返回登录窗口").OnClick(func(_ *application.Context) {
 		guiApp.BackToLogin()
@@ -295,8 +347,55 @@ func NotifyHideToTray() {
 	slog.Debug("已最小化到系统托盘，单击托盘图标可恢复窗口")
 }
 
-// formatSysTrayTooltip 构建托盘悬浮提示文本，包含应用名称和当前监听端口。
-func formatSysTrayTooltip() string {
-	return fmt.Sprintf("Subs Check Pro  |  端口 %s",
-		strings.TrimPrefix(config.GlobalConfig.ListenPort, ":"))
+// renderProgressString 根据当前状态生成进度字符串
+func renderProgressString(coreApp *app.App) string {
+	var percent float64
+	state := coreApp.GetCurrentState()
+	stepName := state.StepName
+
+	if state.ProxyCount == 0 {
+		if stepName == "保存中" {
+			percent = 100.0
+		} else {
+			percent = 0.0
+		}
+	} else {
+		percent = float64(state.Progress) / float64(state.ProxyCount) * 100.0
+	}
+
+	if percent < 0 {
+		percent = 0
+	}
+	if percent > 100 {
+		percent = 100
+	}
+
+	if stepName == "" {
+		stepName = "进度"
+	}
+
+	return fmt.Sprintf("%s %.1f%% %s", stepName, percent, state.ETASuffix)
+}
+
+// formatSysTrayTooltip 构建托盘悬浮提示文本，包含应用名称、当前监听端口以及检测进度。
+func formatSysTrayTooltip(coreApp *app.App, appInitOK bool) string {
+	base := "Subs Check Pro GUI" + " - 端口 " + strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
+
+	if !appInitOK || coreApp == nil {
+		return base + "\n后端未启动"
+	}
+
+	if coreApp.IsChecking() {
+		progressStr := renderProgressString(coreApp)
+
+		// 检测中：下一行显示当前进度格式化字符串
+		return base + "\n" + progressStr
+	}
+
+	lastResult := coreApp.GetLastCheckResult()
+	if lastResult != "" {
+		return base + "\n" + lastResult + "\n空闲 √"
+	} else {
+		return base + "\n空闲 √"
+	}
 }
