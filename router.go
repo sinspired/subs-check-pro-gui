@@ -110,7 +110,7 @@ func handleGuiEnter(c *gin.Context) {
 // handleGuiPopup 接收来自 WebUI 注入脚本的"新窗口"请求，
 // 在 Go 端创建无地址栏的 Wails 弹出窗口，风格与主窗口一致。
 //
-// 调用方：webUIWin 内注入的 JS 通过 fetch('/gui/popup?url=...') 触发。
+// 调用方：webUIWin 内注入的 JS 通过 fetch('/gui/popup?url=...&size=small') 触发。
 // 安全策略：仅允许 localhost 访问，URL 只接受 http/https 协议。
 func handleGuiPopup(c *gin.Context) {
 	if !isLoopback(c) {
@@ -128,6 +128,8 @@ func handleGuiPopup(c *gin.Context) {
 		return
 	}
 
+	width, height := popupSize(c.Query("size"))
+
 	// 先返回 200，让 JS fetch 立即结束，不阻塞页面
 	c.String(http.StatusOK, "ok")
 
@@ -136,15 +138,13 @@ func handleGuiPopup(c *gin.Context) {
 	if wailsApp == nil {
 		return
 	}
-	// application.InvokeAsync 是 Wails v3 中在主线程执行函数的正确方式
-	// wailsApp.InvokeOnMainThread 在 v3 中已不存在
 	capturedURL := rawURL
 	application.InvokeAsync(func() {
 		loadingURL := "/loading.html#" + capturedURL
 		popup := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Title:     "Subs Check Pro",
-			Width:     1100,
-			Height:    750,
+			Width:     width,
+			Height:    height,
 			MinWidth:  600,
 			MinHeight: 400,
 			URL:       loadingURL,
@@ -158,6 +158,26 @@ func handleGuiPopup(c *gin.Context) {
 		popup.Center()
 		popup.Focus()
 	})
+}
+
+// popupSize 将尺寸名称映射为窗口宽高，与 OpenBrandURL 的规格保持一致。
+func popupSize(size string) (width, height int) {
+	switch size {
+	case "extraLarge":
+		return 1920, 1440
+	case "large":
+		return 1600, 1200
+	case "medium":
+		return 1200, 800
+	case "small":
+		return 720, 720
+	case "tiny":
+		return 600, 600
+	case "wide":
+		return 1600, 900
+	default:
+		return 1100, 750
+	}
 }
 
 // ── 辅助 ──────────────────────────────────────────────────────────────────────

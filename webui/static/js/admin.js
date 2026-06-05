@@ -33,11 +33,15 @@ import { initQuickPreview } from './cfg-quickpreview.js';
    * openInternalURL: 在 Wails GUI 环境下通过 /gui/popup 打开 Gin 服务内部页面；
    * 浏览器环境下降级为 window.open。
    * 仅用于相对路径（/files、/analysis 等），外部链接仍用 window.open。
+   * @param {string} path   相对路径，如 '/files'
+   * @param {string} [size] 窗口尺寸：tiny/small/medium/large/extraLarge/wide，默认 medium
    */
-  function openInternalURL(path) {
+  function openInternalURL(path, size) {
     if (window.__WAILS_GUI?.baseURL) {
       const fullURL = window.__WAILS_GUI.baseURL + path
-      fetch('/gui/popup?url=' + encodeURIComponent(fullURL)).catch(() => {})
+      let qs = '/gui/popup?url=' + encodeURIComponent(fullURL)
+      if (size) qs += '&size=' + encodeURIComponent(size)
+      fetch(qs).catch(() => {})
     } else {
       window.open(path, '_blank', 'noopener,noreferrer')
     }
@@ -2668,12 +2672,12 @@ import { initQuickPreview } from './cfg-quickpreview.js';
 
     els.fileManagerBtn?.addEventListener('click', () => {
       if (sessionKey) safeLS('subscheck_api_key', sessionKey);
-      openInternalURL('/files');
+      openInternalURL('/files', 'small');
     });
 
     els.btnFiles?.addEventListener('click', () => {
       if (sessionKey) safeLS('subscheck_api_key', sessionKey);
-      openInternalURL('/files');
+      openInternalURL('/files', 'small');
     });
 
     els.analysisBtn?.addEventListener('click', () => {
