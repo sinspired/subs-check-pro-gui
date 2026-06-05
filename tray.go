@@ -20,7 +20,7 @@ import (
 // trayIcon 嵌入托盘图标文件（ICO 格式，Windows/Linux 通用）。
 // macOS 建议改用透明背景 PNG 并调用 SetTemplateIcon。
 //
-//go:embed tray.ico
+//go:embed logo.png
 var trayIcon []byte
 
 //go:embed logo_32x32.png
