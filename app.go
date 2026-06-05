@@ -11,6 +11,7 @@ import (
 
 	coreapp "github.com/sinspired/subs-check-pro/v2/app"
 	"github.com/sinspired/subs-check-pro/v2/config"
+	"github.com/sinspired/subs-check-pro/v2/utils"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 )
@@ -114,7 +115,7 @@ func (g *GuiApp) OpenBrandURL(url string, windowSize string) {
 		width = 1600
 		height = 900
 	}
-	
+
 	// application.InvokeAsync 确保窗口创建在 Wails 主线程执行
 	capturedURL := url
 	application.InvokeAsync(func() {
@@ -226,6 +227,11 @@ func (g *GuiApp) CompleteInit() error {
 	}
 
 	registerGuiAutoLogin(g.backend.GetRouter())
+
+	// 延迟初始化路径同样需要注入 hook
+	utils.OSNotifyHook = func(title, body string) {
+		sendOSNotification(title, body)
+	}
 
 	go g.backend.Run()
 

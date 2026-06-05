@@ -8,6 +8,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/sinspired/subs-check-pro/v2/app"
+	"github.com/sinspired/subs-check-pro/v2/utils"
 )
 
 var (
@@ -99,6 +100,11 @@ func setupApp() (*app.App, *GuiApp, bool) {
 	}
 
 	registerGuiRoutes(coreApp.GetRouter())
+
+	// 注入系统通知回调：核心包检测完成 → Wails3 托盘通知 
+	utils.OSNotifyHook = func(title, body string) {
+		sendOSNotification(title, body)
+	}
 
 	go coreApp.Run()
 
