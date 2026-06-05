@@ -1,297 +1,723 @@
-/* frontend/public/about.css — Subs Check Pro 侘寂风关于窗口 (800x600 固定) */
+/* frontend/public/about.css
+   「关于」窗口专属样式 — 侘寂风分栏布局（800×600 优化版）
+   依赖 style.css 中定义的 CSS 变量与 .icon-btn 等基础类
+   ─────────────────────────────────────────────────────────── */
 
-/* ── 根容器：呼吸感与极简 ── */
+/* ── 全局动画 ── */
+@keyframes aw-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes aw-slide-right {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+
+/* ══════════════════════════════════════════════════════
+   根容器：横向分栏，撑满窗口
+   ══════════════════════════════════════════════════════ */
 .aw-root {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   width: 100vw;
   height: 100vh;
-  background: var(--card); /* 纯净底色 */
+  background: var(--card);
   color: var(--fg);
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
 }
 
-/* 极柔和的淡入动画 */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ── 顶部工具栏 (拖拽区) ── */
-.aw-toolbar {
-  display: flex;
-  align-items: center;
-  height: 42px;
-  padding: 0 16px;
+/* ══════════════════════════════════════════════════════
+   左侧边栏（固定 200px）
+   侘寂美学：纯净底色，Logo 自然呈现，无光晕堆叠
+   ══════════════════════════════════════════════════════ */
+.aw-sidebar {
+  width: 200px;
   flex-shrink: 0;
-  -webkit-app-region: drag;
-}
-.aw-drag { flex: 1; height: 100%; }
-
-/* ── 头部信息 (留白、去边框) ── */
-.aw-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 10px 0 24px;
+  background: var(--card);
+  position: relative;
+  overflow: hidden;
+  -webkit-app-region: drag; /* 整个侧边栏可拖动 */
+}
+
+/* 右侧细分隔线（渐变淡入淡出，避免截断感） */
+.aw-sidebar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 48px;
+  bottom: 48px;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--border) 20%,
+    var(--border) 80%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Mac 原生标题栏高度占位（InvisibleTitleBarHeight = 30px，留 38px 保险） */
+.aw-sidebar-titlebar {
+  width: 100%;
+  height: 38px;
   flex-shrink: 0;
   -webkit-app-region: drag;
 }
-.aw-logo {
-  width: 64px;
-  height: 64px;
-  margin-bottom: 16px;
-  pointer-events: none;
-  /* 仅保留极微弱的阴影，让Logo自然浮现 */
-  filter: drop-shadow(0 4px 16px color-mix(in srgb, var(--fg) 4%, transparent));
+
+/* ── 品牌区：Logo + 应用名 ── */
+.aw-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 16px 20px;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+  pointer-events: none; /* 品牌区不拦截拖动 */
 }
-.aw-title {
-  font-size: 20px;
+
+.aw-logo {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 14px;
+  display: block;
+  /* 仅极微弱的阴影，保留图标本身的层次 */
+  filter: drop-shadow(0 3px 10px color-mix(in srgb, var(--fg) 4%, transparent));
+}
+
+.aw-app-name {
+  font-size: 13.5px;
   font-weight: 700;
   color: var(--fg);
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
+  text-align: center;
   line-height: 1.2;
 }
-.aw-title .pro {
+.aw-app-name .pro {
   color: var(--accent);
-  font-size: 11px;
+  font-size: 9px;
   vertical-align: super;
   font-weight: 700;
   margin-left: 1px;
 }
-.aw-subtitle {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 4px;
-  letter-spacing: 0.5px;
-}
 
-/* ── 徽章 (完美复刻 style.css 的 .ver-tag 体系) ── */
-.aw-badges {
-  display: flex;
-  gap: 8px;
-  margin-top: 14px;
-  -webkit-app-region: no-drag;
-}
-.aw-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+.aw-app-sub {
   font-size: 10px;
-  font-weight: 500;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-family: "Fira Code", "Cascadia Code", monospace;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
-}
-.aw-badge:hover {
-  opacity: 0.8;
-  transform: translateY(-1px);
-}
-.aw-badge.gui {
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
-}
-.aw-badge.core {
   color: var(--muted);
-  background: color-mix(in srgb, var(--muted) 8%, transparent);
-  border: 1px solid color-mix(in srgb, var(--muted) 15%, transparent);
+  opacity: 0.55;
+  margin-top: 6px;
+  text-align: center;
+  letter-spacing: 0.3px;
+  line-height: 1.5;
 }
 
-/* ── 极简导航 (禅意小圆点指示器) ── */
-.aw-nav {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  margin-bottom: 24px;
+/* ── 版本信息块 ── */
+.aw-ver-block {
+  width: calc(100% - 28px);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 7px 12px;
+  margin-bottom: 20px;
   flex-shrink: 0;
   -webkit-app-region: no-drag;
 }
-.aw-nav-item {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted);
-  background: transparent;
-  border: none;
+
+.aw-ver-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 0;
   cursor: pointer;
-  position: relative;
-  transition: color 0.3s ease;
-  outline: none;
-  padding: 4px 0;
+  border-radius: 5px;
+  transition: opacity 0.15s;
 }
-.aw-nav-item:hover {
-  color: var(--fg);
-}
-.aw-nav-item.active {
-  color: var(--fg);
-  font-weight: 600;
-}
-.aw-nav-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
+.aw-ver-row:hover { opacity: 0.7; }
+
+/* 状态指示点 */
+.aw-ver-dot {
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
+  flex-shrink: 0;
+}
+.aw-ver-dot.gui-dot {
   background: var(--accent);
-  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 50%, transparent);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.aw-ver-dot.core-dot {
+  background: var(--muted);
+  opacity: 0.45;
 }
 
-/* ── 视图面板区 ── */
-.aw-main {
-  flex: 1;
-  position: relative;
-  margin: 0 40px; /* 两侧留出大面积呼吸空间 */
+.aw-ver-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  opacity: 0.65;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  width: 30px;
+  flex-shrink: 0;
 }
-.aw-panel {
-  position: absolute;
-  inset: 0;
+
+.aw-ver-val {
+  flex: 1;
+  font-size: 10px;
+  font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.75;
+}
+.aw-ver-val.accent {
+  color: var(--accent);
+  opacity: 1;
+}
+
+/* 版本行间分割线 */
+.aw-ver-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 3px 0;
+  opacity: 0.6;
+}
+
+/* ── 垂直导航菜单 ── */
+.aw-nav {
+  width: calc(100% - 20px);
   display: flex;
   flex-direction: column;
-  animation: fadeUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 3px;
+  flex-shrink: 0;
   -webkit-app-region: no-drag;
 }
 
-/* --- 面板 1: 概览 (纯净排版，摒弃卡片背景) --- */
-.aw-intro-text {
+.aw-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 14px 9px 18px; /* 左侧留出指示器空间 */
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: color 0.2s, background 0.2s;
+  outline: none;
+  text-align: left;
+  gap: 8px;
+}
+
+.aw-nav-item:hover {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+}
+
+.aw-nav-item.active {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* 激活指示条（左侧 2px 竖线） */
+.aw-nav-item::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%) scaleY(0);
+  width: 2px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 60%, transparent);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.aw-nav-item.active::before {
+  transform: translateY(-50%) scaleY(1);
+}
+
+.aw-nav-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  flex: 1;
+  transition: font-weight 0.1s;
+}
+.aw-nav-item.active .aw-nav-label {
+  font-weight: 600;
+}
+
+.aw-nav-hint {
+  font-size: 9px;
+  opacity: 0;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+  font-family: "Fira Code", "Cascadia Code", monospace;
+  transition: opacity 0.2s;
+}
+.aw-nav-item:hover .aw-nav-hint,
+.aw-nav-item.active .aw-nav-hint {
+  opacity: 0.45;
+}
+
+/* ── 侧边栏底部版权 ── */
+.aw-sidebar-footer {
+  margin-top: auto;
+  padding: 0 16px 20px;
+  font-size: 10px;
+  color: var(--muted);
+  opacity: 0.25;
+  text-align: center;
+  -webkit-app-region: drag;
+}
+
+/* ══════════════════════════════════════════════════════
+   右侧内容区（flex:1，背景稍与侧边栏区分）
+   ══════════════════════════════════════════════════════ */
+.aw-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg); /* 细微的底色差，制造层次感 */
+  overflow: hidden;
+  transition: background 0.2s;
+}
+
+/* 工具栏：拖拽区 + 主题切换按钮 */
+.aw-content-toolbar {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 12px;
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+.aw-drag-area {
+  flex: 1;
+  height: 100%;
+  -webkit-app-region: drag;
+}
+
+/* ── 面板容器 ── */
+.aw-main {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* 每个面板：绝对定位以支持动画，内部滚动 */
+.aw-panel {
+  position: absolute;
+  inset: 0;
+  padding: 28px 36px 20px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  animation: aw-fade-up 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-app-region: no-drag;
+}
+
+.aw-panel::-webkit-scrollbar          { width: 3px; }
+.aw-panel::-webkit-scrollbar-track    { background: transparent; }
+.aw-panel::-webkit-scrollbar-thumb    { background: var(--border); border-radius: 2px; }
+.aw-panel::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ─────────────────────────────────────────
+   面板 1：系统概览
+   ───────────────────────────────────────── */
+.aw-intro-lead {
   font-size: 13px;
   color: var(--muted);
-  line-height: 1.7;
-  text-align: center;
-  margin-bottom: 30px;
-  padding: 0 20px;
+  line-height: 1.8;
+  margin-bottom: 32px;
 }
-.aw-intro-text strong {
+.aw-intro-lead strong {
   color: var(--fg);
   font-weight: 600;
 }
+
 .aw-arch-grid {
-  display: flex;
-  gap: 40px;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 32px;
 }
+
 .aw-arch-col h3 {
-  font-size: 12px;
+  font-size: 10.5px;
   font-weight: 600;
   color: var(--fg);
-  margin-bottom: 12px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
+
+/* 彩色标记点 */
 .aw-arch-col h3 .dot {
-  width: 6px; height: 6px; border-radius: 50%;
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
-.aw-arch-col h3 .dot.gui { background: var(--accent); }
-.aw-arch-col h3 .dot.core { background: var(--muted); }
+.aw-arch-col h3 .dot.gui  { background: var(--accent); box-shadow: 0 0 5px color-mix(in srgb, var(--accent) 45%, transparent); }
+.aw-arch-col h3 .dot.core { background: var(--muted); opacity: 0.55; }
+
 .aw-arch-col ul {
   list-style: none;
-  font-size: 12.5px;
+  padding: 0;
+  margin: 0;
+}
+.aw-arch-col ul li {
+  position: relative;
+  font-size: 12px;
   color: var(--muted);
-  line-height: 2;
+  line-height: 2.1;
+  padding-left: 14px;
+}
+/* 极简项目符号：小圆点 */
+.aw-arch-col ul li::before {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--border);
 }
 
-/* --- 面板 2: 特性 (轻量列表，Emoji退化为单色点缀) --- */
+/* ─────────────────────────────────────────
+   面板 2：核心特性
+   ───────────────────────────────────────── */
 .aw-features-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px 40px;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 28px;
   align-content: start;
-  padding: 0 10px;
 }
+
 .aw-feature-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 12.5px;
-  color: var(--muted);
-  transition: color 0.2s ease, transform 0.2s ease;
+  padding: 8px 6px;
+  border-radius: 7px;
+  cursor: default;
+  transition: color 0.18s ease, transform 0.18s ease, background 0.18s ease;
 }
 .aw-feature-item:hover {
-  color: var(--fg);
   transform: translateX(3px);
+  background: color-mix(in srgb, var(--fg) 3%, transparent);
 }
+.aw-feature-item:hover .aw-feature-label {
+  color: var(--fg);
+}
+
 .aw-feature-emoji {
-  font-size: 14px;
-  opacity: 0.4;
+  font-size: 15px;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+  opacity: 0.3;
   filter: grayscale(100%);
-  transition: all 0.2s ease;
+  transition: opacity 0.2s ease, filter 0.2s ease;
 }
 .aw-feature-item:hover .aw-feature-emoji {
-  opacity: 1;
+  opacity: 0.9;
   filter: grayscale(0%);
 }
 
-/* --- 面板 3: 资源导航 (复刻 style.css 中的 quit-btn 质感) --- */
-.aw-links-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+.aw-feature-label {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+  transition: color 0.18s;
 }
+
+/* ─────────────────────────────────────────
+   面板 3：生态资源
+   Telegram 主推卡（突出）+ 三项次要卡并排
+   ───────────────────────────────────────── */
+
+/* 整体纵向布局，撑满面板高度 */
+.aw-res-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+
+/* 次要三项：等宽并排，占据剩余高度 */
+.aw-res-secondary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── 通用卡片基础 ── */
 .aw-link-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+.aw-link-card:active { transform: scale(0.98); }
+
+/* 左侧 accent 入场条（弹性伸缩） */
+.aw-link-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent);
+  opacity: 0;
+  transform: scaleY(0.3);
+  transition: opacity 0.2s, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.aw-link-card:hover::before { opacity: 1; transform: scaleY(1); }
+
+/* ── 主推卡：水平布局 + accent 底色 ── */
+.aw-link-card.aw-featured {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px;
-  border-radius: 14px;
-  background: var(--bg);
-  border: 1px solid transparent;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 16px;
+  padding: 18px 20px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--accent) 5%, var(--card));
+  border-color: color-mix(in srgb, var(--accent) 22%, transparent);
 }
-.aw-link-card:hover {
-  background: var(--info-bg);
-  border-color: rgba(14, 165, 160, 0.2);
+.aw-link-card.aw-featured:hover {
+  background: color-mix(in srgb, var(--accent) 10%, var(--card));
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 6%, transparent);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 10%, transparent);
 }
-.aw-link-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: var(--card);
+.aw-link-card.aw-featured .aw-link-title { font-size: 14px; }
+.aw-link-card.aw-featured .aw-link-desc  { font-size: 12px; margin-top: 3px; }
+
+/* 主推卡图标（更大） */
+.aw-link-icon-wrap.aw-featured-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+.aw-link-card.aw-featured:hover .aw-link-icon-wrap { transform: scale(1.08); }
+
+/* ── 次要卡：竖向布局，撑满行高 ── */
+.aw-link-card.aw-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px 16px 14px;
+}
+.aw-link-card.aw-compact:hover {
+  background: var(--info-bg);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.aw-link-card.aw-compact .aw-link-title { font-size: 12.5px; }
+.aw-link-card.aw-compact .aw-link-desc  { font-size: 11px; flex: 1; line-height: 1.5; }
+/* 箭头贴底部右侧 */
+.aw-link-card.aw-compact .aw-link-arrow { align-self: flex-end; }
+
+/* ── 图标容器（通用） ── */
+.aw-link-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  color: var(--fg);
   flex-shrink: 0;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--fg) 4%, transparent);
+  transition: background 0.2s, border-color 0.2s, transform 0.2s;
 }
-.aw-link-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.aw-link-text strong {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--fg);
-}
-.aw-link-text span {
-  font-size: 11.5px;
-  color: var(--muted);
-  line-height: 1.4;
+.aw-link-card:hover .aw-link-icon-wrap {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
+  transform: scale(1.06);
 }
 
-/* ── 页脚 (极简版权) ── */
-.aw-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 40px 24px;
-  font-size: 11px;
+/* ── SVG 文件图标（img + filter，主题自适应） ── */
+.aw-link-svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  filter: brightness(0);
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+:root[data-theme="dark"] .aw-link-svg {
+  filter: brightness(0) invert(1);
+}
+.aw-link-card:hover .aw-link-svg { opacity: 0.9; }
+
+/* WikiIcon 使用 stroke="currentColor"，直接 color 控制 */
+.aw-link-icon-wrap svg {
   color: var(--muted);
-  opacity: 0.45;
+  opacity: 0.6;
+  transition: color 0.2s, opacity 0.2s;
+}
+.aw-link-card:hover .aw-link-icon-wrap svg {
+  color: var(--accent);
+  opacity: 1;
+}
+
+/* ── 文字区（水平卡用） ── */
+.aw-link-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.aw-link-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aw-link-desc {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── 箭头图标 ── */
+.aw-link-arrow {
+  flex-shrink: 0;
+  color: var(--muted);
+  opacity: 0;
+  transform: translate(-3px, 3px);
+  transition: opacity 0.2s, transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.aw-link-card:hover .aw-link-arrow {
+  opacity: 0.55;
+  transform: translate(0, 0);
+}
+
+/* ─────────────────────────────────────────
+   底栏（法律声明）
+   ───────────────────────────────────────── */
+.aw-content-footer {
+  padding: 10px 36px;
+  font-size: 10.5px;
+  color: var(--muted);
+  opacity: 0.3;
+  flex-shrink: 0;
+  text-align: right;
+  letter-spacing: 0.1px;
   -webkit-app-region: drag;
+}
+
+/* ══════════════════════════════════════════════════════
+   面板 3（生态资源）— 快速参考区
+   三张次要卡片下方，simple 几行，不拉伸，卡片可自然压缩
+   ══════════════════════════════════════════════════════ */
+
+/* 调整：次要卡片从 flex:1（强制撑满）改为可收缩模式 */
+.aw-res-secondary {
+  flex: 1 1 0;          /* 有空间时仍拉伸；空间不足时向下让给 quickref */
+  min-height: 80px;     /* 卡片最低保留高度，不至于被压消失 */
+}
+
+/* ── 快速参考容器 ── */
+.aw-quickref {
+  flex-shrink: 0;           /* 始终保持自然高度，不被压缩 */
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  opacity: 0.9;
+}
+
+/* 每行：标签 + 值 + 动作图标 */
+.aw-qr-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-app-region: no-drag;
+}
+.aw-qr-item:hover {
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+}
+.aw-qr-item:hover .aw-qr-action {
+  opacity: 0.5;
+}
+
+/* 左侧固定宽度标签 */
+.aw-qr-label {
+  flex-shrink: 0;
+  width: 62px;               /* 统一对齐 */
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  opacity: 0.55;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+/* 值：等宽字体，超长截断 */
+.aw-qr-val {
+  flex: 1;
+  min-width: 0;
+  font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+  font-size: 10px;
+  color: var(--muted);
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Docker 命令行：前景色更亮 */
+.aw-qr-val.aw-qr-cmd {
+  color: var(--fg);
+  opacity: 0.75;
+}
+
+/* 右侧动作图标（copy / 外链箭头） */
+.aw-qr-action {
+  flex-shrink: 0;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.15s;
 }

@@ -18,7 +18,6 @@ import { QuitDialog } from './components/QuitDialog';
 
 import { GuiApp } from '../bindings/github.com/sinspired/subs-check-pro-gui';
 import { AppInfo } from '../bindings/github.com/sinspired/subs-check-pro-gui';
-import { OpenAboutWindow } from '../bindings/github.com/sinspired/subs-check-pro-gui/guiapp';
 
 // UI 状态机：每个状态对应一个独立视图
 type View = 'loading' | 'error' | 'portConflict' | 'main' | 'password' | 'about';
@@ -125,7 +124,7 @@ export function App() {
         <img src="/logo.svg" alt="logo" class="brand-icon" />
       </div>
 
-      {/* 底部工具行：开机自启 | 竖线 | github | tg | docker */}
+      {/* ── 底部工具行：开机自启 | 竖线 | github | tg | docker | 竖线 | ⓘ 关于 */}
       <nav class="brand-links">
         {/* 开机自启图标按钮 */}
         <button
@@ -143,7 +142,7 @@ export function App() {
         {/* 竖线分割 */}
         <span class="brand-sep" />
 
-        {/* 社交链接：img + CSS filter 实现主题适配 */}
+        {/* 社交链接 */}
         <a class="brand-link" onClick={() => openLink('https://github.com/sinspired/subs-check-pro')} title="GitHub">
           <img src="/github.svg" alt="GitHub" class="brand-social-icon" />
         </a>
@@ -153,6 +152,23 @@ export function App() {
         <a class="brand-link" onClick={() => openLink('https://hub.docker.com/r/sinspired/subs-check-pro')} title="Docker Hub">
           <img src="/docker.svg" alt="Docker" class="brand-social-icon" />
         </a>
+
+        {/* 竖线分割（与左侧开机自启对称） */}
+        {/* <span class="brand-sep" /> */}
+
+        {/* ⓘ 关于按钮：复用 brand-autostart 样式，无 active 态，始终灰色 */}
+        <button
+          class="brand-autostart"
+          title="关于 Subs Check Pro"
+          onClick={GuiApp.OpenAboutWindow}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+        </button>
       </nav>
     </aside>
   );
@@ -211,19 +227,6 @@ export function App() {
     if (!info) return <div class="lp-footer" />;
     return (
       <div class="lp-footer">
-        {/* ⓘ 关于按钮，紧靠版本号左侧 */}
-        <button
-          class="icon-btn about-info-btn"
-          title="关于 Subs Check Pro"
-          onClick={OpenAboutWindow}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="16" x2="12" y2="12" />
-            <line x1="12" y1="8" x2="12.01" y2="8" />
-          </svg>
-        </button>
         <a
           class="ver-tag ver-gui"
           onClick={() => openLink('https://github.com/sinspired/subs-check-pro-gui')}
