@@ -57,7 +57,7 @@ const FEATURES = [
 const TG_LINK = {
   title: 'Telegram 群组',
   desc: '实时技术探讨 · Issue 跟踪 · 版本更新推送 · 欢迎加入',
-  url: 'https://t.me/subs_check_pro',
+  url: 'https://proxy.linkpc.dpdns.org/https://t.me/subs_check_pro',
 };
 
 const SEC_LINKS = [
@@ -65,19 +65,19 @@ const SEC_LINKS = [
     svgSrc: '/github.svg' as string | null,
     title: 'GUI 客户端仓库',
     desc: '获取源码、构建版本及主题资源',
-    url: 'https://github.com/sinspired/subs-check-pro-gui',
+    url: 'https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro-gui',
   },
   {
     svgSrc: '/github.svg' as string | null,
     title: '内核引擎仓库',
     desc: '查阅内核引擎源码，版本发布及官方 Docker 镜像',
-    url: 'https://github.com/sinspired/subs-check-pro',
+    url: 'https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro',
   },
   {
     svgSrc: null,
     title: '官方知识库 Wiki',
     desc: '部署教程、订阅规则及高阶配置',
-    url: 'https://github.com/sinspired/subs-check-pro/wiki',
+    url: 'https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro/wiki',
   },
 ];
 
@@ -166,7 +166,7 @@ export function AboutApp() {
         <div class="aw-ver-block">
           <div
             class="aw-ver-row"
-            onClick={() => openLink('https://github.com/sinspired/subs-check-pro-gui')}
+            onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro-gui')}
             title="打开 GUI 仓库"
           >
             <span class="aw-ver-dot gui-dot" />
@@ -176,7 +176,7 @@ export function AboutApp() {
           <div class="aw-ver-divider" />
           <div
             class="aw-ver-row"
-            onClick={() => openLink('https://github.com/sinspired/subs-check-pro')}
+            onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro')}
             title="打开 内核 仓库"
           >
             <span class="aw-ver-dot core-dot" />
@@ -204,14 +204,14 @@ export function AboutApp() {
           © 2026{' '}
           <span
             style="cursor:pointer; text-decoration:underline; text-underline-offset:2px;"
-            onClick={() => openLink('https://github.com/sinspired')}
+            onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired')}
           >
             Sinspired
           </span>
           <span>&nbsp;·&nbsp;</span>
           <span
             style="cursor:pointer; text-decoration:underline; text-underline-offset:2px;"
-            onClick={() => openLink('https://www.gnu.org/licenses/gpl-3.0.html')}
+            onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://www.gnu.org/licenses/gpl-3.0.html')}
           >
             GPL-3.0 License
           </span>
@@ -441,7 +441,7 @@ export function AboutApp() {
 
                       {/* 通知渠道配置 */}
                       <div class="aw-qr-item"
-                        onClick={() => openLink('https://github.com/sinspired/subs-check-pro/wiki/Notifications')}>
+                        onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro/wiki/Notifications')}>
                         <svg class="aw-qr-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
                           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -454,7 +454,7 @@ export function AboutApp() {
 
                       {/* 自建 GitHub 加速代理 */}
                       <div class="aw-qr-item"
-                        onClick={() => openLink('https://github.com/sinspired/CF-Proxy')}>
+                        onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/CF-Proxy')}>
                         <svg class="aw-qr-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
                           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <circle cx="12" cy="12" r="10" />
@@ -479,7 +479,7 @@ export function AboutApp() {
         <footer class="aw-content-footer">
           <span
             style="cursor:pointer; text-decoration:underline; text-underline-offset:2px;"
-            onClick={() => openLink('https://github.com/sinspired/subs-check-pro-gui')}
+            onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro-gui')}
           >
             GitHub 仓库
           </span>

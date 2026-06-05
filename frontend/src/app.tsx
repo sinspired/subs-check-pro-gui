@@ -143,10 +143,10 @@ export function App() {
         <span class="brand-sep" />
 
         {/* 社交链接 */}
-        <a class="brand-link" onClick={() => openLink('https://github.com/sinspired/subs-check-pro')} title="GitHub">
+        <a class="brand-link" onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro')} title="GitHub">
           <img src="/github.svg" alt="GitHub" class="brand-social-icon" />
         </a>
-        <a class="brand-link" onClick={() => openLink('https://t.me/sinspired')} title="Telegram">
+        <a class="brand-link" onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://t.me/sinspired')} title="Telegram">
           <img src="/telegram.svg" alt="Telegram" class="brand-social-icon" />
         </a>
         <a class="brand-link" onClick={() => openLink('https://hub.docker.com/r/sinspired/subs-check-pro')} title="Docker Hub">
@@ -229,7 +229,7 @@ export function App() {
       <div class="lp-footer">
         <a
           class="ver-tag ver-gui"
-          onClick={() => openLink('https://github.com/sinspired/subs-check-pro-gui')}
+          onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro-gui')}
           title={`GUI 版本：${info.guiVersion || 'dev'}  →  sinspired/subs-check-pro-gui`}
         >
           GUI&nbsp;{info.guiVersion || 'dev'}
@@ -237,7 +237,7 @@ export function App() {
         <span class="ver-dot">·</span>
         <a
           class="ver-tag ver-core"
-          onClick={() => openLink('https://github.com/sinspired/subs-check-pro')}
+          onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro')}
           title={`内核 版本：${info.coreVersion || 'dev'}  →  sinspired/subs-check-pro`}
         >
           内核&nbsp;{info.coreVersion || 'dev'}
