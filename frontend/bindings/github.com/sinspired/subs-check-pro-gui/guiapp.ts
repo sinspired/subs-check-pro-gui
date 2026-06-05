@@ -85,8 +85,8 @@ export function OpenAboutWindow(): $CancellablePromise<void> {
  * 前端品牌面板（GitHub、Telegram、Docker Hub）及版本标签点击时调用，
  * 替代 window.open，避免打开系统默认浏览器，保持应用内体验一致。
  */
-export function OpenBrandURL(url: string): $CancellablePromise<void> {
-    return $Call.ByID(541730476, url);
+export function OpenBrandURL(url: string, windowSize: string): $CancellablePromise<void> {
+    return $Call.ByID(541730476, url, windowSize);
 }
 
 /**

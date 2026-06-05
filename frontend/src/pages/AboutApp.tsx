@@ -12,9 +12,9 @@ import { GuiApp, AppInfo } from '../../bindings/github.com/sinspired/subs-check-
 import { useToast } from '../hooks/useToast';
 import { Toast } from '../components/Toast';
 
-async function openLink(url: string) {
+async function openLink(url: string, windowSize: 'extraLarge' | 'large' | 'medium' | 'small' | 'tiny' | 'wide' = 'medium') {
   try {
-    await GuiApp.OpenBrandURL(url);
+    await GuiApp.OpenBrandURL(url, windowSize);
   } catch {
     window.open(url, '_blank');
   }
@@ -313,7 +313,7 @@ export function AboutApp() {
                       <IconExternal />
                     </div>
 
-                    <div class="aw-qr-item" onClick={() => openLink(`http://localhost:${port}/files`)}>
+                    <div class="aw-qr-item" onClick={() => openLink(`http://localhost:${port}/files`, 'small')}>
                       <svg class="aw-qr-icon" width="12" height="12" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
@@ -349,7 +349,7 @@ export function AboutApp() {
               <div class="aw-res-layout">
 
                 {/* ── Telegram 主推卡（突出） ── */}
-                <div class="aw-link-card aw-featured" onClick={() => openLink(TG_LINK.url)}>
+                <div class="aw-link-card aw-featured" onClick={() => openLink(TG_LINK.url, 'tiny')}>
                   <div class="aw-link-icon-wrap aw-featured-icon">
                     <img src="/telegram.svg" class="aw-link-svg" alt="Telegram" />
                   </div>

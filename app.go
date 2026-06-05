@@ -78,7 +78,7 @@ type AppInfo struct {
 // OpenBrandURL 在 Wails 无地址栏窗口中打开品牌 / 社交链接。
 // 前端品牌面板（GitHub、Telegram、Docker Hub）及版本标签点击时调用，
 // 替代 window.open，避免打开系统默认浏览器，保持应用内体验一致。
-func (g *GuiApp) OpenBrandURL(url string) {
+func (g *GuiApp) OpenBrandURL(url string, windowSize string) {
 	if url == "" {
 		return
 	}
@@ -90,6 +90,31 @@ func (g *GuiApp) OpenBrandURL(url string) {
 	if wailsApp == nil {
 		return
 	}
+
+	width := 1200
+	height := 800
+
+	switch windowSize {
+	case "extraLarge":
+		width = 1920
+		height = 1440
+	case "large":
+		width = 1600
+		height = 1200
+	case "medium":
+		width = 1200
+		height = 800
+	case "small":
+		width = 720
+		height = 720
+	case "tiny":
+		width = 600
+		height = 600
+	case "wide":
+		width = 1600
+		height = 900
+	}
+	
 	// application.InvokeAsync 确保窗口创建在 Wails 主线程执行
 	capturedURL := url
 	application.InvokeAsync(func() {
@@ -98,10 +123,10 @@ func (g *GuiApp) OpenBrandURL(url string) {
 		loadingURL := "/loading.html#" + capturedURL
 		popup := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Title:     "Subs Check Pro",
-			Width:     1200,
-			Height:    800,
-			MinWidth:  600,
-			MinHeight: 400,
+			Width:     width,
+			Height:    height,
+			MinWidth:  580,
+			MinHeight: 580,
 			URL:       loadingURL,
 			Mac: application.MacWindow{
 				InvisibleTitleBarHeight: 50,

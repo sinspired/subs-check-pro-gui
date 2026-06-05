@@ -24,9 +24,9 @@ type View = 'loading' | 'error' | 'portConflict' | 'main' | 'password' | 'about'
 
 // 在 Wails 无地址栏窗口中打开链接（不唤起系统浏览器）。
 // 若 Go 调用失败（极少情况），降级到系统浏览器作为兜底。
-async function openLink(url: string) {
+async function openLink(url: string, windowSize: 'extraLarge' | 'large' | 'medium' | 'small' | 'tiny' | 'wide' = 'medium') {
   try {
-    await GuiApp.OpenBrandURL(url);
+    await GuiApp.OpenBrandURL(url, windowSize);
   } catch {
     window.open(url, '_blank');
   }
@@ -146,7 +146,7 @@ export function App() {
         <a class="brand-link" onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro')} title="GitHub">
           <img src="/github.svg" alt="GitHub" class="brand-social-icon" />
         </a>
-        <a class="brand-link" onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://t.me/sinspired')} title="Telegram">
+        <a class="brand-link" onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://t.me/sinspired', 'tiny')} title="Telegram">
           <img src="/telegram.svg" alt="Telegram" class="brand-social-icon" />
         </a>
         <a class="brand-link" onClick={() => openLink('https://hub.docker.com/r/sinspired/subs-check-pro')} title="Docker Hub">
