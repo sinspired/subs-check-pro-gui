@@ -149,7 +149,7 @@ func main() {
 		wailsApp.Quit()
 	}
 
-	startSysTray(wailsApp, guiApp, coreApp, notifier, onQuit)
+	startSysTray(wailsApp, guiApp, onQuit)
 
 	slog.Info("Wails 双窗口已启动", "appReady", appInitOK)
 

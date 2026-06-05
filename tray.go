@@ -13,10 +13,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	coreapp "github.com/sinspired/subs-check-pro/v2/app"
 	"github.com/sinspired/subs-check-pro/v2/config"
 	"github.com/wailsapp/wails/v3/pkg/application"
-	"github.com/wailsapp/wails/v3/pkg/services/notifications"
 )
 
 // trayIcon 嵌入托盘图标文件（ICO 格式，Windows/Linux 通用）。
@@ -26,7 +24,7 @@ import (
 var trayIcon []byte
 
 //go:embed logo_32x32.png
-var logo_32 []byte
+var logo32 []byte
 
 // windowVisible 跟踪当前窗口可见状态。
 var windowVisible atomic.Bool
@@ -51,8 +49,6 @@ var (
 func startSysTray(
 	wailsApp *application.App,
 	guiApp *GuiApp,
-	coreApp *coreapp.App,
-	notifier *notifications.NotificationService,
 	onQuit func(),
 ) {
 	// 创建托盘实例
@@ -63,7 +59,7 @@ func startSysTray(
 	tray.SetTooltip("Subs Check Pro - 订阅检测管理")
 
 	// 构建右键菜单
-	menu := buildTrayMenu(wailsApp, guiApp, coreApp, notifier, onQuit)
+	menu := buildTrayMenu(wailsApp, guiApp, onQuit)
 	tray.SetMenu(menu)
 
 	// 左键单击：切换当前活跃窗口的显示/隐藏
@@ -91,13 +87,11 @@ func startSysTray(
 func buildTrayMenu(
 	wailsApp *application.App,
 	guiApp *GuiApp,
-	coreApp *coreapp.App,
-	notifier *notifications.NotificationService,
 	onQuit func(),
 ) *application.Menu {
 	menu := wailsApp.NewMenu()
 
-	menu.Add("Subs Check Pro 桌面端").SetBitmap(logo_32).SetEnabled(false)
+	menu.Add("Subs Check Pro 桌面端").SetBitmap(logo32).SetEnabled(false)
 
 	menu.AddSeparator()
 
