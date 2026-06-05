@@ -168,6 +168,11 @@ func buildTrayMenu(
 
 	menu.AddSeparator()
 
+	menu.Add("开始检测").OnClick(func(_ *application.Context) {
+		coreApp.TriggerCheck()
+		sendOSNotification("Subs Check Pro", "已触发检测任务\n可在系统托盘、管理界面查看检测进度")
+	})
+
 	menu.Add("停止检测").OnClick(func(_ *application.Context) {
 		if err := callBackendForceClose(); err != nil {
 			slog.Warn("检测任务停止失败", "error", err)
