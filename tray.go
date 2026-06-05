@@ -13,6 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/sinspired/subs-check-pro/v2/app"
 	"github.com/sinspired/subs-check-pro/v2/config"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -49,6 +50,8 @@ var (
 func startSysTray(
 	wailsApp *application.App,
 	guiApp *GuiApp,
+	coreApp *app.App,
+	appInitOK bool,
 	onQuit func(),
 ) {
 	// 创建托盘实例
@@ -59,7 +62,7 @@ func startSysTray(
 	tray.SetTooltip("Subs Check Pro - 订阅检测管理")
 
 	// 构建右键菜单
-	menu := buildTrayMenu(wailsApp, guiApp, onQuit)
+	menu := buildTrayMenu(wailsApp, guiApp, coreApp, appInitOK, onQuit)
 	tray.SetMenu(menu)
 
 	// 左键单击：切换当前活跃窗口的显示/隐藏
@@ -87,6 +90,8 @@ func startSysTray(
 func buildTrayMenu(
 	wailsApp *application.App,
 	guiApp *GuiApp,
+	coreApp *app.App,
+	appInitOK bool,
 	onQuit func(),
 ) *application.Menu {
 	menu := wailsApp.NewMenu()
@@ -102,6 +107,11 @@ func buildTrayMenu(
 	menu.Add("隐藏主界面").OnClick(func(_ *application.Context) {
 		guiApp.hideActiveWindow()
 		sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击图标可恢复窗口")
+	})
+
+	menu.Add("返回登录窗口").OnClick(func(_ *application.Context) {
+		guiApp.BackToLogin()
+		sendOSNotification("Subs Check Pro", "已返回登录窗口")
 	})
 
 	menu.AddSeparator()

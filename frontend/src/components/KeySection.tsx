@@ -149,6 +149,11 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
     const enterURL = `http://localhost:${info.listenPort}/gui/enter?n=${encodeURIComponent(nonce)}`;
     try {
       await GuiApp.EnterWebUI(enterURL);
+
+      // 延迟300ms重置状态
+      setTimeout(() => {
+        setLaunching(false);
+      }, 300);
     } catch (e: any) {
       toast('进入管理界面失败: ' + (e?.message ?? ''));
       setLaunching(false);
