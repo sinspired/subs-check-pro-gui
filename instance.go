@@ -36,7 +36,7 @@ func ensureSingleInstance() {
 	if err != nil {
 		// 端口被占用 → 判断是否是本程序的另一个实例
 		if trySignalExistingInstance() {
-			slog.Info("检测到已有实例正在运行，已发送唤醒信号，本实例退出")
+			slog.Debug("检测到已有实例正在运行，已发送唤醒信号，本实例退出")
 			os.Exit(0)
 		}
 		// 无法握手 → 端口被其他进程占用，优雅降级允许多实例

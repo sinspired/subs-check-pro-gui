@@ -81,7 +81,7 @@ func startSysTray(
 		tray.OpenMenu()
 	})
 
-	slog.Info("系统托盘初始化完成（Wails v3 原生）")
+	slog.Debug("系统托盘初始化完成（Wails v3 原生）")
 }
 
 func buildTrayMenu(
@@ -111,14 +111,14 @@ func buildTrayMenu(
 			slog.Warn("检测任务停止失败", "error", err)
 		} else {
 			sendOSNotification("Subs Check Pro", "已发送停止检测信号\n正在等待结果收集完成")
-			slog.Info("托盘：已发送停止检测信号")
+			slog.Debug("托盘：已发送停止检测信号")
 		}
 	})
 
 	menu.Add("结束检测并退出").OnClick(func(_ *application.Context) {
 		if gracefulQuitPending.CompareAndSwap(false, true) {
 			sendOSNotification("Subs Check Pro", "正在等待检测完成后退出\n再次点击将立即强制退出")
-			slog.Info("托盘：已发送停止检测信号，等待检测完成后退出")
+			slog.Debug("托盘：已发送停止检测信号，等待检测完成后退出")
 
 			gracefulQuitOnce.Do(func() {
 				go func() {
@@ -134,7 +134,7 @@ func buildTrayMenu(
 				}()
 			})
 		} else {
-			slog.Warn("托盘：用户二次确认，立即退出")
+			slog.Warn("GUI：用户二次确认，立即退出")
 			sendOSNotification("Subs Check Pro", "正在强制退出…")
 			onQuit()
 		}
@@ -191,7 +191,7 @@ func buildTrayMenu(
 	})
 
 	menu.Add("退出").OnClick(func(_ *application.Context) {
-		slog.Info("托盘：立即退出")
+		slog.Info("GUI：强制退出")
 		sendOSNotification("Subs Check Pro", "正在退出…")
 		onQuit()
 	})
@@ -282,7 +282,7 @@ func hideWindow(win *application.WebviewWindow) {
 func NotifyHideToTray() {
 	windowVisible.Store(false)
 	sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击托盘图标可恢复窗口")
-	slog.Info("已最小化到系统托盘，单击托盘图标可恢复窗口")
+	slog.Debug("已最小化到系统托盘，单击托盘图标可恢复窗口")
 }
 
 // formatSysTrayTooltip 构建托盘悬浮提示文本，包含应用名称和当前监听端口。

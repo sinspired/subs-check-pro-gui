@@ -115,7 +115,7 @@ func main() {
 		webUIWin.Hide()
 		windowVisible.Store(false)
 		sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击托盘图标可恢复窗口")
-		slog.Info("WebUI 窗口已最小化到系统托盘")
+		slog.Debug("WebUI 窗口已最小化到系统托盘")
 	})
 
 	// ── 登录窗口最小化：同样隐藏到托盘 ──────────────────────────────────────
@@ -123,12 +123,12 @@ func main() {
 		loginWin.Hide()
 		windowVisible.Store(false)
 		sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击托盘图标可恢复窗口")
-		slog.Info("登录窗口已最小化到系统托盘")
+		slog.Debug("登录窗口已最小化到系统托盘")
 	})
 
 	// 退出时统一清理
 	wailsApp.OnShutdown(func() {
-		slog.Info("应用正在退出，执行清理工作…")
+		slog.Info("GUI 程序正在退出，执行清理工作…")
 		if appInitOK {
 			if err := coreApp.Shutdown(); err != nil {
 				slog.Error("关闭应用失败", "error", err)
@@ -140,7 +140,7 @@ func main() {
 	// 单实例唤醒：显示当前活跃窗口
 	go func() {
 		for range showSignalCh {
-			slog.Info("收到单实例唤醒信号，显示主窗口")
+			slog.Debug("收到单实例唤醒信号，显示主窗口")
 			guiApp.showActiveWindow()
 		}
 	}()
@@ -151,7 +151,7 @@ func main() {
 
 	startSysTray(wailsApp, guiApp, onQuit)
 
-	slog.Info("Wails 双窗口已启动", "appReady", appInitOK)
+	slog.Debug("Wails 双窗口已启动", "appReady", appInitOK)
 
 	if err := wailsApp.Run(); err != nil {
 		slog.Error("Wails 运行失败", "error", err)
