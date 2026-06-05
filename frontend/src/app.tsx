@@ -146,7 +146,7 @@ export function App() {
         <a class="brand-link" onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro')} title="GitHub">
           <img src="/github.svg" alt="GitHub" class="brand-social-icon" />
         </a>
-        <a class="brand-link" onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://t.me/sinspired', 'tiny')} title="Telegram">
+        <a class="brand-link" onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://t.me/sinspired_ai', 'tiny')} title="Telegram">
           <img src="/telegram.svg" alt="Telegram" class="brand-social-icon" />
         </a>
         <a class="brand-link" onClick={() => openLink('https://hub.docker.com/r/sinspired/subs-check-pro')} title="Docker Hub">
