@@ -138,17 +138,8 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
   async function enterWebUI() {
     if (launching) return;
     setLaunching(true);
-    let nonce: string;
     try {
-      nonce = await GuiApp.GetEnterNonce(true);
-    } catch (e: any) {
-      toast('获取登录凭证失败: ' + (e?.message ?? ''));
-      setLaunching(false);
-      return;
-    }
-    const enterURL = `http://localhost:${info.listenPort}/gui/enter?n=${encodeURIComponent(nonce)}`;
-    try {
-      await GuiApp.EnterWebUI(enterURL);
+      await GuiApp.EnterWebUI();
 
       // 延迟300ms重置状态
       setTimeout(() => {

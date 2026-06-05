@@ -26,23 +26,16 @@ export function PasswordConfirm({ cfgPath, toast, onDone, onBack, onReselect }: 
     setLoading(true);
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
-    let nonce: string;
     try {
-      nonce = await GuiApp.ValidateConfigKey(trimmed, true);
+      await GuiApp.ValidateConfigKey(trimmed, true);
     } catch (e: any) {
       toast('❌ ' + (e?.message || '密钥错误'));
       setLoading(false);
       return;
     }
 
-    let newInfo: AppInfo | null = null;
-    try { newInfo = await GuiApp.GetAppInfo(); } catch { /* 降级 */ }
-
-    const port = newInfo?.listenPort || '8199';
-    const enterURL = `http://localhost:${port}/gui/enter?n=${encodeURIComponent(nonce)}`;
-
     try {
-      await GuiApp.EnterWebUI(enterURL);
+      await GuiApp.EnterWebUI();
     } catch (e: any) {
       toast('进入管理界面失败: ' + (e?.message ?? ''));
       setLoading(false);

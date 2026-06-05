@@ -12,6 +12,34 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
+// wailsOrigins 是 Wails webview 在各平台发出请求时携带的 Origin 头。
+// WebView2 (Windows): http://wails.localhost
+// WebKitGTK (Linux):  wails://
+// WKWebView (macOS):  wails://
+var wailsOrigins = map[string]bool{
+	"http://wails.localhost": true,
+	"wails://":               true,
+}
+
+// guiCORSMiddleware 为 Wails webview 的跨域请求添加必要的 CORS 响应头。
+// 仅允许已知的 Wails origin，不对外开放，安全性不受影响。
+func guiCORSMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		origin := c.GetHeader("Origin")
+		if wailsOrigins[origin] {
+			c.Header("Access-Control-Allow-Origin", origin)
+			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			c.Header("Access-Control-Allow-Headers", "Content-Type, X-API-Key, Authorization")
+			c.Header("Access-Control-Max-Age", "86400")
+			if c.Request.Method == "OPTIONS" {
+				c.AbortWithStatus(http.StatusNoContent)
+				return
+			}
+		}
+		c.Next()
+	}
+}
+
 // registerGuiRoutes 注册所有 /gui/* 辅助路由。
 // 统一入口，便于在 setup.go 和 CompleteInit 中复用。
 func registerGuiRoutes(router *gin.Engine) {

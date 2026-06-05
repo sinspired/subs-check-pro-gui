@@ -29,11 +29,24 @@ export function CompleteInit(): $CancellablePromise<void> {
 }
 
 /**
- * EnterWebUI 由前端调用：导航 WebUI 窗口、显示它、隐藏登录窗口。
- * 完全无定时器，无闪烁。
+ * EnterWebUI 由前端调用：切换到本地 WebUI 大窗，隐藏登录小窗。
+ * 
+ * 迁移后不再需要传入 Gin 的 enterURL：
+ *  - webUIWin 直接加载 Wails 资产服务器上的 /webui/admin.html
+ *  - APIKey 和端口由 admin.html 内联脚本通过 Wails binding 自行获取
  */
-export function EnterWebUI(enterURL: string): $CancellablePromise<void> {
-    return $Call.ByID(551937120, enterURL);
+export function EnterWebUI(): $CancellablePromise<void> {
+    return $Call.ByID(551937120);
+}
+
+/**
+ * GetApiKey 返回当前配置的 API Key，供本地 WebUI 页面通过 Wails binding 调用。
+ * 
+ * 安全边界：该 binding 仅对 Wails 资产服务器提供的页面可见（/webui/admin.html），
+ * 外部网络无法调用。APIKey 本身已明文保存在 config.yaml，此处不增加额外泄露面。
+ */
+export function GetApiKey(): $CancellablePromise<string> {
+    return $Call.ByID(242902589);
 }
 
 /**
@@ -57,6 +70,14 @@ export function GetAutoStartEnabled(): $CancellablePromise<boolean> {
  */
 export function GetEnterNonce(remember: boolean): $CancellablePromise<string> {
     return $Call.ByID(3832583147, remember);
+}
+
+/**
+ * GetListenPort 返回 Gin HTTP 服务监听的端口号（不含冒号），
+ * 供 newCombinedAssetHandler 构造反向代理目标地址使用。
+ */
+export function GetListenPort(): $CancellablePromise<string> {
+    return $Call.ByID(96953646);
 }
 
 /**

@@ -29,7 +29,7 @@ func main() {
 			application.NewService(notifier),
 		},
 		Assets: application.AssetOptions{
-			Handler: application.AssetFileServerFS(assets),
+			Handler: newCombinedAssetHandler(guiApp.configPath, guiApp.GetListenPort()),
 		},
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
