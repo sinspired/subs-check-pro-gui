@@ -201,7 +201,20 @@ export function AboutApp() {
 
         {/* 底部版权 */}
         <div class="aw-sidebar-footer">
-          © 2026 sinspired
+          © 2026{' '}
+          <span
+            style="cursor:pointer; text-decoration:underline; text-underline-offset:2px;"
+            onClick={() => openLink('https://github.com/sinspired')}
+          >
+            Sinspired
+          </span>
+          <span>&nbsp;·&nbsp;</span>
+          <span
+            style="cursor:pointer; text-decoration:underline; text-underline-offset:2px;"
+            onClick={() => openLink('https://www.gnu.org/licenses/gpl-3.0.html')}
+          >
+            GPL-3.0 License
+          </span>
         </div>
 
       </aside>
@@ -464,7 +477,13 @@ export function AboutApp() {
 
         {/* 底栏 */}
         <footer class="aw-content-footer">
-          仅供学习与调试研究，请遵守相关法律法规。
+          <span
+            style="cursor:pointer; text-decoration:underline; text-underline-offset:2px;"
+            onClick={() => openLink('https://github.com/sinspired/subs-check-pro-gui')}
+          >
+            GitHub 仓库
+          </span>
+          &nbsp;·&nbsp;仅供学习与调试研究，请遵守相关法律法规
         </footer>
       </div>
 
