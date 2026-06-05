@@ -28,6 +28,20 @@ import { initQuickPreview } from './cfg-quickpreview.js';
   const MAX_LOG_LINES = 100
   const MAX_FAILURE_DURATION_MS = 10000
   const ACTION_CONFIRM_TIMEOUT_MS = 600000
+
+  /**
+   * openInternalURL: 在 Wails GUI 环境下通过 /gui/popup 打开 Gin 服务内部页面；
+   * 浏览器环境下降级为 window.open。
+   * 仅用于相对路径（/files、/analysis 等），外部链接仍用 window.open。
+   */
+  function openInternalURL(path) {
+    if (window.__WAILS_GUI?.baseURL) {
+      const fullURL = window.__WAILS_GUI.baseURL + path
+      fetch('/gui/popup?url=' + encodeURIComponent(fullURL)).catch(() => {})
+    } else {
+      window.open(path, '_blank', 'noopener,noreferrer')
+    }
+  }
   const THEME_KEY = 'theme'
 
   // ==================== DOM 元素缓存 ====================
@@ -2654,26 +2668,26 @@ import { initQuickPreview } from './cfg-quickpreview.js';
 
     els.fileManagerBtn?.addEventListener('click', () => {
       if (sessionKey) safeLS('subscheck_api_key', sessionKey);
-      window.open('/files', '_blank', 'noopener,noreferrer');
+      openInternalURL('/files');
     });
 
     els.btnFiles?.addEventListener('click', () => {
       if (sessionKey) safeLS('subscheck_api_key', sessionKey);
-      window.open('/files', '_blank', 'noopener,noreferrer');
+      openInternalURL('/files');
     });
 
     els.analysisBtn?.addEventListener('click', () => {
       // 打开新标签前，将当前 sessionKey 写入 localStorage
       // 使 analysis.html 可以跨标签读取（无论是否勾选"记住密钥"）
       if (sessionKey) safeLS('subscheck_api_key', sessionKey);
-      window.open('/analysis', '_blank', 'noopener,noreferrer');
+      openInternalURL('/analysis');
     });
 
     els.btnAnalysis?.addEventListener('click', () => {
       // 打开新标签前，将当前 sessionKey 写入 localStorage
       // 使 analysis.html 可以跨标签读取（无论是否勾选"记住密钥"）
       if (sessionKey) safeLS('subscheck_api_key', sessionKey);
-      window.open('/analysis', '_blank', 'noopener,noreferrer');
+      openInternalURL('/analysis');
     });
 
     els.downloadLogsBtnSide?.addEventListener('click', async () => {

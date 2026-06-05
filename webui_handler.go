@@ -74,7 +74,7 @@ func newCombinedAssetHandler(configPath, listenPort string) http.Handler {
 		// ── /api/… /admin/… ────────────────────────────────────────────────
 		// 反向代理到 Gin HTTP 服务，绕开 Wails webview 的跨域限制。
 		// 请求由 Go 服务器端发出，不存在 CORS 问题。
-		case strings.HasPrefix(p, "/api/") || strings.HasPrefix(p, "/admin/"):
+		case strings.HasPrefix(p, "/api/") || strings.HasPrefix(p, "/admin/") || strings.HasPrefix(p, "/gui/"):
 			reverseProxyToGin(w, r, listenPort)
 
 		// ── /static/… ──────────────────────────────────────────────────────
