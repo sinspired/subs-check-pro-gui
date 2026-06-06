@@ -3,52 +3,75 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*.*.*"
+
+permissions:
+  contents: write
 
 jobs:
   build:
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            task: darwin:build
-            artifact: subs-check-pro-gui-darwin
+          # Windows (amd64)
           - os: windows-latest
+            arch: amd64
             task: windows:build
-            artifact: subs-check-pro-gui-windows.exe
+            artifact: subs-check-pro-gui-windows-amd64
+            
+          # macOS (Intel amd64)
+          - os: macos-13
+            arch: amd64
+            task: darwin:build
+            artifact: subs-check-pro-gui-darwin-amd64
+            
+          # macOS (Apple Silicon arm64)
+          - os: macos-14
+            arch: arm64
+            task: darwin:build
+            artifact: subs-check-pro-gui-darwin-arm64
+            
+          # Linux (amd64)
           - os: ubuntu-latest
+            arch: amd64
             task: linux:build
-            artifact: subs-check-pro-gui-linux
+            artifact: subs-check-pro-gui-linux-amd64
+            
+          # Linux (arm64) - 使用 GitHub 原生 ARM64 运行环境
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            task: linux:build
+            artifact: subs-check-pro-gui-linux-arm64
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v6
         with:
-          fetch-depth: 0  # 必须拉取完整历史，git describe 才能找到 tag
+          fetch-depth: 0
 
-      - uses: actions/setup-go@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
+          go-version: stable
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v6
         with:
-          node-version: '20'
-
-      - name: Install Task
-        uses: arduino/setup-task@v2
+          node-version: 24
 
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
 
-      # GUI_VERSION 由 Taskfile 中 `git describe --tags --abbrev=0` 自动读取
-      # 等同于当前推送的 tag（如 v1.2.3），无需手动传入
       - name: Build
         run: task ${{ matrix.task }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
           path: bin/
@@ -59,10 +82,62 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v8
         with:
           path: artifacts/
 
-      - uses: softprops/action-gh-release@v2
+      - name: Delete existing release
+        run: |
+          gh release view ${{ github.ref_name }} &>/dev/null && \
+            gh release delete ${{ github.ref_name }} --yes || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v3
         with:
           files: artifacts/**/*
+          generate_release_notes: true
+
+  notify:
+    needs: [release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Get release notes
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo 'notes<<EOF'
+            gh release view "${{ github.ref_name }}" --json body -q .body
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Send notifications
+        uses: sinspired/multi-release-notify@v1
+        with:
+          summary: >-
+            🎉 linux 和 mac 可能存在问题
+          release_notes: ${{ steps.release.outputs.notes }}
+
+          email_url: ${{ secrets.EMAIL_APPRISE_URL }}
+          telegram_url: ${{ secrets.TELEGRAM_APPRISE_URL }}
+          slack_url: ${{ secrets.DINGTALK_APPRISE_URL }}
+          bark_url: ${{ secrets.BARK_APPRISE_URL }}
+
+          urls: |
+            ntfy://subs-check-pro
