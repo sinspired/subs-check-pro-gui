@@ -737,6 +737,7 @@ func (g *GuiApp) OpenAboutWindow() {
 		})
 	})
 }
+
 // OpenSubLinksWindow 打开或聚焦「订阅链接」独立窗口（单例模式）。
 //
 // 调用来源：
@@ -761,9 +762,11 @@ func (g *GuiApp) OpenSubLinksWindow() {
 			Name:          "sub-links",
 			Title:         "Subs Check Pro — 订阅链接",
 			Width:         500,
-			Height:        460,
-			MinWidth:      420,
-			MinHeight:     340,
+			Height:        500,
+			MinWidth:      500,
+			MinHeight:     500,
+			MaxWidth:      500,
+			MaxHeight:     520,
 			DisableResize: false,
 			Frameless:     false,
 			URL:           "/sub-links.html",

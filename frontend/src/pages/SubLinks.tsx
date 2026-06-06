@@ -64,11 +64,12 @@ export function SubLinks() {
       const subBase = `http://127.0.0.1:${info.subStorePort}`;
 
       setLinks([
-        { key: 'common',         label: '通用订阅',                    url: `${subBase}${path}/download/sub` },
-        { key: 'v2ray',          label: 'V2Ray 订阅',                  url: `${subBase}${path}/download/sub?target=V2Ray`,          icon: '/v2ray.png' },
-        { key: 'mihomo',         label: 'Mihomo 订阅',                 url: `${subBase}${path}/api/file/mihomo`,                    icon: '/mihomo.png' },
-        { key: 'singbox-old',    label: `singbox-${vData.old} 订阅`,   url: `${subBase}${path}/api/file/singbox-${vData.old}`,      icon: '/singbox.png' },
-        { key: 'singbox-latest', label: `singbox-${vData.latest} 订阅`, url: `${subBase}${path}/api/file/singbox-${vData.latest}`,  icon: '/singbox.png' },
+        { key: 'common', label: '通用订阅', url: `${subBase}${path}/download/sub` },
+        { key: 'v2ray', label: 'V2Ray 订阅', url: `${subBase}${path}/download/sub?target=V2Ray`, icon: '/v2ray.png' },
+        { key: 'mihomo', label: 'Mihomo 订阅', url: `${subBase}${path}/api/file/mihomo`, icon: '/mihomo.png' },
+        { key: 'singbox-old', label: `singbox-${vData.old} 订阅`, url: `${subBase}${path}/api/file/singbox-${vData.old}`, icon: '/singbox.png' },
+        { key: 'singbox-latest', label: `singbox-${vData.latest} 订阅`, url: `${subBase}${path}/api/file/singbox-${vData.latest}`, icon: '/singbox.png' },
+        { key: 'shadowrocket', label: 'Shadowrocket 订阅', url: `${subBase}${path}/download/sub?target=ShadowRocket`, icon: '/shadowrocket.png' },
       ]);
       setStatus('ready');
     } catch (e: any) {
