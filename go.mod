@@ -8,9 +8,9 @@ require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/goccy/go-yaml v1.19.2
 	github.com/lmittmann/tint v1.1.3
-	github.com/metacubex/mihomo v1.19.26
-	github.com/sinspired/subs-check-pro/v2 v2.5.4
-	github.com/wailsapp/wails/v3 v3.0.0-alpha.97
+	github.com/metacubex/mihomo v1.19.27
+	github.com/sinspired/subs-check-pro/v2 v2.5.5
+	github.com/wailsapp/wails/v3 v3.0.0-alpha.98
 	golang.org/x/sys v0.45.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
@@ -32,7 +32,7 @@ require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/biter777/countries v1.7.5 // indirect
 	github.com/bytedance/gopkg v0.1.4 // indirect
-	github.com/bytedance/sonic v1.15.1 // indirect
+	github.com/bytedance/sonic v1.15.2 // indirect
 	github.com/bytedance/sonic/loader v0.5.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
@@ -82,7 +82,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
 	github.com/hashicorp/go-version v1.9.0 // indirect
 	github.com/huin/goupnp v1.3.0 // indirect
-	github.com/insomniacslk/dhcp v0.0.0-20260407060928-11b94ed970f2 // indirect
+	github.com/insomniacslk/dhcp v0.0.0-20260603135910-a415979eb11e // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jchv/go-winloader v0.0.0-20250406163304-c1995be93bd1 // indirect
 	github.com/jsimonetti/rtnetlink v1.4.2 // indirect
@@ -156,7 +156,7 @@ require (
 	github.com/pjbgf/sha1cd v0.6.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
-	github.com/quic-go/quic-go v0.59.1 // indirect
+	github.com/quic-go/quic-go v0.60.0 // indirect
 	github.com/rasky/go-lzo v0.0.0-20200203143853-96a758eda86e // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rs/xid v1.6.0 // indirect
@@ -200,7 +200,7 @@ require (
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
 	golang.org/x/arch v0.27.0 // indirect
 	golang.org/x/crypto v0.52.0 // indirect
-	golang.org/x/exp v0.0.0-20260529124908-c761662dc8c9 // indirect
+	golang.org/x/exp v0.0.0-20260603202125-055de637280b // indirect
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
