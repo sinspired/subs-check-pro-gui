@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch: # 支持手动触发调试
 
 permissions:
   contents: write
@@ -19,12 +20,6 @@ jobs:
             task: windows:build
             artifact: subs-check-pro-gui-windows-amd64
             
-          # macOS (Intel amd64)
-          - os: macos-13
-            arch: amd64
-            task: darwin:build
-            artifact: subs-check-pro-gui-darwin-amd64
-            
           # macOS (Apple Silicon arm64)
           - os: macos-14
             arch: arm64
@@ -32,12 +27,12 @@ jobs:
             artifact: subs-check-pro-gui-darwin-arm64
             
           # Linux (amd64)
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             arch: amd64
             task: linux:build
             artifact: subs-check-pro-gui-linux-amd64
             
-          # Linux (arm64) - 使用 GitHub 原生 ARM64 运行环境
+          # Linux (arm64)
           - os: ubuntu-24.04-arm
             arch: arm64
             task: linux:build
@@ -51,7 +46,6 @@ jobs:
         with:
           fetch-depth: 0
 
-
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
@@ -62,8 +56,17 @@ jobs:
         with:
           node-version: 24
 
+      - name: Install Linux Dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev
+
       - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.98
+
+      - name: Install Task CLI and pnpm
+        run: npm install -g @go-task/cli pnpm
 
       - name: Build
         run: task ${{ matrix.task }}
@@ -131,7 +134,7 @@ jobs:
         uses: sinspired/multi-release-notify@v1
         with:
           summary: >-
-            🎉 linux 和 mac 可能存在问题
+            🎉 linux 和 mac 可能存在问题，请及时反馈
           release_notes: ${{ steps.release.outputs.notes }}
 
           email_url: ${{ secrets.EMAIL_APPRISE_URL }}
