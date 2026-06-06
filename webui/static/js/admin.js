@@ -30,12 +30,12 @@ import { initQuickPreview } from './cfg-quickpreview.js';
   const ACTION_CONFIRM_TIMEOUT_MS = 600000
 
   /**
-   * openInternalURL: 在 Wails GUI 环境下通过 /gui/popup 打开 Gin 服务内部页面；
-   * 浏览器环境下降级为 window.open。
-   * 仅用于相对路径（/files、/analysis 等），外部链接仍用 window.open。
-   * @param {string} path   相对路径，如 '/files'
-   * @param {string} [size] 窗口尺寸：tiny/small/medium/large/extraLarge/wide，默认 medium
-   */
+ * openInternalURL: 在 Wails GUI 环境下通过 /gui/popup 打开 Gin 服务内部页面；
+ * 浏览器环境下降级为 window.open。
+ * 仅用于相对路径（/files、/analysis 等），外部链接仍用 window.open。
+ * @param {string} path   相对路径，如 '/files'
+ * @param {string} [size] 窗口尺寸：tiny/small/medium/large/extraLarge/wide，默认 medium
+ */
   function openInternalURL(path, size) {
     if (window.__WAILS_GUI?.baseURL) {
       const fullURL = window.__WAILS_GUI.baseURL + path
@@ -47,7 +47,7 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     }
   }
 
-  const THEME_KEY = 'scp_theme'  // 与登录窗口 useTheme.ts 保持一致（同 origin，共享 localStorage）
+  const THEME_KEY = 'scp_theme'
 
   // ==================== DOM 元素缓存 ====================
   const $ = s => document.querySelector(s)
@@ -1575,8 +1575,7 @@ import { initQuickPreview } from './cfg-quickpreview.js';
       ${miniGridHTML}
 
       <a href="/analysis" class="summary-analysis-btn"
-   target="_blank" title="查看完整分析报告"
-   onclick="e => { e.preventDefault();if (sessionKey) safeLS('subscheck_api_key', sessionKey); openInternalURL('/analysis'); }">
+         target="_blank" rel="noopener noreferrer" title="查看完整分析报告">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round" width="11" height="11">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
@@ -2147,12 +2146,12 @@ import { initQuickPreview } from './cfg-quickpreview.js';
   }
 
   /**
-   * 构建 Sub-Store 访问 URL
-   * @param {Object} config 配置对象
-   * @param {string} config.subStorePath sub-store 路径
-   * @param {string|number} config.portStr sub-store 端口
-   * @returns {Object} 包含完整 URL 和 subStorePath
-   */
+     * 构建 Sub-Store 访问 URL
+     * @param {Object} config 配置对象
+     * @param {string} config.subStorePath sub-store 路径
+     * @param {string|number} config.portStr sub-store 端口
+     * @returns {Object} 包含完整 URL 和 subStorePath
+     */
   function buildSubStoreUrl(config) {
     const { subStorePath, subStorePathYaml, portStr } = config
     if (!subStorePath) throw new Error('配置中未找到 sub_store_path')

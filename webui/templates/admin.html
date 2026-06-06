@@ -2,8 +2,7 @@
 <html lang="zh-CN">
 
 <head>
-  <meta charset="utf-8" />
-  <script>
+    <script>
     // 由 Go 模板注入，供 admin.js bootstrap() 读取，免去登录框交互
     window.__WAILS_GUI = {
       apiKey:     "{{.apiKey}}",
@@ -11,6 +10,7 @@
       baseURL:    "http://127.0.0.1:{{.listenPort}}"
     };
   </script>
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#ffffff" />
   <meta name="theme-color" content="#18191b" />
@@ -486,10 +486,10 @@
               <button id="splitViewBtn" class="cfg-mode-btn" title="分屏显示" style="display:none;" aria-pressed="false">
                 <svg viewBox="0 0 1024 1024" fill="currentColor" width="12" height="12" style="flex-shrink:0">
                   <path d="M509 1020c-22.09 0-40-17.91-40-40V42c0-22.09 17.91-40 40-40s40 17.91 40 40v938c0 22.09-17.91 40-40 40z
-        M970 915H665c-22.09 0-40-17.91-40-40s17.91-40 40-40h277V204H665c-22.09 0-40-17.91-40-40s17.91-40 40-40h305
-        c28.67 0 52 22.7 52 50.6v689.8c0 27.9-23.33 50.6-52 50.6z
-        M397 875c0 22.09-17.91 40-40 40H52c-28.67 0-52-22.7-52-50.6V174.6C0 146.7 23.33 124 52 124h305
-        c22.09 0 40 17.91 40 40s-17.91 40-40 40H80v631h277c22.09 0 40 17.91 40 40z" />
+                  M970 915H665c-22.09 0-40-17.91-40-40s17.91-40 40-40h277V204H665c-22.09 0-40-17.91-40-40s17.91-40 40-40h305
+                  c28.67 0 52 22.7 52 50.6v689.8c0 27.9-23.33 50.6-52 50.6z
+                  M397 875c0 22.09-17.91 40-40 40H52c-28.67 0-52-22.7-52-50.6V174.6C0 146.7 23.33 124 52 124h305
+                  c22.09 0 40 17.91 40 40s-17.91 40-40 40H80v631h277c22.09 0 40 17.91 40 40z" />
                 </svg>
                 <!-- <span>双栏</span> -->
               </button>

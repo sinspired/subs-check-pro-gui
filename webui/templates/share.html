@@ -446,7 +446,7 @@
 
         function applyTheme(theme) {
             html.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
+            localStorage.setItem('scp_theme', theme);
             // 根据主题切换图标显示
             const isDark = theme === 'dark';
             iconMoon.style.display = isDark ? 'block' : 'none';
@@ -460,7 +460,7 @@
         });
 
         // 初始化：优先读取本地存储，否则跟随系统
-        const savedTheme = localStorage.getItem('theme')
+        const savedTheme = localStorage.getItem('scp_theme')
             || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         applyTheme(savedTheme);
 
