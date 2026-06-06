@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - "v*.*.*"
-  workflow_dispatch: # 支持手动触发调试
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,6 +12,7 @@ permissions:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           # Windows (amd64)
@@ -19,19 +20,25 @@ jobs:
             arch: amd64
             task: windows:build
             artifact: subs-check-pro-gui-windows-amd64
-            
+
+          # macOS (Intel amd64)
+          - os: macos-15-intel
+            arch: amd64
+            task: darwin:build
+            artifact: subs-check-pro-gui-darwin-amd64
+
           # macOS (Apple Silicon arm64)
           - os: macos-14
             arch: arm64
             task: darwin:build
             artifact: subs-check-pro-gui-darwin-arm64
-            
+
           # Linux (amd64)
           - os: ubuntu-24.04
             arch: amd64
             task: linux:build
             artifact: subs-check-pro-gui-linux-amd64
-            
+
           # Linux (arm64)
           - os: ubuntu-24.04-arm
             arch: arm64
@@ -60,7 +67,11 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev
+          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libgtk-4-dev \
+            libwebkitgtk-6.0-dev
 
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.98
@@ -84,6 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -94,25 +106,23 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           path: artifacts/
+          merge-multiple: true
 
-      - name: Delete existing release
-        run: |
-          gh release view ${{ github.ref_name }} &>/dev/null && \
-            gh release delete ${{ github.ref_name }} --yes || true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: List artifacts
+        run: ls -lah artifacts
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v3
         with:
-          files: artifacts/**/*
+          files: artifacts/*
           generate_release_notes: true
 
   notify:
-    needs: [release]
+    needs: release
     runs-on: ubuntu-latest
     permissions:
       contents: read
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -136,7 +146,6 @@ jobs:
           summary: >-
             🎉 linux 和 mac 可能存在问题，请及时反馈
           release_notes: ${{ steps.release.outputs.notes }}
-
           email_url: ${{ secrets.EMAIL_APPRISE_URL }}
           telegram_url: ${{ secrets.TELEGRAM_APPRISE_URL }}
           slack_url: ${{ secrets.DINGTALK_APPRISE_URL }}
