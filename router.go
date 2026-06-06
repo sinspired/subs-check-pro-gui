@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -137,6 +138,23 @@ func handleGuiPopup(c *gin.Context) {
 	if !strings.HasPrefix(rawURL, "http://") && !strings.HasPrefix(rawURL, "https://") {
 		c.String(http.StatusBadRequest, "invalid url scheme")
 		return
+	}
+
+	// 若目标是本机 Gin 服务的内部页面，通过 /gui/enter 中转自动写入
+	// sessionStorage，使弹出窗口无需手动登录（与 OpenInternalPage 行为一致）。
+	listenPort := strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
+	if listenPort == "" {
+		listenPort = "8199"
+	}
+	internalBase := "http://127.0.0.1:" + listenPort
+	if strings.HasPrefix(rawURL, internalBase+"/") || rawURL == internalBase {
+		// 提取路径 + query（保留 theme= 等参数）
+		internalPath := strings.TrimPrefix(rawURL, internalBase)
+		if internalPath == "" {
+			internalPath = "/"
+		}
+		nonce := generateNonce(config.GlobalConfig.APIKey, false)
+		rawURL = internalBase + "/gui/enter?n=" + nonce + "&redirect=" + url.QueryEscape(internalPath)
 	}
 
 	width, height := popupSize(c.Query("size"))
