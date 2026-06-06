@@ -22,6 +22,8 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         // 关于窗口（独立 Wails 窗口）
         about: resolve(__dirname, "about.html"),
+        // 订阅链接窗口（独立 Wails 窗口）
+        "sub-links": resolve(__dirname, "sub-links.html"),
       },
     },
   },

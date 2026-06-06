@@ -132,6 +132,19 @@ export function OpenInternalPage(path: string, title: string, windowSize: string
 }
 
 /**
+ * OpenSubLinksWindow 打开或聚焦「订阅链接」独立窗口（单例模式）。
+ * 
+ * 调用来源：
+ *   - 主窗口前端快捷按钮区「订阅链接」按钮（KeySection）
+ * 
+ * 窗口加载 Vite MPA 入口 /sub-links.html，前端自行通过
+ * Wails 资产代理（/api/...）拉取订阅数据并展示。
+ */
+export function OpenSubLinksWindow(): $CancellablePromise<void> {
+    return $Call.ByID(4239119837);
+}
+
+/**
  * OpenSubStoreUI 在弹出窗口中打开 Sub-Store 订阅管理页面。
  * 
  * 设计要点：

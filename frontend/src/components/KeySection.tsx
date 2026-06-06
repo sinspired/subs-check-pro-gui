@@ -11,16 +11,6 @@ interface Props {
   onSelectConfig: (path: string) => void;
 }
 
-interface SubLinks {
-  common: string;
-  v2ray: string;
-  mihomo: string;
-  singboxOld: string;
-  singboxLatest: string;
-  singboxOldName: string;
-  singboxLatestName: string;
-}
-
 // ── 路径中间截断 Hook ───────────────────────────────────────────────────────
 // 使用 canvas measureText 精确测量像素宽度，通过二分查找找到最大可显示字符数，
 // 并在路径中间插入省略号，保留路径的头部（盘符/根目录）和尾部（文件名）。
@@ -109,109 +99,12 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
   const [keyShown, setKeyShown] = useState(false);
   const [launching, setLaunching] = useState(false);
 
-  // ── 订阅链接菜单状态 ─────────────────────────────────────────────────────
-  const [subMenuOpen, setSubMenuOpen] = useState(false);
-  const [subLinksLoading, setSubLinksLoading] = useState(false);
-  const [subLinks, setSubLinks] = useState<SubLinks | null>(null);
-  // 整个「快捷按钮区 + 菜单」的锚点 ref，用于点击外部关闭菜单
-  const subAnchorRef = useRef<HTMLDivElement | undefined>(undefined);
-
   // 路径中间截断
   const { spanRef: pathRef, display: pathDisplay } = useTruncatedPath(
     info.configPath || '',
   );
 
-  // ── 点击外部关闭订阅菜单 ─────────────────────────────────────────────────
-  useEffect(() => {
-    if (!subMenuOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (
-        subAnchorRef.current &&
-        !subAnchorRef.current.contains(e.target as Node)
-      ) {
-        setSubMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [subMenuOpen]);
-
-  // ── 订阅链接逻辑 ─────────────────────────────────────────────────────────
-
-  /**
-   * 从 Gin HTTP 服务拉取 Sub-Store 运行状态和 singbox 版本，构建全部订阅链接。
-   * 直接使用 info 中已有的 subStorePort / subStorePath，无需重新拉取配置文件。
-   */
-  async function fetchSubLinks(): Promise<SubLinks> {
-    const base = `http://127.0.0.1:${info.listenPort || '8199'}`;
-    const headers: Record<string, string> = { 'X-API-Key': info.apiKey };
-
-    // 1. 检查 Sub-Store 是否正在运行
-    const statusRes = await fetch(`${base}/api/status`, { headers }).catch(
-      () => null,
-    );
-    if (!statusRes?.ok) throw new Error('获取状态失败，请检查服务是否运行');
-    const statusData = await statusRes.json();
-    if (!statusData?.isSubStoreRunning)
-      throw new Error('Sub-Store 服务未运行，请在配置中启用');
-
-    // 2. 获取 singbox 版本（latest / old）
-    const vRes = await fetch(`${base}/api/singbox-versions`, {
-      headers,
-    }).catch(() => null);
-    if (!vRes?.ok) throw new Error('获取 singbox 版本失败');
-    const vData = await vRes.json();
-
-    // 3. 校验 sub-store-path（info.subStorePath 已由 Go 端去掉前导 /）
-    if (!info.subStorePath)
-      throw new Error('请先在 config.yaml 中设置 sub-store-path');
-
-    const path = `/${info.subStorePath}`;
-    const subBase = `http://127.0.0.1:${info.subStorePort}`;
-
-    return {
-      common: `${subBase}${path}/download/sub`,
-      v2ray: `${subBase}${path}/download/sub?target=V2Ray`,
-      mihomo: `${subBase}${path}/api/file/mihomo`,
-      singboxOld: `${subBase}${path}/api/file/singbox-${vData.old}`,
-      singboxLatest: `${subBase}${path}/api/file/singbox-${vData.latest}`,
-      singboxOldName: `singbox-${vData.old}`,
-      singboxLatestName: `singbox-${vData.latest}`,
-    };
-  }
-
-  /** 切换订阅链接菜单；首次打开时异步拉取链接数据。 */
-  async function toggleSubMenu() {
-    if (subMenuOpen) {
-      setSubMenuOpen(false);
-      return;
-    }
-    setSubMenuOpen(true);
-    setSubLinksLoading(true);
-    setSubLinks(null);
-    try {
-      const links = await fetchSubLinks();
-      setSubLinks(links);
-    } catch (e: any) {
-      toast(e?.message ?? '获取订阅链接失败');
-      setSubMenuOpen(false);
-    } finally {
-      setSubLinksLoading(false);
-    }
-  }
-
-  /** 复制订阅链接到剪贴板并关闭菜单。 */
-  async function copySubLink(link: string, name: string) {
-    try {
-      await navigator.clipboard.writeText(link);
-      toast(`已复制 ${name}`);
-      setSubMenuOpen(false);
-    } catch {
-      toast('复制失败，请手动复制');
-    }
-  }
-
-  // ── 其他原有逻辑 ─────────────────────────────────────────────────────────
+  // ── 原有逻辑 ─────────────────────────────────────────────────────────────
 
   const currentKey = info.apiKey;
   const toggleKey = () => setKeyShown(v => !v);
@@ -273,24 +166,14 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
     }
   }
 
-  // ── 订阅菜单每行数据 ─────────────────────────────────────────────────────
-  const subLinkItems = subLinks
-    ? [
-        { key: 'common', label: '通用订阅', link: subLinks.common },
-        { key: 'v2ray', label: 'v2ray 订阅', link: subLinks.v2ray },
-        { key: 'mihomo', label: 'Mihomo 订阅', link: subLinks.mihomo },
-        {
-          key: 'singboxOld',
-          label: `${subLinks.singboxOldName} 订阅`,
-          link: subLinks.singboxOld,
-        },
-        {
-          key: 'singboxLatest',
-          label: `${subLinks.singboxLatestName} 订阅`,
-          link: subLinks.singboxLatest,
-        },
-      ]
-    : [];
+  /** 打开订阅链接独立窗口 */
+  async function openSubLinksWindow() {
+    try {
+      await GuiApp.OpenSubLinksWindow();
+    } catch (e: any) {
+      toast('打开订阅链接失败: ' + (e?.message ?? ''));
+    }
+  }
 
   // ── 渲染 ─────────────────────────────────────────────────────────────────
   return (
@@ -376,46 +259,8 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
       {/* ── 进入按钮：固定在底部 ── */}
       <div class="enter-spacer">
 
-        {/*
-          quick-btn-area：position:relative，作为订阅菜单的定位锚点。
-          同时作为点击外部检测的边界（subAnchorRef）。
-        */}
-        <div class="quick-btn-area" ref={subAnchorRef as any}>
-
-          {/* ── 订阅链接浮动菜单（向上弹出） ── */}
-          {subMenuOpen && (
-            <div class="sub-links-menu">
-              <div class="sub-links-title">订阅链接</div>
-
-              {subLinksLoading ? (
-                <div class="sub-links-loading">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" class="sub-links-spinner">
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                  </svg>
-                  正在获取…
-                </div>
-              ) : (
-                subLinkItems.map(({ key, label, link }) => (
-                  <button
-                    key={key}
-                    class="sub-links-item"
-                    onClick={() => copySubLink(link, label)}
-                    title={link}
-                  >
-                    <span class="sub-links-item-label">{label}</span>
-                    <svg class="sub-links-item-copy" width="11" height="11"
-                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                    </svg>
-                  </button>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* ── 快捷入口小按钮组 ── */}
+        {/* 快捷入口小按钮组 */}
+        <div class="quick-btn-area">
           <div class="btn-quick-group">
             {/* Sub-Store 订阅管理按钮 */}
             {info.subStorePort && (
@@ -464,8 +309,8 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
             {/* 订阅链接（仅配置了 Sub-Store 端口时显示） */}
             {info.subStorePort && (
               <button
-                class={`btn-quick${subMenuOpen ? ' active' : ''}`}
-                onClick={toggleSubMenu}
+                class="btn-quick"
+                onClick={openSubLinksWindow}
                 title="订阅链接"
                 disabled={launching}
               >

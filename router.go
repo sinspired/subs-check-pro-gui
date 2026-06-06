@@ -42,13 +42,22 @@ func guiCORSMiddleware() gin.HandlerFunc {
 	}
 }
 
-// registerGuiRoutes 注册所有 /gui/* 辅助路由。
+// registerGuiRoutes 注册所有 /gui/* 辅助路由，并补全 CORS 中间件。
 // 统一入口，便于在 setup.go 和 CompleteInit 中复用。
+//
+// ⚠️ CORS 修复说明：
+// guiCORSMiddleware 之前已定义但从未注册，导致 Wails webview 从
+// http://wails.localhost（Windows）/ wails://localhost（macOS）
+// 直接向 http://127.0.0.1:PORT/api/* 发起绝对 URL 请求时被浏览器拦截。
+// 此处 router.Use() 全局注册，确保所有路由均返回正确的 CORS 响应头。
+// 主要修复手段是前端改用相对路径（走 Wails 资产代理），此处作防御性补充。
 func registerGuiRoutes(router *gin.Engine) {
 	if router == nil {
 		slog.Warn("HTTP 服务未启动（端口冲突），跳过 /gui/* 路由注册")
 		return
 	}
+	// 补全 CORS 中间件注册（之前定义了但从未 Use，导致 Wails webview 跨域请求失败）
+	router.Use(guiCORSMiddleware())
 	router.GET("/gui/enter", handleGuiEnter)
 	router.GET("/gui/popup", handleGuiPopup)
 	router.GET("/gui/back-to-login", handleGuiBackToLogin)

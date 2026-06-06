@@ -52,6 +52,10 @@ type GuiApp struct {
 	// aboutWin 「关于」独立窗口，单例引用。
 	// nil 表示窗口已关闭或尚未创建；OpenAboutWindow 负责创建和复用。
 	aboutWin *application.WebviewWindow
+
+	// subLinksWin 「订阅链接」独立窗口，单例引用。
+	// nil 表示窗口已关闭或尚未创建；OpenSubLinksWindow 负责创建和复用。
+	subLinksWin *application.WebviewWindow
 }
 
 // AppInfo 前端展示所需的应用运行信息。
@@ -730,6 +734,50 @@ func (g *GuiApp) OpenAboutWindow() {
 		// 窗口关闭时清除单例引用，以便下次重新创建
 		win.RegisterHook(events.Common.WindowClosing, func(_ *application.WindowEvent) {
 			g.aboutWin = nil
+		})
+	})
+}
+// OpenSubLinksWindow 打开或聚焦「订阅链接」独立窗口（单例模式）。
+//
+// 调用来源：
+//   - 主窗口前端快捷按钮区「订阅链接」按钮（KeySection）
+//
+// 窗口加载 Vite MPA 入口 /sub-links.html，前端自行通过
+// Wails 资产代理（/api/...）拉取订阅数据并展示。
+func (g *GuiApp) OpenSubLinksWindow() {
+	wailsApp := application.Get()
+	if wailsApp == nil {
+		return
+	}
+	application.InvokeAsync(func() {
+		// 窗口已存在：直接显示并聚焦，不重复创建
+		if g.subLinksWin != nil {
+			g.subLinksWin.Show()
+			g.subLinksWin.Focus()
+			return
+		}
+		// 创建新的「订阅链接」窗口（小窗，500×420）
+		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+			Name:          "sub-links",
+			Title:         "Subs Check Pro — 订阅链接",
+			Width:         500,
+			Height:        460,
+			MinWidth:      420,
+			MinHeight:     340,
+			DisableResize: false,
+			Frameless:     false,
+			URL:           "/sub-links.html",
+			Mac: application.MacWindow{
+				InvisibleTitleBarHeight: 30,
+				Backdrop:                application.MacBackdropTranslucent,
+				TitleBar:                application.MacTitleBarHiddenInset,
+			},
+		})
+		g.subLinksWin = win
+		win.Center()
+		// 窗口关闭时清除单例引用，以便下次重新创建
+		win.RegisterHook(events.Common.WindowClosing, func(_ *application.WindowEvent) {
+			g.subLinksWin = nil
 		})
 	})
 }
