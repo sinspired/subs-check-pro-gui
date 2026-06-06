@@ -15,31 +15,26 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Windows (amd64)
           - os: windows-latest
             arch: amd64
             task: windows:build
             artifact: subs-check-pro-gui-windows-amd64
 
-          # macOS (Intel amd64)
           - os: macos-15-intel
             arch: amd64
             task: darwin:build
             artifact: subs-check-pro-gui-darwin-amd64
 
-          # macOS (Apple Silicon arm64)
           - os: macos-14
             arch: arm64
             task: darwin:build
             artifact: subs-check-pro-gui-darwin-arm64
 
-          # Linux (amd64)
           - os: ubuntu-24.04
             arch: amd64
             task: linux:build
             artifact: subs-check-pro-gui-linux-amd64
 
-          # Linux (arm64)
           - os: ubuntu-24.04-arm
             arch: arm64
             task: linux:build
@@ -84,6 +79,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # 重命名为带平台后缀，避免 release job 里同名覆盖
+      - name: Rename artifacts
+        shell: bash
+        run: |
+          cd bin
+          for f in *; do
+            # 跳过已经带后缀的文件
+            case "$f" in
+              *.exe)
+                mv "$f" "subs-check-pro-gui-${{ matrix.artifact }}.exe"
+                ;;
+              *)
+                mv "$f" "subs-check-pro-gui-${{ matrix.artifact }}"
+                ;;
+            esac
+          done
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
         with:
@@ -102,19 +114,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      # 不用 merge-multiple，每个 artifact 下载到独立子目录
       - name: Download all artifacts
         uses: actions/download-artifact@v8
         with:
           path: artifacts/
-          merge-multiple: true
 
-      - name: List artifacts
-        run: ls -lah artifacts
+      - name: Collect release files
+        run: |
+          mkdir -p release-files
+          # 把各子目录中的文件平铺到 release-files/
+          find artifacts/ -type f -exec mv {} release-files/ \;
+          echo "=== Release files ==="
+          ls -lah release-files/
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v3
         with:
-          files: artifacts/*
+          tag_name: ${{ github.ref_name }}
+          files: release-files/*
           generate_release_notes: true
 
   notify:
@@ -150,6 +168,5 @@ jobs:
           telegram_url: ${{ secrets.TELEGRAM_APPRISE_URL }}
           slack_url: ${{ secrets.DINGTALK_APPRISE_URL }}
           bark_url: ${{ secrets.BARK_APPRISE_URL }}
-
           urls: |
             ntfy://subs-check-pro
