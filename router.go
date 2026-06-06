@@ -84,6 +84,12 @@ func handleGuiEnter(c *gin.Context) {
 		return
 	}
 
+	// 解析跳转目标：只允许以 "/" 开头的站内路径，防止开放重定向。
+	redirect := c.Query("redirect")
+	if redirect == "" || !strings.HasPrefix(redirect, "/") {
+		redirect = "/admin"
+	}
+
 	c.Header("Cache-Control", "no-store, no-cache")
 	c.Header("Content-Type", "text/html; charset=utf-8")
 
@@ -95,16 +101,19 @@ func handleGuiEnter(c *gin.Context) {
 		)
 	}
 
+	// 写入两个 storage key，兼容 admin.js（读 subscheck_session_key）
+	// 和 analysis.js（读 subscheck_api_key）。
 	c.String(http.StatusOK, fmt.Sprintf(`<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <script>
 (function(){
   try { sessionStorage.setItem('subscheck_session_key', %q); } catch(e) {}
+  try { sessionStorage.setItem('subscheck_api_key', %q); } catch(e) {}
   %s
-  window.location.replace('/admin');
+  window.location.replace(%q);
 })();
 </script>
-</head><body></body></html>`, apiKey, extraLS))
+</head><body></body></html>`, apiKey, apiKey, extraLS, redirect))
 }
 
 // ── /gui/popup ────────────────────────────────────────────────────────────────

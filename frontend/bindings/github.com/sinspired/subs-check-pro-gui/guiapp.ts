@@ -121,9 +121,11 @@ export function OpenConfigFile(): $CancellablePromise<string> {
 /**
  * OpenInternalPage 在新窗口中打开内置 Web 页面（如 /files、/analysis）。
  * 
- * 设计要点与 OpenSubStoreUI 类似：
- * 窗口先加载本地 loading.html（立即显示，无白屏），300 ms 后由 Go 端通过
- * SetURL 发起外部导航——规避 JS 跨 origin 导航拦截。
+ * 设计要点：
+ *   - 所有内置页面均通过 /gui/enter?n=<nonce>&redirect=<path> 中转，
+ *     确保新弹出窗口的 sessionStorage 写入正确的 API Key，与打开 admin 一致。
+ *   - 窗口先加载本地 loading.html（立即显示，无白屏），300 ms 后由 Go 端通过
+ *     SetURL 发起外部导航——规避 JS 跨 origin 导航拦截。
  */
 export function OpenInternalPage(path: string, title: string, windowSize: string): $CancellablePromise<void> {
     return $Call.ByID(1633695184, path, title, windowSize);
