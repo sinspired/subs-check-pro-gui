@@ -41,12 +41,13 @@ import { initQuickPreview } from './cfg-quickpreview.js';
       const fullURL = window.__WAILS_GUI.baseURL + path
       let qs = '/gui/popup?url=' + encodeURIComponent(fullURL)
       if (size) qs += '&size=' + encodeURIComponent(size)
-      fetch(qs).catch(() => {})
+      fetch(qs).catch(() => { })
     } else {
       window.open(path, '_blank', 'noopener,noreferrer')
     }
   }
-  const THEME_KEY = 'theme'
+
+  const THEME_KEY = 'scp_theme'  // 与登录窗口 useTheme.ts 保持一致（同 origin，共享 localStorage）
 
   // ==================== DOM 元素缓存 ====================
   const $ = s => document.querySelector(s)
@@ -1574,7 +1575,8 @@ import { initQuickPreview } from './cfg-quickpreview.js';
       ${miniGridHTML}
 
       <a href="/analysis" class="summary-analysis-btn"
-         target="_blank" rel="noopener noreferrer" title="查看完整分析报告">
+   target="_blank" title="查看完整分析报告"
+   onclick="e => { e.preventDefault();if (sessionKey) safeLS('subscheck_api_key', sessionKey); openInternalURL('/analysis'); }">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round" width="11" height="11">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
@@ -1726,7 +1728,7 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     if (/\[WebView2\]/.test(line)) {
       return ''   // 返回空字符串，前端就不会显示
     }
-    
+
     // 1. 切分时间戳
     // const tsMatch = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
     const tsMatch = line.match(/^((\d{4}-)?\d{2}-\d{2} \d{2}:\d{2}:\d{2})/)
@@ -2163,26 +2165,49 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     }
 
     const cleanPort = (portStr ?? '').toString().trim().replace(/^:/, '')
-    const currentPort = window.location.port
-    const shouldAddPort = currentPort && currentPort !== ''
-    const portToAdd = shouldAddPort && cleanPort ? ':' + cleanPort : ''
 
-    let hostname = window.location.hostname
-    if (!shouldAddPort) {
-      const parts = hostname.split('.')
-      // 防止 IP 地址访问时生成错误的域名 (如: sub_store.104.56.43.43)
-      const isIp = /^\d+\.\d+\.\d+\.\d+$/.test(hostname)
-      if (parts.length > 1 && !isIp) {
-        hostname =
-          parts.length === 2
-            ? 'sub_store_for_subs_check.' + hostname
-            : 'sub_store_for_subs_check.' + parts.slice(1).join('.')
+    // 在 Wails WebView 中 window.location 为 wails:// 或 http://wails.localhost，
+    // 无法用于构造真实的后端地址。优先使用 Go 模板注入的 __WAILS_GUI.baseURL
+    // （形如 http://127.0.0.1:8199），仅在普通浏览器环境下回退到 window.location。
+    const wailsBase = window.__WAILS_GUI?.baseURL  // e.g. "http://127.0.0.1:8199"
+    let baseUrl
+    if (wailsBase) {
+      // 替换端口为 sub-store 端口（如果有）
+      if (cleanPort) {
+        // 修复前：wailsBase.replace(/(:\d+)?(\/|$)/, ':' + cleanPort + '$2').replace(/\/$/, '')
+        // 修复后：用 URL 对象直接替换端口，避免正则误匹配协议冒号
+        try {
+          const u = new URL(wailsBase)
+          u.port = cleanPort
+          baseUrl = u.origin  // "http://127.0.0.1:8299"
+        } catch {
+          baseUrl = wailsBase.replace(/\/$/, '')
+        }
+      } else {
+        baseUrl = wailsBase.replace(/\/$/, '')
       }
+    } else {
+      const currentPort = window.location.port
+      const shouldAddPort = currentPort && currentPort !== ''
+      const portToAdd = shouldAddPort && cleanPort ? ':' + cleanPort : ''
+
+      let hostname = window.location.hostname
+      if (!shouldAddPort) {
+        const parts = hostname.split('.')
+        // 防止 IP 地址访问时生成错误的域名 (如: sub_store.104.56.43.43)
+        const isIp = /^\d+\.\d+\.\d+\.\d+$/.test(hostname)
+        if (parts.length > 1 && !isIp) {
+          hostname =
+            parts.length === 2
+              ? 'sub_store_for_subs_check.' + hostname
+              : 'sub_store_for_subs_check.' + parts.slice(1).join('.')
+        }
+      }
+      baseUrl = window.location.protocol + '//' + hostname + portToAdd
     }
 
     const isFirstTime = lastSubStorePath === null
     const isPathChanged = lastSubStorePath !== subStorePath
-    const baseUrl = window.location.protocol + '//' + hostname + portToAdd
 
     return {
       url: isFirstTime || isPathChanged ? `${baseUrl}?api=${path}` : baseUrl,
@@ -2197,106 +2222,54 @@ import { initQuickPreview } from './cfg-quickpreview.js';
       return
     }
 
-    // 立即同步打开窗口，避免 iOS 拦截策略
-    const newWindow = window.open('', '_blank')
-    if (!newWindow) {
-      showToast('窗口弹出被拦截', 'warn')
-      return
-    }
-
-    // 设置初始 Loading 界面
-    newWindow.document.title = '正在连接 Sub-Store...'
-    newWindow.document.body.style.margin = '0'
-    newWindow.document.body.innerHTML = `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f9f9f9;color:#333;">
-      <div style="margin-bottom:15px;">
-         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0ea5a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
-         <style>.spin{animation:spin 1s linear infinite}@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
-      </div>
-      <h3 id="status-text" style="font-weight:600;">正在跳转...</h3>
-      <p style="color:#666;font-size:13px;margin-top:5px;">正在解析 sub-store 配置并构建连接，请稍候。</p>
-    </div>
-  `
-
-    // 超时控制 (10秒)
-    let isFinished = false
-    const timeoutTimer = setTimeout(() => {
-      if (isFinished) return
-      isFinished = true
-      if (newWindow && !newWindow.closed) {
-        newWindow.document.body.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
-          <h3 style="color:#ff4d4f;">连接超时</h3>
-          <p style="color:#666;margin-bottom:20px;">获取 sub-store 配置耗时过长，请关闭重试。</p>
-          <button onclick="window.close()" style="padding:8px 20px;cursor:pointer;background:#fff;border:1px solid #ccc;border-radius:4px;">关闭窗口</button>
-        </div>
-      `
-      }
-    }, 10000)
-
     try {
-      // 异步操作再 window.open 之后,避免出发ios窗口拦截
+      // ── 1. 检查 Sub-Store 服务是否运行 ─────────────────────────────────
       const r = await sfetch(API.status)
       if (!r.ok) {
-        if (isFinished) return
-        isFinished = true
-        clearTimeout(timeoutTimer)
-        newWindow.close()
         if (els.statusEl) {
           els.statusEl.textContent = '获取状态失败'
           els.statusEl.className = 'muted status-label status-error'
         }
         return
       }
-
       const d = r.payload || {}
       if (!d.isSubStoreRunning) {
-        if (isFinished) return
-        isFinished = true
-        clearTimeout(timeoutTimer)
-        newWindow.close()
         showToast('Sub-Store 服务未运行', 'warn')
         return
       }
 
+      // ── 2. 获取配置（缓存优先）并构建 URL（含 ?api=<path>）────────────
       let configData = _cachedSubStoreConfig
       if (!configData) {
-        if (!isFinished && newWindow && !newWindow.closed) {
-          const statusEl = newWindow.document.getElementById('status-text')
-          if (statusEl) statusEl.textContent = '正在获取 sub-store 配置...'
-        }
         configData = await fetchSubStoreConfig()
-        if (isFinished) return
         _cachedSubStoreConfig = configData
       }
-
       const result = buildSubStoreUrl(configData)
       lastSubStorePath = result.subStorePath
 
-      if (isFinished) return
-      isFinished = true
-      clearTimeout(timeoutTimer)
+      // ── 3. 打开窗口 ─────────────────────────────────────────────────────
+      // Wails GUI 环境（window.__WAILS_GUI 由 Go 模板注入）：
+      //   通过 /gui/popup 让 Go 在主线程创建 Wails 管理的无地址栏弹窗，
+      //   规避 WebView2/WKWebView 对 JS window.open 跨 origin 导航的拦截，
+      //   并复用 loading.html 过渡页（带主题同步），不会卡在跳转页面。
+      if (window.__WAILS_GUI?.baseURL) {
+        showToast('Wails GUI 环境，打开窗口', 'info')
+        fetch('/gui/popup?url=' + encodeURIComponent(result.url) + '&size=medium')
+          .catch(err => showToast('打开窗口失败: ' + err.message, 'error'))
+        return
+      }
 
+      // 普通浏览器降级：先开空窗再跳转（规避弹窗拦截检测）
+      const newWindow = window.open('', '_blank')
+      if (!newWindow) {
+        showToast('窗口弹出被拦截', 'warn')
+        return
+      }
       newWindow.location.href = result.url
+
     } catch (err) {
       console.error(err)
-      if (isFinished) return
-      isFinished = true
-      clearTimeout(timeoutTimer)
-
-      if (newWindow && !newWindow.closed) {
-        newWindow.document.title = '错误'
-        newWindow.document.body.innerHTML = `
-        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;padding:20px;text-align:center;">
-          <h3 style="color:#ff4d4f;margin-bottom:10px;">发生错误</h3>
-          <p style="color:#333;background:#ffebeb;padding:10px;border-radius:5px;font-family:monospace;">${err.message || '未知错误'}</p>
-          <p style="color:#999;font-size:12px;margin-top:10px;">请检查网络或后端日志</p>
-          <button onclick="window.close()" style="margin-top:20px;padding:8px 20px;cursor:pointer;border:1px solid #d9d9d9;background:#fff;border-radius:4px;">关闭</button>
-        </div>
-      `
-      } else {
-        showToast(err.message || '打开失败', 'error')
-      }
+      showToast(err.message || '打开失败', 'error')
     }
   }
 
@@ -2307,6 +2280,22 @@ import { initQuickPreview } from './cfg-quickpreview.js';
    * @returns {Promise<string>} 可用的 Base URL
    */
   async function getBaseUrl(path, port) {
+    // 在 Wails WebView 中 window.location 为 wails:// 或 http://wails.localhost，
+    // 无法用于构造真实的后端地址。优先使用 Go 模板注入的 __WAILS_GUI.baseURL
+    // （形如 http://127.0.0.1:8199），仅在普通浏览器环境下回退到 window.location。
+    const wailsBase = window.__WAILS_GUI?.baseURL
+    if (wailsBase) {
+      // 替换端口为目标端口（如果有）
+      const cleanPort = port ? String(port).trim().replace(/^:/, '') : ''
+      let base
+      if (cleanPort) {
+        base = wailsBase.replace(/(:\d+)?(\/|$)/, ':' + cleanPort + '$2').replace(/\/$/, '')
+      } else {
+        base = wailsBase.replace(/\/$/, '')
+      }
+      return `${base}${path}`
+    }
+
     const protocol = window.location.protocol
     const hostname = window.location.hostname
     const baseUrlWithoutPort = `${protocol}//${hostname}`
@@ -2595,6 +2584,32 @@ import { initQuickPreview } from './cfg-quickpreview.js';
   // ==================== 初始化 ====================
 
   function bindControls() {
+    // ── Wails GUI 环境：全局拦截所有 <a> 点击，统一走 openInternalURL / openURL ──
+    // Wails WebView 中 window.location 为 wails://wails.localhost，
+    // 直接跟随 <a href> 会导航到错误地址。统一在此拦截后按链接类型分发：
+    //   - 内部相对路径（/analysis、/files 等）→ openInternalURL
+    //   - 外部 http/https 绝对地址 → openInternalURL（openBrandURL 弹窗）
+    //   - # 锚点 / javascript: / 无 href → 不拦截，放行
+    if (window.__WAILS_GUI?.baseURL) {
+      document.addEventListener('click', e => {
+        const a = e.target.closest('a[href]')
+        if (!a) return
+        const href = a.getAttribute('href')
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return
+        e.preventDefault()
+        e.stopPropagation()
+        if (href.startsWith('http://') || href.startsWith('https://')) {
+          // 外部链接：用 openInternalURL 走 /gui/popup
+          openInternalURL(href)
+        } else {
+          // 内部相对路径：拼上 baseURL 再走 /gui/popup
+          const fullURL = window.__WAILS_GUI.baseURL.replace(/\/$/, '') + href
+          fetch('/gui/popup?url=' + encodeURIComponent(fullURL) + '&size=medium')
+            .catch(() => { })
+        }
+      }, true)  // useCapture=true，在冒泡前拦截，防止被其他 handler 先消费
+    }
+
     els.loginBtn?.addEventListener('click', onLoginBtnClick)
     els.subStoreBtn?.addEventListener('click', handleOpenSubStore)
     els.subStoreBtnMobile?.addEventListener('click', handleOpenSubStore)
@@ -2789,7 +2804,7 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     })
 
     els.themeToggleBtn?.addEventListener('dblclick', () => {
-      safeLS('theme', null)
+      safeLS(THEME_KEY, null)
       const sys = window.matchMedia?.('(prefers-color-scheme: dark)').matches
         ? 'dark'
         : 'light'

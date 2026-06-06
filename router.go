@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sinspired/subs-check-pro/v2/config"
@@ -136,11 +137,17 @@ func handleGuiPopup(c *gin.Context) {
 	// 在 Wails 主线程创建弹出窗口
 	wailsApp := application.Get()
 	if wailsApp == nil {
+		slog.Error("/gui/popup: application.Get() returned nil") // 加这行
 		return
 	}
+
 	capturedURL := rawURL
+	slog.Info("/gui/popup: invoking popup", "url", capturedURL) // 加这行
 	application.InvokeAsync(func() {
+		// loading.html 中 hash 仅用于显示域名提示。
+		// 实际导航由 Go 端 SetURL 完成，避免 JS 跨 origin 导航被 WebView 拦截。
 		loadingURL := "/loading.html#" + capturedURL
+		slog.Info("/gui/popup: inside InvokeAsync, creating window")
 		popup := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Title:     "Subs Check Pro",
 			Width:     width,
@@ -153,10 +160,19 @@ func handleGuiPopup(c *gin.Context) {
 				Backdrop:                application.MacBackdropTranslucent,
 				TitleBar:                application.MacTitleBarHiddenInset,
 			},
+			DevToolsEnabled: true,
 		})
 		popup.Show()
 		popup.Center()
 		popup.Focus()
+		popup.OpenDevTools()
+
+		finalURL := capturedURL
+		time.AfterFunc(300*time.Millisecond, func() {
+			application.InvokeAsync(func() {
+				popup.SetURL(finalURL)
+			})
+		})
 	})
 }
 

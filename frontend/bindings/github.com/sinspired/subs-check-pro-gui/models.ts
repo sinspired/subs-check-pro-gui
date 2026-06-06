@@ -14,6 +14,12 @@ export class AppInfo {
     "subStorePort": string;
 
     /**
+     * SubStorePath Sub-Store 后端 API 路径（config.yaml 中的 sub-store-path）。
+     * 前端拼接 ?api=<path> 时使用；若未配置则为空字符串。
+     */
+    "subStorePath": string;
+
+    /**
      * KeyIsRandom 为 true 表示 api-key 随机生成（重启后变更）
      */
     "keyIsRandom": boolean;
@@ -68,6 +74,9 @@ export class AppInfo {
         }
         if (!("subStorePort" in $$source)) {
             this["subStorePort"] = "";
+        }
+        if (!("subStorePath" in $$source)) {
+            this["subStorePath"] = "";
         }
         if (!("keyIsRandom" in $$source)) {
             this["keyIsRandom"] = false;

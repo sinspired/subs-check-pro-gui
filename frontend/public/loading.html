@@ -21,8 +21,28 @@
     body { background: #111317; color: #e5e7eb; }
     .ring { border-color: rgba(255,255,255,0.08); border-top-color: #0ea5a0; }
     .label { color: #9ca3af; }
-    .logo-icon { opacity: 0.7; }
   }
+
+  /* data-theme 显式主题（优先级高于系统媒体查询，与 Wails 登录窗口保持同步）*/
+  [data-theme="dark"] body {
+    background: #111317;
+    color: #e5e7eb;
+  }
+  [data-theme="dark"] .ring {
+    border-color: rgba(255,255,255,0.08);
+    border-top-color: #0ea5a0;
+  }
+  [data-theme="dark"] .label { color: #9ca3af; }
+
+  [data-theme="light"] body {
+    background: #f2f4f6;
+    color: #111827;
+  }
+  [data-theme="light"] .ring {
+    border-color: rgba(0,0,0,0.07);
+    border-top-color: #0ea5a0;
+  }
+  [data-theme="light"] .label { color: #6b7280; }
 
   .wrap {
     display: flex;
@@ -76,6 +96,20 @@
     to { opacity: 1; }
   }
 </style>
+<script>
+// 同步 Wails 登录窗口的用户主题设置。
+// loading.html 由 Wails 资产服务器提供（wails://localhost 同 origin），
+// 可以直接读取与登录窗口共享的 localStorage（key: scp_theme）。
+// 若未找到存储值，则回退到系统 prefers-color-scheme（CSS 媒体查询已兜底）。
+(function () {
+  try {
+    var t = localStorage.getItem('scp_theme');
+    if (t === 'dark' || t === 'light') {
+      document.documentElement.setAttribute('data-theme', t);
+    }
+  } catch (e) { /* 隐私模式或 storage 不可用时静默忽略 */ }
+})();
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -87,19 +121,16 @@
 </div>
 <script>
 (function () {
-  // 从 URL hash 读取目标地址：loading.html#https://...
-  var target = decodeURIComponent(location.hash.slice(1));
-  if (!target || !/^https?:\/\//.test(target)) return;
-
-  // 显示目标域名，让用户知道在加载什么
+  // 从 URL hash 读取目标域名，仅用于显示提示文字。
+  // 实际导航由 Go 端通过 SetURL() 触发，不依赖 JS location.replace。
+  var hash = location.hash.slice(1);
+  if (!hash) return;
+  var target = decodeURIComponent(hash);
+  if (!/^https?:\/\//.test(target)) return;
   try {
     var host = new URL(target).hostname;
     document.getElementById('lbl').textContent = host;
   } catch (_) {}
-
-  // 直接跳转：WebView 初始化完毕后立即发起请求
-  // 用 replace 避免用户按回退键回到此 loading 页
-  window.location.replace(target);
 })();
 </script>
 </body>

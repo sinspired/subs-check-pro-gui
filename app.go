@@ -56,6 +56,9 @@ type AppInfo struct {
 	APIKey       string `json:"apiKey"`
 	ListenPort   string `json:"listenPort"`
 	SubStorePort string `json:"subStorePort"`
+	// SubStorePath Sub-Store 后端 API 路径（config.yaml 中的 sub-store-path）。
+	// 前端拼接 ?api=<path> 时使用；若未配置则为空字符串。
+	SubStorePath string `json:"subStorePath"`
 	// KeyIsRandom 为 true 表示 api-key 随机生成（重启后变更）
 	KeyIsRandom bool `json:"keyIsRandom"`
 	// IsFirstRun 为 true 表示本次是首次运行
@@ -120,7 +123,9 @@ func (g *GuiApp) OpenBrandURL(url string, windowSize string) {
 	capturedURL := url
 	application.InvokeAsync(func() {
 		// 先加载本地 loading 页（即时显示，无白屏）。
-		// loading.html 读取 hash 中的目标 URL 后自动 replace 跳转。
+		// Hash 仅供 loading.html 显示目标域名提示，实际跳转由 Go 端 SetURL 完成：
+		// Wails3 的 WebView 会拦截从本地 wails:// origin 发起的外部 JS 导航，
+		// 而 Go 端调用 SetURL 属于宿主进程指令，不经过 JS 导航拦截。
 		loadingURL := "/loading.html#" + capturedURL
 		popup := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Title:     "Subs Check Pro",
@@ -138,6 +143,15 @@ func (g *GuiApp) OpenBrandURL(url string, windowSize string) {
 		popup.Show()
 		popup.Center()
 		popup.Focus()
+
+		// 等待 loading.html 渲染完成后，由 Go 端发起外部 URL 导航。
+		// 300 ms 对于本地静态页足够，且不会出现 JS 导航被 WebView 拦截的问题。
+		finalURL := capturedURL
+		time.AfterFunc(300*time.Millisecond, func() {
+			application.InvokeAsync(func() {
+				popup.SetURL(finalURL)
+			})
+		})
 	})
 }
 
@@ -156,6 +170,8 @@ func (g *GuiApp) EnterWebUI() {
     g.webUIWin.Show()
     g.webUIWin.Center()
     g.webUIWin.Focus()
+		    // ✅ 打开开发者工具（仅开发模式使用，生产环境建议去掉）
+    g.webUIWin.OpenDevTools()
     g.loginWin.Hide()
 }
 
@@ -214,10 +230,16 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 		coreVer = Version + "-" + CurrentCommit
 	}
 
+	// Sub-Store 后端路径：去掉可能存在的前导 "/" 后规范化，保持与 JS 侧一致
+	subStorePath := strings.TrimPrefix(
+		strings.TrimSpace(config.GlobalConfig.SubStorePath), "/",
+	)
+
 	return AppInfo{
 		APIKey:               config.GlobalConfig.APIKey,
 		ListenPort:           port,
 		SubStorePort:         subStorePort,
+		SubStorePath:         subStorePath,
 		KeyIsRandom:          os.Getenv("GUI_KEY_IS_RANDOM") == "1",
 		IsFirstRun:           os.Getenv("GUI_FIRST_RUN") == "1",
 		ConfigPath:           g.configPath,
@@ -513,6 +535,76 @@ func (g *GuiApp) SetAutoStart(enable bool) error {
 		g.autostartMenuItem.SetChecked(enable)
 	}
 	return nil
+}
+
+// OpenSubStoreUI 在弹出窗口中打开 Sub-Store 订阅管理页面。
+//
+// 设计要点：
+//   - 若 config.yaml 配置了 sub-store-path，自动拼接 ?api=<path>，
+//     让 Sub-Store 前端直接完成后端绑定，无需用户手动输入。
+//   - 窗口先加载本地 loading.html（立即显示，无白屏），300 ms 后由 Go 端通过
+//     SetURL 发起外部导航——规避 Wails3 WKWebView/WebView2 对 JS 跨 origin
+//     导航的拦截，确保最终页面能正确加载。
+//   - 不依赖 JS window.location / window.open，无 WebKit 弹窗拦截问题。
+func (g *GuiApp) OpenSubStoreUI() {
+	subStorePort := strings.TrimPrefix(config.GlobalConfig.SubStorePort, ":")
+	if subStorePort == "" {
+		return
+	}
+
+	// ── 构建目标 URL ───────────────────────────────────────────────────────
+	// Sub-Store 前端首次访问需要 ?api=<backendPath> 才能自动绑定后端，
+	// 否则会弹出"请输入后端地址"对话框。
+	// 若用户已在 config.yaml 中配置 sub-store-path，则在此处自动附带；
+	// 若为随机生成路径（未写入 yaml），则回退到根路径——用户在 Sub-Store
+	// 界面手动输入一次后，Sub-Store 会将配置持久化到自己的 localStorage，
+	// 后续访问无需再传 ?api=。
+	baseURL := "http://127.0.0.1:" + subStorePort
+	subStorePath := strings.TrimSpace(config.GlobalConfig.SubStorePath)
+	var targetURL string
+	if subStorePath != "" {
+		// 确保路径以 "/" 开头，格式与 JS 侧一致
+		if !strings.HasPrefix(subStorePath, "/") {
+			subStorePath = "/" + subStorePath
+		}
+		targetURL = baseURL + "?api=" + subStorePath
+	} else {
+		targetURL = baseURL
+	}
+
+	wailsApp := application.Get()
+	if wailsApp == nil {
+		return
+	}
+
+	application.InvokeAsync(func() {
+		// loading.html 的 hash 仅用于显示目标主机名提示；
+		// 实际跳转由 300ms 后的 Go 端 SetURL 完成（规避 JS 跨 origin 导航拦截）。
+		popup := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+			Title:     "Sub-Store — 订阅管理",
+			Width:     1200,
+			Height:    800,
+			MinWidth:  800,
+			MinHeight: 600,
+			URL:       "/loading.html#" + baseURL, // hash 只显示主机名，不含 query
+			Mac: application.MacWindow{
+				InvisibleTitleBarHeight: 50,
+				Backdrop:                application.MacBackdropTranslucent,
+				TitleBar:                application.MacTitleBarHiddenInset,
+			},
+		})
+		popup.Show()
+		popup.Center()
+		popup.Focus()
+
+		// 300 ms 后 Go 端发起真实导航（含 ?api= 参数）
+		final := targetURL
+		time.AfterFunc(300*time.Millisecond, func() {
+			application.InvokeAsync(func() {
+				popup.SetURL(final)
+			})
+		})
+	})
 }
 
 // OpenAboutWindow 打开或聚焦「关于」独立窗口（单例模式）。

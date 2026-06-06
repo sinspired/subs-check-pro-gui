@@ -151,6 +151,14 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
     }
   }
 
+  async function openSubStore() {
+    try {
+      await GuiApp.OpenSubStoreUI();
+    } catch (e: any) {
+      toast('打开订阅管理失败: ' + (e?.message ?? ''));
+    }
+  }
+
   return (
     <div id="keySection" class="key-section-flex">
 
@@ -237,6 +245,23 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
         <button class="btn-enter" onClick={enterWebUI} disabled={launching}>
           {launching ? '正在进入…' : '进入管理界面 →'}
         </button>
+
+        {/* Sub-Store 订阅管理按钮：仅在配置了 subStorePort 时显示 */}
+        {info.subStorePort && (
+          <button
+            class="btn-substore"
+            onClick={openSubStore}
+            title={`打开 Sub-Store 订阅管理 (端口 ${info.subStorePort})`}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              style="flex-shrink:0">
+              <path d="M4 4h16v4H4z" /><path d="M4 12h10" /><path d="M4 16h7" />
+              <circle cx="18" cy="16" r="3" /><path d="M21 19l2 2" />
+            </svg>
+            订阅管理
+          </button>
+        )}
       </div>
     </div>
   );

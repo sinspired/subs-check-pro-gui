@@ -636,13 +636,14 @@ let _geoMapInstance = null;
 
 // ── theme ──
 (function () {
-    const saved = localStorage.getItem('theme');
+    const saved = localStorage.getItem('scp_theme');
     const prefer = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     applyTheme(saved || prefer);
 })();
+
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
+    localStorage.setItem('scp_theme', theme);
     const isDark = theme === 'dark';
     const moon = document.getElementById('iconMoon'), sun = document.getElementById('iconSun'), label = document.getElementById('themeLabel');
     if (moon) moon.style.display = isDark ? 'block' : 'none';
@@ -658,16 +659,28 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
 const STORAGE_KEY = 'subscheck_api_key';
 function getKey() { try { return localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY) || null; } catch { return null; } }
 
+// analysis.js 里的 sfetch，替换原有版本
 async function sfetch(url, opts = {}) {
     const key = getKey();
     if (!key) return { ok: false, status: 401, error: '未认证' };
     opts.headers = { ...opts.headers, 'X-API-Key': key };
+
+    // Wails WebView 中 window.location 是 wails://wails.localhost，
+    // 相对路径 fetch 会走到错误的 origin。
+    // 用 __WAILS_GUI.baseURL（Go 模板注入的真实地址）拼成绝对路径。
+    const base = window.__WAILS_GUI?.baseURL?.replace(/\/$/, '') ?? ''
+    const fullURL = base ? base + url : url
+
     try {
-        const r = await fetch(url, opts);
+        const r = await fetch(fullURL, opts);
         const ct = r.headers.get('content-type') || '';
         const text = await r.text();
         const payload = ct.includes('application/json') ? JSON.parse(text) : text;
-        if (r.status === 401) { try { localStorage.removeItem(STORAGE_KEY); } catch { } showLoginArea('API 密钥已失效，请重新输入。'); return { ok: false, status: 401, payload }; }
+        if (r.status === 401) {
+            try { localStorage.removeItem(STORAGE_KEY); } catch { }
+            showLoginArea('API 密钥已失效，请重新输入。');
+            return { ok: false, status: 401, payload };
+        }
         return r.ok ? { ok: true, status: r.status, payload } : { ok: false, status: r.status, payload };
     } catch (e) { return { ok: false, error: e.message }; }
 }
@@ -699,7 +712,10 @@ async function inlineLogin() {
     if (!k) { input.classList.add('error'); hintEl.textContent = '请输入 API 密钥'; input.focus(); return; }
     btn.disabled = true;
     try {
-        const resp = await fetch('/api/status', { headers: { 'X-API-Key': k } });
+        const resp = await fetch(
+    (window.__WAILS_GUI?.baseURL?.replace(/\/$/, '') ?? '') + '/api/status',
+    { headers: { 'X-API-Key': k } }
+);
         if (resp.status === 401) { input.classList.add('error'); hintEl.textContent = 'API 密钥无效，请重试'; input.value = ''; input.focus(); return; }
         if (!resp.ok) { showRetryArea(`验证失败（HTTP ${resp.status}），请检查服务状态。`); return; }
         try { localStorage.setItem(STORAGE_KEY, k); } catch { }

@@ -617,7 +617,7 @@
 
         function applyTheme(theme) {
             html.setAttribute('data-theme', theme);
-            localStorage.setItem('theme', theme);
+            localStorage.setItem('scp_theme', theme);
             const isDark = theme === 'dark';
             iconMoon.style.display = isDark ? 'block' : 'none';
             iconSun.style.display = isDark ? 'none' : 'block';
@@ -629,14 +629,40 @@
             applyTheme(current === 'dark' ? 'light' : 'dark');
         });
 
-        const savedTheme = localStorage.getItem('theme')
+        const savedTheme = localStorage.getItem('scp_theme')
             || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         applyTheme(savedTheme);
+           // ── Wails GUI 环境：拦截所有 <a target="_blank"> 用弹窗打开 ──
+    // window.__WAILS_GUI 由 Go 模板注入（admin.html 同源加载时共享）
+    // files.html 通过 /gui/popup 在 Go 主线程创建无地址栏弹窗，
+    // 规避 WebView2/WKWebView 对 window.open 跨 origin 导航的拦截。
+    function openURL(url, size) {
+        if (window.__WAILS_GUI?.baseURL) {
+            const fullURL = url.startsWith('http') ? url : window.__WAILS_GUI.baseURL + url;
+            fetch('/gui/popup?url=' + encodeURIComponent(fullURL) + '&size=' + (size || 'medium'))
+                .catch(() => {});
+        } else {
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // 拦截所有 target="_blank" 的 <a> 链接
+        document.querySelectorAll('a[target="_blank"]').forEach(a => {
+            a.addEventListener('click', e => {
+                if (!window.__WAILS_GUI?.baseURL) return; // 浏览器环境不拦截
+                e.preventDefault();
+                openURL(a.getAttribute('href'), 'medium');
+            });
+        });
+    });
 
         // ── 复制公共文件直链 ──────────────────────────────────────
         function copyRoute(btn) {
             const route = btn.dataset.route;
-            const url = window.location.origin + route;
+        // Wails GUI 环境用 __WAILS_GUI.baseURL，浏览器用 window.location.origin
+        const base = window.__WAILS_GUI?.baseURL || window.location.origin;
+        const url = base.replace(/\/$/, '') + route;
 
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(url).then(() => {

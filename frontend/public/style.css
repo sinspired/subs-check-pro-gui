@@ -404,6 +404,38 @@ button:focus-visible {
   cursor: default;
 }
 
+/* ── Sub-Store 订阅管理按钮 ── */
+.btn-substore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition:
+    opacity 0.15s,
+    transform 0.1s,
+    background 0.15s;
+  -webkit-app-region: no-drag;
+}
+.btn-substore:hover {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.btn-substore:active {
+  transform: scale(0.98);
+}
+
 .btn-back {
   width: 100%;
   padding: 10px;

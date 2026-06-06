@@ -119,6 +119,21 @@ export function OpenConfigFile(): $CancellablePromise<string> {
 }
 
 /**
+ * OpenSubStoreUI 在弹出窗口中打开 Sub-Store 订阅管理页面。
+ * 
+ * 设计要点：
+ *   - 若 config.yaml 配置了 sub-store-path，自动拼接 ?api=<path>，
+ *     让 Sub-Store 前端直接完成后端绑定，无需用户手动输入。
+ *   - 窗口先加载本地 loading.html（立即显示，无白屏），300 ms 后由 Go 端通过
+ *     SetURL 发起外部导航——规避 Wails3 WKWebView/WebView2 对 JS 跨 origin
+ *     导航的拦截，确保最终页面能正确加载。
+ *   - 不依赖 JS window.location / window.open，无 WebKit 弹窗拦截问题。
+ */
+export function OpenSubStoreUI(): $CancellablePromise<void> {
+    return $Call.ByID(3080875275);
+}
+
+/**
  * QuitApp 供前端"关闭按钮对话框"选择退出时调用。
  */
 export function QuitApp(): $CancellablePromise<void> {
