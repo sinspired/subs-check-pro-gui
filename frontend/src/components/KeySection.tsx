@@ -11,6 +11,16 @@ interface Props {
   onSelectConfig: (path: string) => void;
 }
 
+interface SubLinks {
+  common: string;
+  v2ray: string;
+  mihomo: string;
+  singboxOld: string;
+  singboxLatest: string;
+  singboxOldName: string;
+  singboxLatestName: string;
+}
+
 // ── 路径中间截断 Hook ───────────────────────────────────────────────────────
 // 使用 canvas measureText 精确测量像素宽度，通过二分查找找到最大可显示字符数，
 // 并在路径中间插入省略号，保留路径的头部（盘符/根目录）和尾部（文件名）。
@@ -33,14 +43,12 @@ function useTruncatedPath(path: string): {
       const el2 = spanRef.current;
       if (!el2) return;
 
-      // offsetWidth 是 flex 布局分配给该 span 的实际可用像素宽度
       const availW = el2.offsetWidth;
       if (availW <= 0) {
         setDisplay(path);
         return;
       }
 
-      // 读取实际应用的字体属性，确保 canvas 测量与屏幕渲染一致
       const style = window.getComputedStyle(el2);
       const font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
 
@@ -52,14 +60,11 @@ function useTruncatedPath(path: string): {
       }
       ctx.font = font;
 
-      // 如果完整路径能放下，直接显示
       if (ctx.measureText(path).width <= availW) {
         setDisplay(path);
         return;
       }
 
-      // 二分查找：找到最多可保留的总字符数 lo，使 front+ellipsis+back 恰好放得下
-      // front = ceil(lo/2) 来自路径头部，back = floor(lo/2) 来自路径尾部（文件名侧）
       const ellipsis = '…';
       let lo = 0;
       let hi = path.length;
@@ -78,7 +83,6 @@ function useTruncatedPath(path: string): {
       }
 
       if (lo === 0) {
-        // 连最短组合也放不下，只显示省略号
         setDisplay(ellipsis);
       } else {
         const f = Math.ceil(lo / 2);
@@ -91,7 +95,6 @@ function useTruncatedPath(path: string): {
 
     compute();
 
-    // 容器宽度变化时重新计算（窗口缩放、布局变化等场景）
     const ro = new ResizeObserver(compute);
     ro.observe(el);
     return () => ro.disconnect();
@@ -106,10 +109,109 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
   const [keyShown, setKeyShown] = useState(false);
   const [launching, setLaunching] = useState(false);
 
+  // ── 订阅链接菜单状态 ─────────────────────────────────────────────────────
+  const [subMenuOpen, setSubMenuOpen] = useState(false);
+  const [subLinksLoading, setSubLinksLoading] = useState(false);
+  const [subLinks, setSubLinks] = useState<SubLinks | null>(null);
+  // 整个「快捷按钮区 + 菜单」的锚点 ref，用于点击外部关闭菜单
+  const subAnchorRef = useRef<HTMLDivElement | undefined>(undefined);
+
   // 路径中间截断
   const { spanRef: pathRef, display: pathDisplay } = useTruncatedPath(
     info.configPath || '',
   );
+
+  // ── 点击外部关闭订阅菜单 ─────────────────────────────────────────────────
+  useEffect(() => {
+    if (!subMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        subAnchorRef.current &&
+        !subAnchorRef.current.contains(e.target as Node)
+      ) {
+        setSubMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [subMenuOpen]);
+
+  // ── 订阅链接逻辑 ─────────────────────────────────────────────────────────
+
+  /**
+   * 从 Gin HTTP 服务拉取 Sub-Store 运行状态和 singbox 版本，构建全部订阅链接。
+   * 直接使用 info 中已有的 subStorePort / subStorePath，无需重新拉取配置文件。
+   */
+  async function fetchSubLinks(): Promise<SubLinks> {
+    const base = `http://127.0.0.1:${info.listenPort || '8199'}`;
+    const headers: Record<string, string> = { 'X-API-Key': info.apiKey };
+
+    // 1. 检查 Sub-Store 是否正在运行
+    const statusRes = await fetch(`${base}/api/status`, { headers }).catch(
+      () => null,
+    );
+    if (!statusRes?.ok) throw new Error('获取状态失败，请检查服务是否运行');
+    const statusData = await statusRes.json();
+    if (!statusData?.isSubStoreRunning)
+      throw new Error('Sub-Store 服务未运行，请在配置中启用');
+
+    // 2. 获取 singbox 版本（latest / old）
+    const vRes = await fetch(`${base}/api/singbox-versions`, {
+      headers,
+    }).catch(() => null);
+    if (!vRes?.ok) throw new Error('获取 singbox 版本失败');
+    const vData = await vRes.json();
+
+    // 3. 校验 sub-store-path（info.subStorePath 已由 Go 端去掉前导 /）
+    if (!info.subStorePath)
+      throw new Error('请先在 config.yaml 中设置 sub-store-path');
+
+    const path = `/${info.subStorePath}`;
+    const subBase = `http://127.0.0.1:${info.subStorePort}`;
+
+    return {
+      common: `${subBase}${path}/download/sub`,
+      v2ray: `${subBase}${path}/download/sub?target=V2Ray`,
+      mihomo: `${subBase}${path}/api/file/mihomo`,
+      singboxOld: `${subBase}${path}/api/file/singbox-${vData.old}`,
+      singboxLatest: `${subBase}${path}/api/file/singbox-${vData.latest}`,
+      singboxOldName: `singbox-${vData.old}`,
+      singboxLatestName: `singbox-${vData.latest}`,
+    };
+  }
+
+  /** 切换订阅链接菜单；首次打开时异步拉取链接数据。 */
+  async function toggleSubMenu() {
+    if (subMenuOpen) {
+      setSubMenuOpen(false);
+      return;
+    }
+    setSubMenuOpen(true);
+    setSubLinksLoading(true);
+    setSubLinks(null);
+    try {
+      const links = await fetchSubLinks();
+      setSubLinks(links);
+    } catch (e: any) {
+      toast(e?.message ?? '获取订阅链接失败');
+      setSubMenuOpen(false);
+    } finally {
+      setSubLinksLoading(false);
+    }
+  }
+
+  /** 复制订阅链接到剪贴板并关闭菜单。 */
+  async function copySubLink(link: string, name: string) {
+    try {
+      await navigator.clipboard.writeText(link);
+      toast(`已复制 ${name}`);
+      setSubMenuOpen(false);
+    } catch {
+      toast('复制失败，请手动复制');
+    }
+  }
+
+  // ── 其他原有逻辑 ─────────────────────────────────────────────────────────
 
   const currentKey = info.apiKey;
   const toggleKey = () => setKeyShown(v => !v);
@@ -140,11 +242,7 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
     setLaunching(true);
     try {
       await GuiApp.EnterWebUI();
-
-      // 延迟300ms重置状态
-      setTimeout(() => {
-        setLaunching(false);
-      }, 300);
+      setTimeout(() => setLaunching(false), 300);
     } catch (e: any) {
       toast('进入管理界面失败: ' + (e?.message ?? ''));
       setLaunching(false);
@@ -159,11 +257,15 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
     }
   }
 
-  async function openInternalPage(path: string, title: string, size: string = 'medium') {
-    const theme = document.documentElement.getAttribute('data-theme') || 'light';
+  async function openInternalPage(
+    path: string,
+    title: string,
+    size: string = 'medium',
+  ) {
+    const theme =
+      document.documentElement.getAttribute('data-theme') || 'light';
     const separator = path.includes('?') ? '&' : '?';
     const pathWithTheme = path + separator + 'theme=' + theme;
-
     try {
       await GuiApp.OpenInternalPage(pathWithTheme, title, size);
     } catch (e: any) {
@@ -171,6 +273,26 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
     }
   }
 
+  // ── 订阅菜单每行数据 ─────────────────────────────────────────────────────
+  const subLinkItems = subLinks
+    ? [
+        { key: 'common', label: '通用订阅', link: subLinks.common },
+        { key: 'v2ray', label: 'v2ray 订阅', link: subLinks.v2ray },
+        { key: 'mihomo', label: 'Mihomo 订阅', link: subLinks.mihomo },
+        {
+          key: 'singboxOld',
+          label: `${subLinks.singboxOldName} 订阅`,
+          link: subLinks.singboxOld,
+        },
+        {
+          key: 'singboxLatest',
+          label: `${subLinks.singboxLatestName} 订阅`,
+          link: subLinks.singboxLatest,
+        },
+      ]
+    : [];
+
+  // ── 渲染 ─────────────────────────────────────────────────────────────────
   return (
     <div id="keySection" class="key-section-flex">
 
@@ -237,7 +359,6 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <polyline points="14 2 14 8 20 8" />
             </svg>
-            {/* ref 绑定到 span 上，useTruncatedPath 通过 offsetWidth 获取可用宽度 */}
             <span class="cfg-path-text" ref={pathRef as any} title={info.configPath}>
               {pathDisplay}
             </span>
@@ -252,59 +373,116 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
         )}
       </div>
 
-      {/* ── 进入按钮：固定在底部，与版本栏保持固定间距 ── */}
+      {/* ── 进入按钮：固定在底部 ── */}
       <div class="enter-spacer">
 
-        {/* 快捷入口小按钮组 */}
-        <div class="btn-quick-group">
-          {/* Sub-Store 订阅管理按钮：仅在配置了 subStorePort 时显示 */}
-          {info.subStorePort && (
+        {/*
+          quick-btn-area：position:relative，作为订阅菜单的定位锚点。
+          同时作为点击外部检测的边界（subAnchorRef）。
+        */}
+        <div class="quick-btn-area" ref={subAnchorRef as any}>
+
+          {/* ── 订阅链接浮动菜单（向上弹出） ── */}
+          {subMenuOpen && (
+            <div class="sub-links-menu">
+              <div class="sub-links-title">订阅链接</div>
+
+              {subLinksLoading ? (
+                <div class="sub-links-loading">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" class="sub-links-spinner">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                  正在获取…
+                </div>
+              ) : (
+                subLinkItems.map(({ key, label, link }) => (
+                  <button
+                    key={key}
+                    class="sub-links-item"
+                    onClick={() => copySubLink(link, label)}
+                    title={link}
+                  >
+                    <span class="sub-links-item-label">{label}</span>
+                    <svg class="sub-links-item-copy" width="11" height="11"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* ── 快捷入口小按钮组 ── */}
+          <div class="btn-quick-group">
+            {/* Sub-Store 订阅管理按钮 */}
+            {info.subStorePort && (
+              <button
+                class="btn-quick"
+                onClick={openSubStore}
+                title={`打开 Sub-Store 订阅管理 (端口 ${info.subStorePort})`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" class="sidebar-icon" fill="currentColor">
+                  <path d="M12.6 35C8.2 21.8 21 8.5 34.3 12.5c3.4 1 8.2 4.9 15.2 11.8l10.2 10.3-2.8 2.8-2.8 2.8-10-9.9c-8.2-8.2-10.7-9.9-14.2-9.9-9.2 0-12.5 10.6-5.4 17.4l3.8 3.8-2.8 3-2.8 3-4.2-4.1c-2.3-2.2-4.9-6-5.6-8.4h-.2z" />
+                  <path d="M48.1 46.5l-7.4 7.6 3.8 3.8 3.8 3.8-2.8 2.8-2.8 3-6.7-6.8-6.8-6.7 6.4-6.4c3.4-3.4 6.7-6.4 7.2-6.4s2 1.8 5.6 5.2zM59.7 46.5l7.4 7.6-3.8 3.8-3.8 3.8 2.8 2.8 2.8 3 6.7-6.8 6.8-6.7-6.4-6.4c-3.4-3.4-6.7-6.4-7.2-6.4s-2 1.8-5.6 5.2zM24.4 70.4c-4.5 5.2-5 10.8-1.3 14.6 4 4 10.3 3.4 14.8-1.3l3.8-3.8 3 2.8 3 2.8-4.1 4.2c-8 8.2-18.4 8.8-26 1-7.7-7.6-7.4-17.5.9-26l4-4.2 3 2.8 2.8 2.7-3.8 4.4zM83.6 37.6c4.5-5.2 5-10.8 1.3-14.6-4-4-10.3-3.4-14.8 1.3l-3.8 3.8-3-2.8-3-2.8 4.1-4.2c8-8.2 18.4-8.8 26-1 7.7 7.6 7.4 17.5-.9 26l-4 4.2-3-2.8-2.8-2.7 3.8-4.4z" />
+                  <path d="M95.4 73c4.4 13.3-8.4 26.5-21.6 22.5-3.4-1-8.2-4.9-15.2-11.8L48.4 73.4l2.8-2.8 2.8-2.8 10 9.9c8.2 8.2 10.7 9.9 14.2 9.9 9.2 0 12.5-10.6 5.4-17.4l-3.8-3.8 2.8-3 2.8-3 4.2 4.1c2.3 2.2 4.9 6 5.6 8.4z" />
+                </svg>
+              </button>
+            )}
+
+            {/* 内置文件 */}
             <button
               class="btn-quick"
-              onClick={openSubStore}
-              title={`打开 Sub-Store 订阅管理 (端口 ${info.subStorePort})`}
+              onClick={() => openInternalPage('/files', '内置文件', 'small')}
+              title="内置文件管理"
+              disabled={launching}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" class="sidebar-icon" fill="currentColor">
-                <path
-                  d="M12.6 35C8.2 21.8 21 8.5 34.3 12.5c3.4 1 8.2 4.9 15.2 11.8l10.2 10.3-2.8 2.8-2.8 2.8-10-9.9c-8.2-8.2-10.7-9.9-14.2-9.9-9.2 0-12.5 10.6-5.4 17.4l3.8 3.8-2.8 3-2.8 3-4.2-4.1c-2.3-2.2-4.9-6-5.6-8.4h-.2z" />
-                <path
-                  d="M48.1 46.5l-7.4 7.6 3.8 3.8 3.8 3.8-2.8 2.8-2.8 3-6.7-6.8-6.8-6.7 6.4-6.4c3.4-3.4 6.7-6.4 7.2-6.4s2 1.8 5.6 5.2zM59.7 46.5l7.4 7.6-3.8 3.8-3.8 3.8 2.8 2.8 2.8 3 6.7-6.8 6.8-6.7-6.4-6.4c-3.4-3.4-6.7-6.4-7.2-6.4s-2 1.8-5.6 5.2zM24.4 70.4c-4.5 5.2-5 10.8-1.3 14.6 4 4 10.3 3.4 14.8-1.3l3.8-3.8 3 2.8 3 2.8-4.1 4.2c-8 8.2-18.4 8.8-26 1-7.7-7.6-7.4-17.5.9-26l4-4.2 3 2.8 2.8 2.7-3.8 4.4zM83.6 37.6c4.5-5.2 5-10.8 1.3-14.6-4-4-10.3-3.4-14.8 1.3l-3.8 3.8-3-2.8-3-2.8 4.1-4.2c8-8.2 18.4-8.8 26-1 7.7 7.6 7.4 17.5-.9 26l-4 4.2-3-2.8-2.8-2.7 3.8-4.4z" />
-                <path
-                  d="M95.4 73c4.4 13.3-8.4 26.5-21.6 22.5-3.4-1-8.2-4.9-15.2-11.8L48.4 73.4l2.8-2.8 2.8-2.8 10 9.9c8.2 8.2 10.7 9.9 14.2 9.9 9.2 0 12.5-10.6 5.4-17.4l-3.8-3.8 2.8-3 2.8-3 4.2 4.1c2.3 2.2 4.9 6 5.6 8.4z" />
+              <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
               </svg>
             </button>
-          )}
-          <button
-            class="btn-quick"
-            onClick={() => openInternalPage('/files', '内置文件', 'small')}
-            title="内置文件管理"
-            disabled={launching}
-          >
-            <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-            </svg>
-          </button>
-          <button
-            class="btn-quick"
-            onClick={() => openInternalPage('/analysis', '节点分析报告', 'medium')}
-            title="节点分析报告"
-            disabled={launching}
-          >
-            <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="20" x2="18" y2="10" />
-              <line x1="12" y1="20" x2="12" y2="4" />
-              <line x1="6" y1="20" x2="6" y2="14" />
-              <line x1="2" y1="20" x2="22" y2="20" />
-            </svg>
-          </button>
+
+            {/* 节点分析报告 */}
+            <button
+              class="btn-quick"
+              onClick={() => openInternalPage('/analysis', '节点分析报告', 'medium')}
+              title="节点分析报告"
+              disabled={launching}
+            >
+              <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+                <line x1="2" y1="20" x2="22" y2="20" />
+              </svg>
+            </button>
+
+            {/* 订阅链接（仅配置了 Sub-Store 端口时显示） */}
+            {info.subStorePort && (
+              <button
+                class={`btn-quick${subMenuOpen ? ' active' : ''}`}
+                onClick={toggleSubMenu}
+                title="订阅链接"
+                disabled={launching}
+              >
+                {/* chain/link 图标 */}
+                <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
 
         <button class="btn-enter" onClick={enterWebUI} disabled={launching}>
           {launching ? '正在进入…' : '进入管理界面 →'}
         </button>
-
 
       </div>
     </div>
