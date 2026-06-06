@@ -161,18 +161,18 @@ func (g *GuiApp) OpenBrandURL(url string, windowSize string) {
 //  - webUIWin 直接加载 Wails 资产服务器上的 /webui/admin.html
 //  - APIKey 和端口由 admin.html 内联脚本通过 Wails binding 自行获取
 func (g *GuiApp) EnterWebUI() {
-    if g.webUIWin == nil || g.loginWin == nil {
-        return
-    }
-    g.inWebUI.Store(true)
-    // 加载本地 webui（由 Wails 资产服务器的 newCombinedAssetHandler 提供）
-    g.webUIWin.SetURL("/webui/admin.html")
-    g.webUIWin.Show()
-    g.webUIWin.Center()
-    g.webUIWin.Focus()
-		    // ✅ 打开开发者工具（仅开发模式使用，生产环境建议去掉）
-    g.webUIWin.OpenDevTools()
-    g.loginWin.Hide()
+	if g.webUIWin == nil || g.loginWin == nil {
+		return
+	}
+	g.inWebUI.Store(true)
+	// 加载本地 webui（由 Wails 资产服务器的 newCombinedAssetHandler 提供）
+	g.webUIWin.SetURL("/webui/admin.html")
+	g.webUIWin.Show()
+	g.webUIWin.Center()
+	g.webUIWin.Focus()
+	// ✅ 打开开发者工具（仅开发模式使用，生产环境建议去掉）
+	g.webUIWin.OpenDevTools()
+	g.loginWin.Hide()
 }
 
 // GetApiKey 返回当前配置的 API Key，供本地 WebUI 页面通过 Wails binding 调用。
@@ -180,7 +180,7 @@ func (g *GuiApp) EnterWebUI() {
 // 安全边界：该 binding 仅对 Wails 资产服务器提供的页面可见（/webui/admin.html），
 // 外部网络无法调用。APIKey 本身已明文保存在 config.yaml，此处不增加额外泄露面。
 func (g *GuiApp) GetApiKey() string {
-    return config.GlobalConfig.APIKey
+	return config.GlobalConfig.APIKey
 }
 
 // GetListenPort 返回 Gin HTTP 服务监听的端口号（不含冒号），
@@ -193,7 +193,6 @@ func (g *GuiApp) GetListenPort() string {
 	return port
 }
 
-
 // BackToLogin 从 WebUI 返回登录窗口（可选功能，供托盘菜单使用）
 func (g *GuiApp) BackToLogin() {
 	if g.loginWin == nil {
@@ -203,6 +202,7 @@ func (g *GuiApp) BackToLogin() {
 	g.loginWin.Show()
 	g.loginWin.Center()
 	g.loginWin.Focus()
+	g.loginWin.OpenDevTools()
 	g.webUIWin.Hide()
 }
 

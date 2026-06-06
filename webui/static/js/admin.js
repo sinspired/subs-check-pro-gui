@@ -37,13 +37,16 @@ import { initQuickPreview } from './cfg-quickpreview.js';
  * @param {string} [size] 窗口尺寸：tiny/small/medium/large/extraLarge/wide，默认 medium
  */
   function openInternalURL(path, size) {
+    const theme = document.documentElement.getAttribute('data-theme') || 'light'
+    const separator = path.includes('?') ? '&' : '?'
+    const pathWithTheme = path + separator + 'theme=' + theme
     if (window.__WAILS_GUI?.baseURL) {
-      const fullURL = window.__WAILS_GUI.baseURL + path
+      const fullURL = window.__WAILS_GUI.baseURL + pathWithTheme
       let qs = '/gui/popup?url=' + encodeURIComponent(fullURL)
       if (size) qs += '&size=' + encodeURIComponent(size)
       fetch(qs).catch(() => { })
     } else {
-      window.open(path, '_blank', 'noopener,noreferrer')
+      window.open(pathWithTheme, '_blank', 'noopener,noreferrer')
     }
   }
 
@@ -2674,7 +2677,7 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     })
 
     // 绑定编辑器搜索按钮事件
-    searchBtn?.addEventListener('click', () => {
+    els.searchBtn?.addEventListener('click', () => {
       if (window.searchView && searchPanelOpen(window.searchView.state)) {
         closeSearchPanel(window.searchView)
       } else if (window.searchView) {
@@ -2791,27 +2794,39 @@ import { initQuickPreview } from './cfg-quickpreview.js';
       }
     }
 
-    const initTheme =
-      safeLS(THEME_KEY) ||
-      (window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light')
-    applyTheme(initTheme)
+    // ── 主题初始化（从服务端读取） ──
+    async function fetchTheme() {
+      try {
+        const r = await fetch('/admin/theme')
+        const d = await r.json()
+        return d.theme || 'auto'
+      } catch { return 'auto' }
+    }
+    async function saveTheme(t) {
+      fetch('/admin/theme', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme: t })
+      }).catch(() => { })
+    }
+    function resolveTheme(t) {
+      if (t === 'auto' || !t) {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+      }
+      return t
+    }
+
+    fetchTheme().then(t => applyTheme(resolveTheme(t)))
 
     els.themeToggleBtn?.addEventListener('click', () => {
-      const next =
-        document.documentElement.getAttribute('data-theme') === 'dark'
-          ? 'light'
-          : 'dark'
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'
       applyTheme(next)
-      safeLS(THEME_KEY, next)
+      saveTheme(next)
     })
 
     els.themeToggleBtn?.addEventListener('dblclick', () => {
-      safeLS(THEME_KEY, null)
-      const sys = window.matchMedia?.('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light'
+      saveTheme('auto')
+      const sys = resolveTheme('auto')
       applyTheme(sys)
       showToast('主题已重置为系统默认', 'info')
     })
@@ -3188,5 +3203,6 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     window.showToast = showToast
     window.saveConfigWithValidation = saveConfigWithValidation
     window.loadConfigValidated = loadConfigValidated
+    window.openInternalURL = openInternalURL
   })()
 })()

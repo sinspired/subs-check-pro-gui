@@ -84,6 +84,10 @@ export function App() {
     setView('loading');
     try {
       const data = await GuiApp.GetAppInfo();
+
+      // 尽早设置，让 useTheme 能拿到正确端口
+      (window as any).__CORE_BASE_URL = `http://127.0.0.1:${data.listenPort}`;
+
       setInfo(data);
       if (data.portConflictHTTP || data.portConflictSubStore) {
         setView('portConflict');
