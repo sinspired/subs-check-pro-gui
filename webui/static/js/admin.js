@@ -2284,11 +2284,16 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     // （形如 http://127.0.0.1:8199），仅在普通浏览器环境下回退到 window.location。
     const wailsBase = window.__WAILS_GUI?.baseURL
     if (wailsBase) {
-      // 替换端口为目标端口（如果有）
       const cleanPort = port ? String(port).trim().replace(/^:/, '') : ''
       let base
       if (cleanPort) {
-        base = wailsBase.replace(/(:\d+)?(\/|$)/, ':' + cleanPort + '$2').replace(/\/$/, '')
+        try {
+          const u = new URL(wailsBase)
+          u.port = cleanPort
+          base = u.origin  // "http://127.0.0.1:8299"
+        } catch {
+          base = wailsBase.replace(/\/$/, '')
+        }
       } else {
         base = wailsBase.replace(/\/$/, '')
       }
