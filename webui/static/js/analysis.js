@@ -638,7 +638,7 @@ let _geoMapInstance = null;
 
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('scp_theme', theme);
+    // localStorage 由切换处按需写，避免 resolved 值覆盖 'auto' 语义
     const isDark = theme === 'dark';
     const moon = document.getElementById('iconMoon');
     const sun = document.getElementById('iconSun');
@@ -659,8 +659,7 @@ function resolveTheme(t) {
 fetch('/admin/theme')
   .then(r => r.json())
   .then(d => {
-    console.log('服务端返回:', d);   // 打印完整对象
-    console.log('主题字段:', d.theme); // 单独打印 theme
+    // ✅ 已删除调试 console.log
     applyTheme(resolveTheme(d.theme));
   })
   .catch(() => {
@@ -671,6 +670,7 @@ fetch('/admin/theme')
 document.getElementById('themeToggle')?.addEventListener('click', () => {
     const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     applyTheme(next);
+    try { localStorage.setItem('scp_theme', next); } catch (_) {}
     fetch('/admin/theme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -678,6 +678,7 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
     }).catch(() => { });
 });
 document.getElementById('themeToggle')?.addEventListener('dblclick', () => {
+    try { localStorage.removeItem('scp_theme'); } catch (_) {}
     fetch('/admin/theme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

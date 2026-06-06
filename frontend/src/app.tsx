@@ -34,7 +34,7 @@ async function openLink(url: string, windowSize: 'extraLarge' | 'large' | 'mediu
 
 export function App() {
   const ready = useWailsReady();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, syncFromServer } = useTheme();
   const { msg, visible, toast } = useToast();
   const isDark = theme === 'dark';
 
@@ -87,6 +87,8 @@ export function App() {
 
       // 尽早设置，让 useTheme 能拿到正确端口
       (window as any).__CORE_BASE_URL = `http://127.0.0.1:${data.listenPort}`;
+
+      syncFromServer();
 
       setInfo(data);
       if (data.portConflictHTTP || data.portConflictSubStore) {
