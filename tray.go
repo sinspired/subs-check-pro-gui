@@ -254,6 +254,8 @@ func buildTrayMenu(
 				// 在托盘显示检测进度
 				statusItem.SetLabel(progressStr)
 
+				triggerCheckMenu.SetEnabled(false)
+
 				continue
 			}
 
