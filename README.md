@@ -11,6 +11,8 @@
 
 </div>
 
+![preview](./frontend/public/GUI.png)  
+
 ## 环境要求
 
 | 工具 | 版本 | 说明 |
