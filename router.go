@@ -50,6 +50,7 @@ func registerGuiRoutes(router *gin.Engine) {
 	}
 	router.GET("/gui/enter", handleGuiEnter)
 	router.GET("/gui/popup", handleGuiPopup)
+	router.GET("/gui/back-to-login", handleGuiBackToLogin)
 }
 
 // registerGuiAutoLogin 向后兼容别名（setup.go 调用时使用）。
@@ -197,6 +198,21 @@ func popupSize(size string) (width, height int) {
 }
 
 // ── 辅助 ──────────────────────────────────────────────────────────────────────
+
+// handleGuiBackToLogin 接收来自 WebUI 的"返回登录窗口"请求。
+// 仅限 localhost 访问，调用 globalGuiApp.BackToLogin() 切回登录小窗。
+func handleGuiBackToLogin(c *gin.Context) {
+	if !isLoopback(c) {
+		c.String(http.StatusForbidden, "forbidden")
+		return
+	}
+	c.String(http.StatusOK, "ok")
+	if globalGuiApp != nil {
+		application.InvokeAsync(func() {
+			globalGuiApp.BackToLogin()
+		})
+	}
+}
 
 // isLoopback 检查请求是否来自本机回环地址。
 func isLoopback(c *gin.Context) bool {

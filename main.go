@@ -17,6 +17,7 @@ func main() {
 	ensureSingleInstance()
 
 	coreApp, guiApp, appInitOK := setupApp()
+	globalGuiApp = guiApp // 供 router handler 访问
 
 	notifier := notifications.New()
 	InitNotifier(notifier)

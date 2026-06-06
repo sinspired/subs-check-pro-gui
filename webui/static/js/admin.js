@@ -2745,7 +2745,13 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     })
 
     const logoutHandler = () => {
-      if (confirm('确定退出？')) doLogout()
+      // 在 Wails GUI 环境中，"退出登录" 返回登录窗口而非显示登录框
+      if (window.__WAILS_GUI?.baseURL) {
+          // 调用 Wails binding 切回登录小窗
+          fetch('/gui/back-to-login').catch(() => {})
+      } else {
+        if (confirm('确定退出？')) doLogout()
+      }
     }
     els.logoutBtn?.addEventListener('click', logoutHandler)
     els.logoutBtnMobile?.addEventListener('click', logoutHandler)

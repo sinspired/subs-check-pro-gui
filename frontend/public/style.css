@@ -404,38 +404,54 @@ button:focus-visible {
   cursor: default;
 }
 
-/* ── Sub-Store 订阅管理按钮 ── */
-.btn-substore {
+/* ── 快捷入口小按钮组 ── */
+.btn-quick-group {
+  display: flex;
+  justify-content: center; /* 居中对齐 */
+  gap: 20px;
+  margin-bottom: 10px;
+  padding: 0;
+  -webkit-app-region: no-drag;
+}
+
+/* ── 快捷入口小按钮（统一样式，仅图标） ── */
+.btn-quick {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  width: 100%;
-  margin-top: 8px;
-  padding: 8px;
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  color: var(--accent);
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-  letter-spacing: 0.3px;
-  transition:
-    opacity 0.15s,
-    transform 0.1s,
-    background 0.15s;
+  width: 20px;
+  height: 20px;
+  border: none;              /* 默认无边框 */
+  background: transparent;   /* 默认透明背景 */
+  padding: 0;
+  border-radius: 0;
   -webkit-app-region: no-drag;
-}
-.btn-substore:hover {
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-.btn-substore:active {
-  transform: scale(0.98);
+  transition: transform 0.15s, border-bottom-color 0.15s;
 }
 
+.btn-quick:hover {
+  color: var(--accent);
+  border-bottom: 1px solid var(--accent); /* 仅显示底部边框 */
+  transform: translateY(-1px);
+}
+
+.btn-quick:active {
+  transform: scale(0.92);
+}
+.btn-quick:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sidebar-icon {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1;
+  color: var(--muted);
+  flex-shrink: 0;
+  opacity: 1;
+  padding-top: 2px;
+}
 .btn-back {
   width: 100%;
   padding: 10px;
@@ -1197,7 +1213,9 @@ code {
   cursor: pointer;
   opacity: 0.7;
   text-decoration: none;
-  transition: opacity 0.15s, text-decoration-color 0.15s;
+  transition:
+    opacity 0.15s,
+    text-decoration-color 0.15s;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1241,7 +1259,9 @@ code {
   text-decoration: none;
   color: var(--fg);
   opacity: 0.65;
-  transition: opacity 0.15s, background 0.15s;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
   -webkit-app-region: no-drag;
 }
 
@@ -1315,7 +1335,10 @@ code {
   color: var(--muted);
   opacity: 0.55;
   cursor: pointer;
-  transition: opacity 0.15s, color 0.15s, border-color 0.15s;
+  transition:
+    opacity 0.15s,
+    color 0.15s,
+    border-color 0.15s;
   -webkit-app-region: no-drag;
 }
 

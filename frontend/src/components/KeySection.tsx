@@ -159,6 +159,18 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
     }
   }
 
+  async function openInternalPage(path: string, title: string, size: string = 'medium') {
+    const theme = document.documentElement.getAttribute('data-theme') || 'light';
+    const separator = path.includes('?') ? '&' : '?';
+    const pathWithTheme = path + separator + 'theme=' + theme;
+
+    try {
+      await GuiApp.OpenInternalPage(pathWithTheme, title, size);
+    } catch (e: any) {
+      toast(`打开 ${title} 失败: ` + (e?.message ?? ''));
+    }
+  }
+
   return (
     <div id="keySection" class="key-section-flex">
 
@@ -242,26 +254,58 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
 
       {/* ── 进入按钮：固定在底部，与版本栏保持固定间距 ── */}
       <div class="enter-spacer">
+
+        {/* 快捷入口小按钮组 */}
+        <div class="btn-quick-group">
+          {/* Sub-Store 订阅管理按钮：仅在配置了 subStorePort 时显示 */}
+          {info.subStorePort && (
+            <button
+              class="btn-quick"
+              onClick={openSubStore}
+              title={`打开 Sub-Store 订阅管理 (端口 ${info.subStorePort})`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" class="sidebar-icon" fill="currentColor">
+                <path
+                  d="M12.6 35C8.2 21.8 21 8.5 34.3 12.5c3.4 1 8.2 4.9 15.2 11.8l10.2 10.3-2.8 2.8-2.8 2.8-10-9.9c-8.2-8.2-10.7-9.9-14.2-9.9-9.2 0-12.5 10.6-5.4 17.4l3.8 3.8-2.8 3-2.8 3-4.2-4.1c-2.3-2.2-4.9-6-5.6-8.4h-.2z" />
+                <path
+                  d="M48.1 46.5l-7.4 7.6 3.8 3.8 3.8 3.8-2.8 2.8-2.8 3-6.7-6.8-6.8-6.7 6.4-6.4c3.4-3.4 6.7-6.4 7.2-6.4s2 1.8 5.6 5.2zM59.7 46.5l7.4 7.6-3.8 3.8-3.8 3.8 2.8 2.8 2.8 3 6.7-6.8 6.8-6.7-6.4-6.4c-3.4-3.4-6.7-6.4-7.2-6.4s-2 1.8-5.6 5.2zM24.4 70.4c-4.5 5.2-5 10.8-1.3 14.6 4 4 10.3 3.4 14.8-1.3l3.8-3.8 3 2.8 3 2.8-4.1 4.2c-8 8.2-18.4 8.8-26 1-7.7-7.6-7.4-17.5.9-26l4-4.2 3 2.8 2.8 2.7-3.8 4.4zM83.6 37.6c4.5-5.2 5-10.8 1.3-14.6-4-4-10.3-3.4-14.8 1.3l-3.8 3.8-3-2.8-3-2.8 4.1-4.2c8-8.2 18.4-8.8 26-1 7.7 7.6 7.4 17.5-.9 26l-4 4.2-3-2.8-2.8-2.7 3.8-4.4z" />
+                <path
+                  d="M95.4 73c4.4 13.3-8.4 26.5-21.6 22.5-3.4-1-8.2-4.9-15.2-11.8L48.4 73.4l2.8-2.8 2.8-2.8 10 9.9c8.2 8.2 10.7 9.9 14.2 9.9 9.2 0 12.5-10.6 5.4-17.4l-3.8-3.8 2.8-3 2.8-3 4.2 4.1c2.3 2.2 4.9 6 5.6 8.4z" />
+              </svg>
+            </button>
+          )}
+          <button
+            class="btn-quick"
+            onClick={() => openInternalPage('/files', '内置文件', 'small')}
+            title="内置文件管理"
+            disabled={launching}
+          >
+            <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+          <button
+            class="btn-quick"
+            onClick={() => openInternalPage('/analysis', '节点分析报告', 'medium')}
+            title="节点分析报告"
+            disabled={launching}
+          >
+            <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+              <line x1="2" y1="20" x2="22" y2="20" />
+            </svg>
+          </button>
+        </div>
+
         <button class="btn-enter" onClick={enterWebUI} disabled={launching}>
           {launching ? '正在进入…' : '进入管理界面 →'}
         </button>
 
-        {/* Sub-Store 订阅管理按钮：仅在配置了 subStorePort 时显示 */}
-        {info.subStorePort && (
-          <button
-            class="btn-substore"
-            onClick={openSubStore}
-            title={`打开 Sub-Store 订阅管理 (端口 ${info.subStorePort})`}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-              style="flex-shrink:0">
-              <path d="M4 4h16v4H4z" /><path d="M4 12h10" /><path d="M4 16h7" />
-              <circle cx="18" cy="16" r="3" /><path d="M21 19l2 2" />
-            </svg>
-            订阅管理
-          </button>
-        )}
+
       </div>
     </div>
   );

@@ -16,6 +16,9 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
+// globalGuiApp 包级指针，供 router handler（如 handleGuiBackToLogin）访问。
+var globalGuiApp *GuiApp
+
 // GuiApp Wails 绑定结构体。
 type GuiApp struct {
 	configPath string
@@ -598,6 +601,79 @@ func (g *GuiApp) OpenSubStoreUI() {
 		popup.Focus()
 
 		// 300 ms 后 Go 端发起真实导航（含 ?api= 参数）
+		final := targetURL
+		time.AfterFunc(300*time.Millisecond, func() {
+			application.InvokeAsync(func() {
+				popup.SetURL(final)
+			})
+		})
+	})
+}
+
+// OpenInternalPage 在新窗口中打开内置 Web 页面（如 /files、/analysis）。
+//
+// 设计要点与 OpenSubStoreUI 类似：
+// 窗口先加载本地 loading.html（立即显示，无白屏），300 ms 后由 Go 端通过
+// SetURL 发起外部导航——规避 JS 跨 origin 导航拦截。
+func (g *GuiApp) OpenInternalPage(path string, title string, windowSize string) {
+	listenPort := strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
+	if listenPort == "" {
+		listenPort = "8199" // fallback
+	}
+
+	baseURL := "http://127.0.0.1:" + listenPort
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+	targetURL := baseURL + path
+
+	wailsApp := application.Get()
+	if wailsApp == nil {
+		return
+	}
+
+	width := 1200
+	height := 800
+
+	switch windowSize {
+	case "extraLarge":
+		width = 1920
+		height = 1440
+	case "large":
+		width = 1600
+		height = 1200
+	case "medium":
+		width = 1200
+		height = 800
+	case "small":
+		width = 720
+		height = 720
+	case "tiny":
+		width = 600
+		height = 600
+	case "wide":
+		width = 1600
+		height = 900
+	}
+
+	application.InvokeAsync(func() {
+		popup := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+			Title:     "Subs Check Pro — " + title,
+			Width:     width,
+			Height:    height,
+			MinWidth:  800,
+			MinHeight: 600,
+			URL:       "/loading.html#" + baseURL,
+			Mac: application.MacWindow{
+				InvisibleTitleBarHeight: 50,
+				Backdrop:                application.MacBackdropTranslucent,
+				TitleBar:                application.MacTitleBarHiddenInset,
+			},
+		})
+		popup.Show()
+		popup.Center()
+		popup.Focus()
+
 		final := targetURL
 		time.AfterFunc(300*time.Millisecond, func() {
 			application.InvokeAsync(func() {
