@@ -15,6 +15,8 @@ interface SubLink {
   key: string;
   label: string;
   url: string;
+  /** 品牌图标路径（public/ 下的 SVG），无则显示默认链接图标 */
+  icon?: string;
 }
 
 type Status = 'loading' | 'ready' | 'error';
@@ -62,11 +64,11 @@ export function SubLinks() {
       const subBase = `http://127.0.0.1:${info.subStorePort}`;
 
       setLinks([
-        { key: 'common',        label: '通用订阅',                url: `${subBase}${path}/download/sub` },
-        { key: 'v2ray',         label: 'V2Ray 订阅',              url: `${subBase}${path}/download/sub?target=V2Ray` },
-        { key: 'mihomo',        label: 'Mihomo 订阅',             url: `${subBase}${path}/api/file/mihomo` },
-        { key: 'singbox-old',   label: `singbox-${vData.old} 订阅`,   url: `${subBase}${path}/api/file/singbox-${vData.old}` },
-        { key: 'singbox-latest',label: `singbox-${vData.latest} 订阅`, url: `${subBase}${path}/api/file/singbox-${vData.latest}` },
+        { key: 'common',         label: '通用订阅',                    url: `${subBase}${path}/download/sub` },
+        { key: 'v2ray',          label: 'V2Ray 订阅',                  url: `${subBase}${path}/download/sub?target=V2Ray`,          icon: '/v2ray.png' },
+        { key: 'mihomo',         label: 'Mihomo 订阅',                 url: `${subBase}${path}/api/file/mihomo`,                    icon: '/mihomo.png' },
+        { key: 'singbox-old',    label: `singbox-${vData.old} 订阅`,   url: `${subBase}${path}/api/file/singbox-${vData.old}`,      icon: '/singbox.png' },
+        { key: 'singbox-latest', label: `singbox-${vData.latest} 订阅`, url: `${subBase}${path}/api/file/singbox-${vData.latest}`,  icon: '/singbox.png' },
       ]);
       setStatus('ready');
     } catch (e: any) {
@@ -134,7 +136,7 @@ export function SubLinks() {
               onClick={() => copyLink(item)}
               title={item.url}
             >
-              {/* 图标：复制前链接图标，复制后对勾 */}
+              {/* 图标：复制后统一显示对勾，否则品牌图标或默认链接图标 */}
               <div class="sl-item-icon">
                 {copied ? (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -142,6 +144,8 @@ export function SubLinks() {
                     stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
+                ) : item.icon ? (
+                  <img src={item.icon} class="sl-brand-icon" alt="" aria-hidden="true" />
                 ) : (
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2"
@@ -175,7 +179,7 @@ export function SubLinks() {
       {/* ── 底部提示 ── */}
       {status === 'ready' && (
         <div class="sl-footer">
-          链接指向本机 Sub-Store 端口，请在局域网或本机代理客户端中使用
+          请在局域网或本机代理客户端中使用，远程使用请使用公网域名访问 WebUI
         </div>
       )}
     </div>

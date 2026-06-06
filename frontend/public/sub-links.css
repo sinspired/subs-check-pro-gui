@@ -177,6 +177,28 @@
   color: var(--success);
 }
 
+/* ── 品牌 PNG 图标（保留原色，深浅色模式均自然显示） ── */
+.sl-brand-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  object-fit: contain;
+  opacity: 0.75;
+  transition: opacity 0.12s;
+}
+
+.sl-item:hover .sl-brand-icon {
+  opacity: 1;
+}
+
+:root[data-theme="dark"] .sl-brand-icon {
+  opacity: 0.8;
+}
+
+:root[data-theme="dark"] .sl-item:hover .sl-brand-icon {
+  opacity: 1;
+}
+
 /* ── 底部提示 ── */
 .sl-footer {
   padding: 8px 14px 10px;
