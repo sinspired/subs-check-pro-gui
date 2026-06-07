@@ -195,8 +195,8 @@ jobs:
           GOARCH: ${{ matrix.arch }}
         run: |
           mkdir -p dist
-          # 命名前缀：APP_NAME_VERSION_GOOS_ARCH
-          PREFIX="${APP_NAME}_${VERSION}_${GOOS}_${GOARCH}"
+          # 命名前缀：APP_NAME_GOOS_ARCH
+          PREFIX="${APP_NAME}_${GOOS}_${GOARCH}"
 
           case "${GOOS}" in
 
