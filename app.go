@@ -189,14 +189,23 @@ func (g *GuiApp) GetApiKey() string {
 	return config.GlobalConfig.APIKey
 }
 
+// defaultListenPort 返回当前配置的 HTTP 监听端口号（不含冒号前缀）。
+// GlobalConfig 未初始化或端口为空时，回退到内置默认值 "8199"。
+//
+// 这是唯一的 fallback 定义点——所有需要端口字符串的地方都调用此函数，
+// 避免各文件各自内联 strings.TrimPrefix + 硬编码 "8199" 的逻辑。
+func defaultListenPort() string {
+	port := strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
+	if port == "" {
+		return "8199"
+	}
+	return port
+}
+
 // GetListenPort 返回 Gin HTTP 服务监听的端口号（不含冒号），
 // 供 newCombinedAssetHandler 构造反向代理目标地址使用。
 func (g *GuiApp) GetListenPort() string {
-	port := strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
-	if port == "" {
-		port = "8199"
-	}
-	return port
+	return defaultListenPort()
 }
 
 // BackToLogin 从 WebUI 返回登录窗口（可选功能，供托盘菜单使用）
@@ -214,10 +223,7 @@ func (g *GuiApp) BackToLogin() {
 
 // GetAppInfo 返回应用运行信息（含端口冲突检测）。
 func (g *GuiApp) GetAppInfo() AppInfo {
-	port := strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
-	if port == "" {
-		port = "8199"
-	}
+	port := defaultListenPort()
 	subStorePort := strings.TrimPrefix(config.GlobalConfig.SubStorePort, ":")
 
 	conflictHTTP := false
@@ -260,6 +266,15 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 	}
 }
 
+// IsBackendReady 动态查询后端是否已成功初始化并正在运行。
+//
+// 与启动时快照的静态布尔值 appInitOK 不同，此方法读取 pendingInit 字段：
+// 端口冲突场景下 appInitOK==false，CompleteInit() 成功后 pendingInit 置 false，
+// 此方法立即返回 true，供 OnShutdown 和托盘状态轮询使用。
+func (g *GuiApp) IsBackendReady() bool {
+	return !g.pendingInit && g.backend != nil
+}
+
 // CompleteInit 在用户修正端口冲突后，由前端调用，完成后端初始化。
 func (g *GuiApp) CompleteInit() error {
 	if !g.pendingInit {
@@ -270,6 +285,7 @@ func (g *GuiApp) CompleteInit() error {
 	}
 
 	if err := g.backend.Initialize(); err != nil {
+
 		return fmt.Errorf("初始化后端失败: %w", err)
 	}
 
@@ -597,10 +613,7 @@ func (g *GuiApp) OpenSubStoreUI() {
 //   - 窗口先加载本地 loading.html（立即显示，无白屏），300 ms 后由 Go 端通过
 //     SetURL 发起外部导航——规避 JS 跨 origin 导航拦截。
 func (g *GuiApp) OpenInternalPage(path string, title string, windowSize string) {
-	listenPort := strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
-	if listenPort == "" {
-		listenPort = "8199" // fallback
-	}
+	listenPort := defaultListenPort()
 
 	baseURL := "http://127.0.0.1:" + listenPort
 	if !strings.HasPrefix(path, "/") {

@@ -131,7 +131,10 @@ func main() {
 	// 退出时统一清理
 	wailsApp.OnShutdown(func() {
 		slog.Info("GUI 程序正在退出，执行清理工作…")
-		if appInitOK {
+		// 使用动态方法而非启动时快照的 appInitOK：
+		// 端口冲突场景下 appInitOK==false，CompleteInit() 成功后仍不会更新，
+		// 导致 coreApp.Shutdown() 被跳过，Sub-Store 进程残留。
+		if guiApp.IsBackendReady() {
 			if err := coreApp.Shutdown(); err != nil {
 				slog.Error("关闭应用失败", "error", err)
 			}
@@ -151,7 +154,7 @@ func main() {
 		wailsApp.Quit()
 	}
 
-	startSysTray(wailsApp, guiApp, coreApp, appInitOK, onQuit)
+	startSysTray(wailsApp, guiApp, coreApp, onQuit)
 
 	slog.Debug("Wails 双窗口已启动", "appReady", appInitOK)
 

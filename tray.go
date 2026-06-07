@@ -51,7 +51,6 @@ func startSysTray(
 	wailsApp *application.App,
 	guiApp *GuiApp,
 	coreApp *app.App,
-	appInitOK bool,
 	onQuit func(),
 ) {
 	// 创建托盘实例
@@ -59,15 +58,15 @@ func startSysTray(
 
 	// 设置图标与悬浮提示（tooltip 仅 Windows/Linux 有效）
 	tray.SetIcon(trayIcon)
-	tray.SetTooltip(formatSysTrayTooltip(coreApp, appInitOK)) // 传入参数以获取状态
+	tray.SetTooltip(formatSysTrayTooltip(coreApp, guiApp))
 
 	// 提供更新 Tooltip 的回调，传递给 buildTrayMenu 以便定时同步刷新
 	updateTooltip := func() {
-		tray.SetTooltip(formatSysTrayTooltip(coreApp, appInitOK))
+		tray.SetTooltip(formatSysTrayTooltip(coreApp, guiApp))
 	}
 
 	// 构建右键菜单
-	menu := buildTrayMenu(wailsApp, guiApp, coreApp, appInitOK, onQuit, updateTooltip)
+	menu := buildTrayMenu(wailsApp, guiApp, coreApp, onQuit, updateTooltip)
 	tray.SetMenu(menu)
 
 	// 左键单击：切换当前活跃窗口的显示/隐藏
@@ -96,7 +95,6 @@ func buildTrayMenu(
 	wailsApp *application.App,
 	guiApp *GuiApp,
 	coreApp *app.App,
-	appInitOK bool,
 	onQuit func(),
 	updateTooltip func(),
 ) *application.Menu {
@@ -237,7 +235,8 @@ func buildTrayMenu(
 				updateTooltip()
 			}
 
-			if !appInitOK || coreApp == nil {
+			// 动态读取：CompleteInit() 成功后 IsBackendReady() 立即返回 true
+			if !guiApp.IsBackendReady() {
 				statusItem.SetLabel("后端未启动")
 				continue
 			}
@@ -280,11 +279,7 @@ func buildTrayMenu(
 // 后端 HTTP API 辅助函数
 
 func backendBase() string {
-	port := strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
-	if port == "" {
-		port = "8199"
-	}
-	return "http://127.0.0.1:" + port
+	return "http://127.0.0.1:" + defaultListenPort()
 }
 
 func callBackendForceClose() error {
@@ -395,10 +390,10 @@ func renderProgressString(coreApp *app.App) string {
 }
 
 // formatSysTrayTooltip 构建托盘悬浮提示文本，包含应用名称、当前监听端口以及检测进度。
-func formatSysTrayTooltip(coreApp *app.App, appInitOK bool) string {
+func formatSysTrayTooltip(coreApp *app.App, guiApp *GuiApp) string {
 	base := "Subs Check Pro GUI" + " - 端口 " + strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
 
-	if !appInitOK || coreApp == nil {
+	if !guiApp.IsBackendReady() {
 		return base + "\n后端未启动"
 	}
 

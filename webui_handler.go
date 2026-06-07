@@ -24,11 +24,10 @@ import (
 //
 // 这样 loginWin 继续使用 frontend/dist，webUIWin 使用 /webui/* 路径，
 // 两个窗口共用同一个 Wails 资产服务器，无需各自独立的 HTTP 服务。
-//
 // ⚠️ getListenPort 必须是函数引用而非字符串值：
 // Wails 应用对象在 main() 中仅初始化一次，此时若端口冲突则后端尚未启动，
-// 真正的端口要到用户解决冲突后调用 CompleteInit() 才写入 config.GlobalConfig。
-// 传函数引用可确保每次请求都动态读取最新端口，而非捕获启动时的旧端口快照。
+// 真正的端口在 CompleteInit() 后才写入 config.GlobalConfig。
+// 传函数引用可确保每次请求动态读取最新端口。
 func newCombinedAssetHandler(configPath string, getListenPort func() string) http.Handler {
 	// React 登录前端（frontend/dist embed.FS，由 main.go 的 //go:embed 注入）
 	frontendHandler := application.AssetFileServerFS(assets)
@@ -79,10 +78,9 @@ func newCombinedAssetHandler(configPath string, getListenPort func() string) htt
 		// ── /api/… /admin/… ────────────────────────────────────────────────
 		// 反向代理到 Gin HTTP 服务，绕开 Wails webview 的跨域限制。
 		// 请求由 Go 服务器端发出，不存在 CORS 问题。
-		// 注意：每次请求调用 getListenPort() 动态获取，确保端口冲突解决后
-		// CompleteInit() 写入新端口时反向代理目标能立即跟随更新。
 		case strings.HasPrefix(p, "/api/") || strings.HasPrefix(p, "/admin/") || strings.HasPrefix(p, "/gui/"):
-			reverseProxyToGin(w, r, getListenPort())
+			// 每次请求调用 getListenPort() 动态获取，确保端口修改后立即生效
+		reverseProxyToGin(w, r, getListenPort())
 
 		// ── /static/… ──────────────────────────────────────────────────────
 		// admin.html 内所有资源引用均使用 /static/ 绝对路径（与 Gin 保持一致），
@@ -113,10 +111,7 @@ func renderWebuiAdmin(w http.ResponseWriter, templatesFS fs.FS, configPath strin
 		return
 	}
 
-	port := strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
-	if port == "" {
-		port = "8199"
-	}
+	port := defaultListenPort()
 
 	data := map[string]any{
 		"configPath": configPath,
@@ -131,7 +126,6 @@ func renderWebuiAdmin(w http.ResponseWriter, templatesFS fs.FS, configPath strin
 		slog.Error("webui: 渲染 admin.html 失败", "error", err)
 	}
 }
-
 // reverseProxyToGin 将请求透明转发给本机 Gin HTTP 服务（127.0.0.1:port），
 // 用于让 Wails webview 内的页面访问 /api/* 等端点，绕开浏览器 CORS 限制。
 func reverseProxyToGin(w http.ResponseWriter, r *http.Request, listenPort string) {

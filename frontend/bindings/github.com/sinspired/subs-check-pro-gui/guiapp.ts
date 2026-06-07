@@ -88,6 +88,17 @@ export function HideToTray(): $CancellablePromise<void> {
 }
 
 /**
+ * IsBackendReady 动态查询后端是否已成功初始化并正在运行。
+ * 
+ * 与启动时快照的静态布尔值 appInitOK 不同，此方法读取 pendingInit 字段：
+ * 端口冲突场景下 appInitOK==false，CompleteInit() 成功后 pendingInit 置 false，
+ * 此方法立即返回 true，供 OnShutdown 和托盘状态轮询使用。
+ */
+export function IsBackendReady(): $CancellablePromise<boolean> {
+    return $Call.ByID(4055968029);
+}
+
+/**
  * OpenAboutWindow 打开或聚焦「关于」独立窗口（单例模式）。
  * 
  * 调用来源：

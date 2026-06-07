@@ -151,10 +151,7 @@ func handleGuiPopup(c *gin.Context) {
 
 	// 若目标是本机 Gin 服务的内部页面，通过 /gui/enter 中转自动写入
 	// sessionStorage，使弹出窗口无需手动登录（与 OpenInternalPage 行为一致）。
-	listenPort := strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
-	if listenPort == "" {
-		listenPort = "8199"
-	}
+	listenPort := defaultListenPort()
 	internalBase := "http://127.0.0.1:" + listenPort
 	if strings.HasPrefix(rawURL, internalBase+"/") || rawURL == internalBase {
 		// 提取路径 + query（保留 theme= 等参数）
