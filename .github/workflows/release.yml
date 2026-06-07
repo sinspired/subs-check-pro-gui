@@ -122,7 +122,13 @@ jobs:
       # ── Windows：NSIS 打包器（用于生成安装包）──
       - name: Install NSIS
         if: runner.os == 'Windows'
-        run: choco install nsis --no-progress -y
+        shell: pwsh
+        run: |
+          choco install nsis --no-progress -y
+          # choco 安装后不刷新当前 shell 的 PATH，需手动追加
+          $nsisPath = "C:\Program Files (x86)\NSIS"
+          echo "$nsisPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          Write-Host "Added NSIS to PATH: $nsisPath"
 
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
@@ -208,9 +214,8 @@ jobs:
               ;;
 
             darwin)
-              # .app bundle → tar.gz（macOS 分发惯例）
-              cd bin
-              tar czf "../dist/${PREFIX}.app.tar.gz" "${APP_NAME}.app"
+              # 用 -C 指定源目录，避免 cd 改变工作目录导致后续 ls dist/ 失败
+              tar czf "dist/${PREFIX}.app.tar.gz" -C bin "${APP_NAME}.app"
               ;;
 
             linux)
