@@ -1,3 +1,4 @@
+// main.go
 package main
 
 import (
@@ -30,7 +31,7 @@ func main() {
 			application.NewService(notifier),
 		},
 		Assets: application.AssetOptions{
-			Handler: newCombinedAssetHandler(guiApp.configPath, guiApp.GetListenPort()),
+			Handler: newCombinedAssetHandler(guiApp.configPath, guiApp.GetListenPort),
 		},
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: false,

@@ -6,7 +6,6 @@ replace gopkg.in/ini.v1 => github.com/go-ini/ini v1.67.2
 
 require (
 	github.com/gin-gonic/gin v1.12.0
-	github.com/goccy/go-yaml v1.19.2
 	github.com/lmittmann/tint v1.1.3
 	github.com/metacubex/mihomo v1.19.27
 	github.com/sinspired/subs-check-pro/v2 v2.5.5
@@ -69,6 +68,7 @@ require (
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
+	github.com/goccy/go-yaml v1.19.2 // indirect
 	github.com/godbus/dbus/v5 v5.2.2 // indirect
 	github.com/gofrs/uuid/v5 v5.4.0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect

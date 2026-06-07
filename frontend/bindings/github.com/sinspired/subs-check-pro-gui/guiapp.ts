@@ -219,7 +219,8 @@ export function ValidateConfigKey(enteredKey: string, remember: boolean): $Cance
 }
 
 /**
- * ValidatePort 实时验证单个端口号合法性。
+ * ValidatePort 实时验证单个端口号合法性（格式 + 是否被占用）。
+ * 返回空字符串表示端口格式正确且当前未被占用。
  */
 export function ValidatePort(port: string): $CancellablePromise<string> {
     return $Call.ByID(2902552419, port);

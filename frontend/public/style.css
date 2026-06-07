@@ -421,12 +421,14 @@ button:focus-visible {
   justify-content: center;
   width: 20px;
   height: 20px;
-  border: none;              /* 默认无边框 */
-  background: transparent;   /* 默认透明背景 */
+  border: none; /* 默认无边框 */
+  background: transparent; /* 默认透明背景 */
   padding: 0;
   border-radius: 0;
   -webkit-app-region: no-drag;
-  transition: transform 0.15s, border-bottom-color 0.15s;
+  transition:
+    transform 0.15s,
+    border-bottom-color 0.15s;
 }
 
 .btn-quick:hover {
@@ -1351,4 +1353,260 @@ code {
 /* ── toolbar 关于按钮：与 theme-btn 视觉一致 ── */
 .about-btn {
   -webkit-app-region: no-drag;
+}
+
+/* ── 端口冲突窗口样式（PortConflict.tsx）──────────────────────────────────── */
+
+/* 根容器：占满 login-panel 内容区，垂直居中 */
+.pc-root {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 360px;
+  margin: auto;
+}
+
+/* 双端口冲突时扩宽容器以容纳左右排列 */
+.pc-root--wide {
+  max-width: 520px;
+}
+
+/* 标题区：警告图标 + 标题 + 副标题 */
+.pc-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.pc-icon {
+  flex-shrink: 0;
+  color: var(--warn);
+  margin-top: 2px;
+}
+
+.pc-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.2px;
+  margin-bottom: 3px;
+}
+
+.pc-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+/* 字段列表（默认单列） */
+.pc-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 双端口均冲突时左右排列 */
+.pc-fields--row {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.pc-fields--row .pc-field {
+  flex: 1;
+  min-width: 0; /* 防止内容撑破 flex 容器 */
+}
+
+/* 单个端口字段 */
+.pc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg);
+  transition: border-color 0.18s;
+}
+
+.pc-field.has-error {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.04);
+}
+
+.pc-field.has-ok {
+  border-color: var(--success);
+  background: rgba(16, 185, 129, 0.04);
+}
+
+/* 字段顶行：label + 状态徽章 */
+.pc-field-top {
+  display: block;
+}
+
+.pc-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* 左右分布 */
+  width: 100%; /* 占满整行 */
+  padding: 0 4px 2px 4px;
+}
+
+/* "冲突" 小标签 */
+.pc-conflict-tag {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--warn);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-bd);
+  border-radius: 6px;
+  padding: 1px 4px;
+  letter-spacing: 0.4px;
+}
+
+/* 状态徽章 */
+.pc-status {
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 7px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: none;
+}
+
+.pc-status.checking {
+  color: var(--muted);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.pc-status.ok {
+  color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.pc-status.error {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: help;
+}
+
+/* 输入框包裹层 */
+.pc-input-wrap {
+  position: relative;
+}
+
+/* 端口输入框 */
+.pc-input {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg);
+  outline: none;
+  -webkit-app-region: no-drag;
+  transition: border-color 0.15s;
+}
+
+.pc-input:focus {
+  border-color: var(--accent);
+}
+
+.pc-input:disabled {
+  opacity: 0.55;
+}
+
+/* 字段内错误提示 */
+.pc-errmsg {
+  font-size: 11px;
+  color: #ef4444;
+  line-height: 1.35;
+  padding: 0 4px 2px 4px;
+}
+
+/* 字段底部提示 */
+.pc-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: -2px;
+  padding: 0 4px 2px 4px;
+}
+
+/* 摘要状态行 */
+.pc-summary {
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 0 2px;
+}
+
+.pc-summary-ok {
+  color: var(--success);
+  font-weight: 500;
+}
+.pc-summary-wait {
+  color: var(--muted);
+}
+.pc-summary-hint {
+  color: var(--muted);
+}
+
+/* 应用按钮 */
+.pc-apply-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 0;
+  border: none;
+  border-radius: 9px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  -webkit-app-region: no-drag;
+  transition:
+    opacity 0.15s,
+    transform 0.1s;
+}
+
+.pc-apply-btn:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.pc-apply-btn:active:not(:disabled) {
+  transform: scale(0.985);
+}
+
+.pc-apply-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* 小型 spinner（行内版） */
+.spinner-sm {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* login-content 垂直居中变体（端口冲突界面内容较少，居中更美观） */
+.login-content--conflict {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

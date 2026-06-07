@@ -1,3 +1,4 @@
+// app.go
 package main
 
 import (
@@ -41,9 +42,7 @@ type GuiApp struct {
 	autostartMenuItem *application.MenuItem
 
 	// pendingInit 为 true 时表示端口预检发现冲突，Initialize() 尚未调用。
-	pendingInit     bool
-	preConflictHTTP bool
-	preConflictSub  bool
+	pendingInit bool
 
 	// inWebUI 为 true 表示窗口已切换到外部 WebUI 页面。
 	// 此时 Wails JS runtime 不可用，关闭事件须走 Go 原生对话框。
@@ -221,13 +220,15 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 	}
 	subStorePort := strings.TrimPrefix(config.GlobalConfig.SubStorePort, ":")
 
-	var conflictHTTP, conflictSubStore bool
-	if g.pendingInit {
-		conflictHTTP = g.preConflictHTTP
-		conflictSubStore = g.preConflictSub
-	} else if g.backend != nil {
-		conflictHTTP = g.backend.PortConflictHTTP()
-		conflictSubStore = g.backend.PortConflictSubStore()
+	conflictHTTP := false
+	conflictSubStore := false
+
+	// GUI 模式下，Initialize() 只在端口预检通过后才调用，因此 backend 层面不会出现运行态端口冲突。
+	// 冲突状态仅在 pendingInit 阶段有意义，此时动态通过同一接口查询占用。
+	if g.pendingInit && g.backend != nil {
+		httpAvail, subAvail := g.backend.CheckPortConflict()
+		conflictHTTP = !httpAvail
+		conflictSubStore = !subAvail
 	}
 
 	autostartEnabled, _ := queryAutoStart()
@@ -264,7 +265,6 @@ func (g *GuiApp) CompleteInit() error {
 	if !g.pendingInit {
 		return nil
 	}
-
 	if g.backend == nil {
 		return fmt.Errorf("内部错误：backend 未设置")
 	}
@@ -273,13 +273,15 @@ func (g *GuiApp) CompleteInit() error {
 		return fmt.Errorf("初始化后端失败: %w", err)
 	}
 
-	if err := g.backend.EnsureRouter(); err != nil {
+	if err := g.backend.EnsureRouterAndWebUI(); err != nil {
 		return fmt.Errorf("初始化 HTTP 路由失败: %w", err)
 	}
 
-	registerGuiAutoLogin(g.backend.GetRouter())
+	// 注意：只调用一次 registerGuiRoutes，不重复调用 registerGuiAutoLogin（两者等价）。
+	// 重复调用会导致 Gin 对同一路径二次注册而 panic（"/gui/enter" 等冲突），
+	// 使 CompleteInit 通过 Wails binding 返回错误，前端无法进入下一步。
+	registerGuiRoutes(g.backend.GetRouter())
 
-	// 延迟初始化路径同样需要注入 hook
 	utils.OSNotifyHook = func(title, body string) {
 		sendOSNotification(title, body)
 	}
@@ -288,8 +290,6 @@ func (g *GuiApp) CompleteInit() error {
 
 	g.configPath = g.backend.GetConfigPath()
 	g.pendingInit = false
-	g.preConflictHTTP = false
-	g.preConflictSub = false
 
 	sendOSNotification("Subs Check Pro", "服务已成功启动")
 	return nil
@@ -312,47 +312,22 @@ func (g *GuiApp) ValidateConfigKey(enteredKey string, remember bool) (string, er
 	return generateNonce(actual, remember), nil
 }
 
-// ValidatePort 实时验证单个端口号合法性。
+// ValidatePort 实时验证单个端口号合法性（格式 + 是否被占用）。
+// 返回空字符串表示端口格式正确且当前未被占用。
 func (g *GuiApp) ValidatePort(port string) string {
-	if err := validatePort(port); err != nil {
+	p := normalizePort(port)
+	if err := validatePort(p); err != nil {
 		return err.Error()
+	}
+	if isPortInUse(p) {
+		return "已占用"
 	}
 	return ""
 }
 
 // SetPorts 更新端口配置。
 func (g *GuiApp) SetPorts(httpPort, subStorePort string) error {
-	httpPort = normalizePort(httpPort)
-	subStorePort = normalizePort(subStorePort)
-
-	if err := validatePort(httpPort); err != nil {
-		return fmt.Errorf("HTTP 端口无效: %w", err)
-	}
-	if subStorePort != "" {
-		if err := validatePort(subStorePort); err != nil {
-			return fmt.Errorf("Sub-Store 端口无效: %w", err)
-		}
-		if httpPort == subStorePort {
-			return fmt.Errorf("HTTP 端口与 Sub-Store 端口不能相同（均为 %s）", httpPort)
-		}
-	}
-
-	if isPortInUse(httpPort) {
-		return fmt.Errorf("HTTP 端口 %s 已被占用，请换一个", httpPort)
-	}
-	if subStorePort != "" && isPortInUse(subStorePort) {
-		return fmt.Errorf("Sub-Store 端口 %s 已被占用，请换一个", subStorePort)
-	}
-
-	config.GlobalConfig.ListenPort = ":" + httpPort
-	if subStorePort != "" {
-		config.GlobalConfig.SubStorePort = ":" + subStorePort
-	}
-
-	g.preConflictHTTP = false
-	g.preConflictSub = false
-
-	return nil
+	return g.backend.SetPorts(httpPort, subStorePort)
 }
 
 // ResizeToMain 将登录小窗无闪烁地切换为管理界面大窗。

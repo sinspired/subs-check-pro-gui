@@ -102,7 +102,14 @@ export function App() {
     }
   }
 
-  function handlePortsFixed(newInfo: AppInfo) { setInfo(newInfo); setView('main'); }
+  function handlePortsFixed(newInfo: AppInfo) {
+    // // 端口已变更，更新全局 base URL，避免 useTheme 等钩子继续使用旧端口
+    (window as any).__CORE_BASE_URL = `http://127.0.0.1:${newInfo.listenPort}`;
+    syncFromServer();
+    setInfo(newInfo);
+    setView('main');
+  }
+
   function handleSelectConfig(path: string) { setCfgPath(path); setView('password'); }
   function handlePasswordDone(newInfo: AppInfo | null) { if (newInfo) setInfo(newInfo); setView('main'); }
   function handlePasswordBack() { setView('main'); }
@@ -279,13 +286,17 @@ export function App() {
         </div>
       )}
 
-      {/* ── portConflict ── */}
+      {/* ── portConflict — 左右分栏布局（与 main/password 视图保持一致的窗口感）── */}
       {view === 'portConflict' && info && (
-        <div class="page">
-          <div class="card">
-            <Header theme={theme} toggleTheme={toggleTheme} onRequestClose={requestClose} />
-            <PortConflict info={info} toast={toast} onFixed={handlePortsFixed} />
-          </div>
+        <div class="page split-page">
+          <BrandPanel />
+          <section class="login-panel">
+            <PanelToolbar portInfo={null} />
+            <div class="login-content login-content--conflict">
+              <PortConflict info={info} toast={toast} onFixed={handlePortsFixed} />
+            </div>
+            <LpFooter />
+          </section>
         </div>
       )}
 
