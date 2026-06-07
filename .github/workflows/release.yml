@@ -9,38 +9,87 @@ on:
 permissions:
   contents: write
 
+# ─────────────────────────────────────────────────────────
+# 产物命名规范：
+#   subs-check-pro-gui_<tag>_<goos>_<arch>[.ext]
+# 示例：
+#   subs-check-pro-gui_v2.5.6_windows_amd64.exe          ← 便携版（绿色版）
+#   subs-check-pro-gui_v2.5.6_windows_amd64-setup.exe    ← NSIS 安装包
+#   subs-check-pro-gui_v2.5.6_darwin_amd64.app.tar.gz    ← macOS .app bundle
+#   subs-check-pro-gui_v2.5.6_darwin_arm64.app.tar.gz
+#   subs-check-pro-gui_v2.5.6_linux_amd64                ← 裸二进制（便携版）
+#   subs-check-pro-gui_v2.5.6_linux_amd64.deb            ← Debian/Ubuntu 安装包
+#   subs-check-pro-gui_v2.5.6_linux_arm64
+#   subs-check-pro-gui_v2.5.6_linux_arm64.deb
+# ─────────────────────────────────────────────────────────
+
 jobs:
+  # ══════════════════════════════════════════════
+  # Job 1: 用 git-cliff 生成 Changelog
+  # ══════════════════════════════════════════════
+  changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    outputs:
+      content: ${{ steps.cliff.outputs.content }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # 必须获取完整历史，cliff 才能对比 tag
+
+      - name: Generate Changelog with git-cliff
+        id: cliff
+        uses: orhun/git-cliff-action@v4
+        with:
+          # --latest   : 只生成上一个 tag 到本 tag 的变更（而非全量）
+          # --strip header : 去掉 cliff 自动加的标题行，由 release body 自己控制
+          args: --latest --strip header
+        env:
+          OUTPUT: CHANGES.md # 同时写入文件（供后续步骤引用）
+          GITHUB_REPO: ${{ github.repository }}
+
+  # ══════════════════════════════════════════════
+  # Job 2: 各平台并行编译 + 打包
+  # ══════════════════════════════════════════════
   build:
+    name: Build (${{ matrix.goos }}/${{ matrix.arch }})
+    needs: changelog # 等 changelog 生成完再开始（可选，避免冗余）
     strategy:
       fail-fast: false
       matrix:
         include:
+          # ── Windows amd64（裸 exe + NSIS installer）──
           - os: windows-latest
             arch: amd64
-            task: windows:build
-            artifact: subs-check-pro-gui-windows-amd64
+            goos: windows
 
+          # ── macOS Intel（.app.tar.gz）──
           - os: macos-15-intel
             arch: amd64
-            task: darwin:build
-            artifact: subs-check-pro-gui-darwin-amd64
+            goos: darwin
 
+          # ── macOS Apple Silicon（.app.tar.gz）──
           - os: macos-14
             arch: arm64
-            task: darwin:build
-            artifact: subs-check-pro-gui-darwin-arm64
+            goos: darwin
 
+          # ── Linux amd64（裸二进制 + .deb）──
           - os: ubuntu-24.04
             arch: amd64
-            task: linux:build
-            artifact: subs-check-pro-gui-linux-amd64
+            goos: linux
 
+          # ── Linux arm64（裸二进制 + .deb）──
           - os: ubuntu-24.04-arm
             arch: arm64
-            task: linux:build
-            artifact: subs-check-pro-gui-linux-arm64
+            goos: linux
 
     runs-on: ${{ matrix.os }}
+
+    env:
+      APP_NAME: subs-check-pro-gui
+      VERSION: ${{ github.ref_name }} # 形如 v2.5.6
 
     steps:
       - name: Checkout
@@ -58,6 +107,7 @@ jobs:
         with:
           node-version: 24
 
+      # ── Linux：GTK4 / WebKitGTK 依赖 ──
       - name: Install Linux Dependencies
         if: runner.os == 'Linux'
         run: |
@@ -68,42 +118,131 @@ jobs:
             libgtk-4-dev \
             libwebkitgtk-6.0-dev
 
+      # ── Windows：NSIS 打包器（用于生成安装包）──
+      - name: Install NSIS
+        if: runner.os == 'Windows'
+        run: choco install nsis --no-progress -y
+
       - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.98
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
 
       - name: Install Task CLI and pnpm
         run: npm install -g @go-task/cli pnpm
 
-      - name: Build
-        run: task ${{ matrix.task }}
+      # ──────────────────────────────────────────
+      # Windows：先 build → 再 package（NSIS）
+      # ──────────────────────────────────────────
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: task windows:build
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARCH: ${{ matrix.arch }}
 
-      # 重命名为带平台后缀，避免 release job 里同名覆盖
-      - name: Rename artifacts
+      - name: Package Windows (NSIS installer)
+        if: runner.os == 'Windows'
+        # task windows:package 调用 create:nsis:installer
+        # 输出：bin/subs-check-pro-gui-amd64-installer.exe
+        run: task windows:package
+        env:
+          ARCH: ${{ matrix.arch }}
+
+      # ──────────────────────────────────────────
+      # macOS：package 已包含 build + .app bundle
+      # ──────────────────────────────────────────
+      - name: Package macOS (.app bundle)
+        if: runner.os == 'macOS'
+        # task darwin:package 调用 create:app:bundle
+        # 输出：bin/subs-check-pro-gui.app/
+        run: task darwin:package
+        env:
+          ARCH: ${{ matrix.arch }}
+
+      # ──────────────────────────────────────────
+      # Linux：先 build → 再生成 .deb
+      # ──────────────────────────────────────────
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: task linux:build
+        env:
+          ARCH: ${{ matrix.arch }}
+
+      - name: Package Linux (.deb)
+        if: runner.os == 'Linux'
+        # task linux:create:deb 使用 wails3 tool package（内置 nfpm）
+        # 输出：bin/subs-check-pro-gui_<version>_<arch>.deb
+        # 注意：nfpm.yaml 中 version 字段需改为 ${VERSION}（见说明）
+        run: task linux:create:deb
+        env:
+          ARCH: ${{ matrix.arch }}
+          GOARCH: ${{ matrix.arch }}
+          # nfpm.yaml 用 ${VERSION} 时读取此变量（去掉 v 前缀）
+          VERSION: ${{ github.ref_name != '' && github.ref_name || 'dev' }}
+
+      # ──────────────────────────────────────────
+      # 统一整理产物，重命名为规范格式
+      # ──────────────────────────────────────────
+      - name: Collect and Rename Artifacts
         shell: bash
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.arch }}
         run: |
-          cd bin
-          for f in *; do
-            # 跳过已经带后缀的文件
-            case "$f" in
-              *.exe)
-                mv "$f" "subs-check-pro-gui-${{ matrix.artifact }}.exe"
-                ;;
-              *)
-                mv "$f" "subs-check-pro-gui-${{ matrix.artifact }}"
-                ;;
-            esac
-          done
+          mkdir -p dist
+          # 命名前缀：APP_NAME_VERSION_GOOS_ARCH
+          PREFIX="${APP_NAME}_${VERSION}_${GOOS}_${GOARCH}"
 
-      - name: Upload Artifact
+          case "${GOOS}" in
+
+            windows)
+              # 1. 便携版（裸二进制）
+              cp "bin/${APP_NAME}.exe" "dist/${PREFIX}.exe"
+
+              # 2. NSIS 安装包（OutFile 输出到 bin/<name>-<arch>-installer.exe）
+              NSIS_SRC="bin/${APP_NAME}-${GOARCH}-installer.exe"
+              if [ -f "${NSIS_SRC}" ]; then
+                cp "${NSIS_SRC}" "dist/${PREFIX}-setup.exe"
+              else
+                echo "⚠️  NSIS installer not found at ${NSIS_SRC}, skipping"
+              fi
+              ;;
+
+            darwin)
+              # .app bundle → tar.gz（macOS 分发惯例）
+              cd bin
+              tar czf "../dist/${PREFIX}.app.tar.gz" "${APP_NAME}.app"
+              ;;
+
+            linux)
+              # 1. 裸二进制（便携版）
+              cp "bin/${APP_NAME}" "dist/${PREFIX}"
+
+              # 2. .deb 包（nfpm 生成的默认名如 subs-check-pro-gui_2.5.6_amd64.deb）
+              DEB_SRC=$(ls bin/*.deb 2>/dev/null | head -1)
+              if [ -n "${DEB_SRC}" ]; then
+                cp "${DEB_SRC}" "dist/${PREFIX}.deb"
+              else
+                echo "⚠️  .deb not found in bin/, skipping"
+              fi
+              ;;
+
+          esac
+
+          echo "=== dist/ contents ==="
+          ls -lah dist/
+
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.artifact }}
-          path: bin/
+          name: dist-${{ matrix.goos }}-${{ matrix.arch }}
+          path: dist/
+          retention-days: 1
 
+  # ══════════════════════════════════════════════
+  # Job 3: 汇总产物 → 创建 GitHub Release
+  # ══════════════════════════════════════════════
   release:
-    needs: build
+    name: Create GitHub Release
+    needs: [changelog, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -114,28 +253,32 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 不用 merge-multiple，每个 artifact 下载到独立子目录
+      # merge-multiple 把各 artifact 子目录打平到同一目录
       - name: Download all artifacts
         uses: actions/download-artifact@v8
         with:
-          path: artifacts/
+          path: dist/
+          merge-multiple: true
 
-      - name: Collect release files
+      - name: List release files
         run: |
-          mkdir -p release-files
-          # 把各子目录中的文件平铺到 release-files/
-          find artifacts/ -type f -exec mv {} release-files/ \;
           echo "=== Release files ==="
-          ls -lah release-files/
+          ls -lah dist/
 
-      - name: Create GitHub release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
-          files: release-files/*
-          generate_release_notes: true
+          # 使用 git-cliff 生成的 changelog 作为 release body
+          body: ${{ needs.changelog.outputs.content }}
+          # 不再使用 generate_release_notes: true（只会产生"Full Changelog"链接）
+          files: dist/*
 
+  # ══════════════════════════════════════════════
+  # Job 4: 发送通知
+  # ══════════════════════════════════════════════
   notify:
+    name: Send Release Notifications
     needs: release
     runs-on: ubuntu-latest
     permissions:

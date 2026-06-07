@@ -1,0 +1,62 @@
+# git-cliff 配置文件
+# 放在项目根目录，orhun/git-cliff-action 会自动读取
+# 文档：https://git-cliff.org/docs/configuration
+
+[changelog]
+# changelog 头部（--strip header 参数会忽略此项）
+header = "# Changelog\n\n"
+# 每个 tag 的正文模板（Tera 模板语法）
+body = """
+{% if version %}\
+## {{ version }} - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+## Unreleased
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+{% for commit in commits %}
+- {% if commit.scope %}**{{ commit.scope }}**: {% endif %}\
+{{ commit.message | upper_first }} ([`{{ commit.id | truncate(length=7, end="") }}`]({{ remote.link }}/commit/{{ commit.id }}))\
+{% endfor %}
+{% endfor %}\n
+"""
+# 底部
+footer = ""
+# 去除首尾空白
+trim = true
+
+[git]
+# 是否要求提交符合 Conventional Commits 规范
+# false = 所有提交都会出现在 changelog，不做类型过滤
+conventional_commits = false
+# 是否过滤掉不符合规范的提交（配合 conventional_commits = true 使用）
+filter_unconventional = false
+# 提交消息预处理：去除 PR 合并信息噪音
+commit_preprocessors = [
+  { pattern = "Merge pull request #(\\d+) from \\S+", replace = "PR #$1" },
+  { pattern = "\\(#(\\d+)\\)", replace = "([#$1]({{ remote.link }}/pull/$1))" },
+]
+# 提交分组规则（根据提交消息前缀自动归类）
+commit_parsers = [
+  { message = "^feat",     group = "✨ Features"       },
+  { message = "^fix",      group = "🐛 Bug Fixes"       },
+  { message = "^perf",     group = "⚡ Performance"     },
+  { message = "^refactor", group = "♻️ Refactor"         },
+  { message = "^doc",      group = "📚 Documentation"   },
+  { message = "^chore",    group = "🔧 Chores"          },
+  { message = "^ci",       group = "👷 CI/CD"           },
+  { message = "^build",    group = "🏗️ Build"           },
+  { message = "^test",     group = "✅ Tests"           },
+  { message = "^revert",   group = "⏪ Reverts"         },
+  # 不符合以上规则的提交归入"其他"
+  { message = ".*",        group = "📝 Changes"         },
+]
+# 过滤掉纯版本 bump 提交（如 "chore: bump v2.5.6"）
+filter_commits = false
+# 按 tag 排序
+topo_order = false
+sort_commits = "newest"
+
+[remote.github]
+owner = "sinspired"
+repo = "subs-check-pro-gui"

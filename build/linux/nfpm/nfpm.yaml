@@ -1,18 +1,19 @@
-# Feel free to remove those if you don't want/need to use them.
-# Make sure to check the documentation at https://nfpm.goreleaser.com
+# nfpm configuration for Linux package generation
+# See: https://nfpm.goreleaser.com/configuration/
 #
-# The lines below are called `modelines`. See `:help modeline`
+# VERSION 环境变量由 CI 注入（见 release.yml），格式为 "2.5.6"（不含 v 前缀）
+# arch    由 GOARCH 环境变量提供（amd64 / arm64）
 
 name: "subs-check-pro-gui"
 arch: ${GOARCH}
 platform: "linux"
-version: "0.0.1"
+version: "${VERSION}" # ← 修复：原来写死 "0.0.1"，现在从环境变量读取
 section: "default"
 priority: "extra"
 maintainer: ${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>
 description: "A modern GUI of Subs-Check-Pro"
 vendor: "sinspired"
-homepage: "https://wails.io"
+homepage: "https://github.com/sinspired/subs-check-pro-gui"
 license: "MIT"
 release: "1"
 
