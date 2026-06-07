@@ -49,6 +49,7 @@ jobs:
         env:
           OUTPUT: CHANGES.md # 同时写入文件（供后续步骤引用）
           GITHUB_REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ══════════════════════════════════════════════
   # Job 2: 各平台并行编译 + 打包

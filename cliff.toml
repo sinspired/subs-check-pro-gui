@@ -16,7 +16,7 @@ body = """
 ### {{ group | upper_first }}
 {% for commit in commits %}
 - {% if commit.scope %}**{{ commit.scope }}**: {% endif %}\
-{{ commit.message | upper_first }} ([`{{ commit.id | truncate(length=7, end="") }}`]({{ remote.link }}/commit/{{ commit.id }}))\
+{{ commit.message | upper_first }} ([`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/sinspired/subs-check-pro-gui/commit/{{ commit.id }}))\
 {% endfor %}
 {% endfor %}\n
 """
@@ -33,23 +33,23 @@ conventional_commits = false
 filter_unconventional = false
 # 提交消息预处理：去除 PR 合并信息噪音
 commit_preprocessors = [
-  { pattern = "Merge pull request #(\\d+) from \\S+", replace = "PR #$1" },
-  { pattern = "\\(#(\\d+)\\)", replace = "([#$1]({{ remote.link }}/pull/$1))" },
+    { pattern = "Merge pull request #(\\d+) from \\S+", replace = "PR #$1" },
+    { pattern = "\\(#(\\d+)\\)", replace = "([#$1](https://github.com/sinspired/subs-check-pro-gui/pull/$1))" },
 ]
 # 提交分组规则（根据提交消息前缀自动归类）
 commit_parsers = [
-  { message = "^feat",     group = "✨ Features"       },
-  { message = "^fix",      group = "🐛 Bug Fixes"       },
-  { message = "^perf",     group = "⚡ Performance"     },
-  { message = "^refactor", group = "♻️ Refactor"         },
-  { message = "^doc",      group = "📚 Documentation"   },
-  { message = "^chore",    group = "🔧 Chores"          },
-  { message = "^ci",       group = "👷 CI/CD"           },
-  { message = "^build",    group = "🏗️ Build"           },
-  { message = "^test",     group = "✅ Tests"           },
-  { message = "^revert",   group = "⏪ Reverts"         },
-  # 不符合以上规则的提交归入"其他"
-  { message = ".*",        group = "📝 Changes"         },
+    { message = "^feat", group = "✨ Features" },
+    { message = "^fix", group = "🐛 Bug Fixes" },
+    { message = "^perf", group = "⚡ Performance" },
+    { message = "^refactor", group = "♻️ Refactor" },
+    { message = "^doc", group = "📚 Documentation" },
+    { message = "^chore", group = "🔧 Chores" },
+    { message = "^ci", group = "👷 CI/CD" },
+    { message = "^build", group = "🏗️ Build" },
+    { message = "^test", group = "✅ Tests" },
+    { message = "^revert", group = "⏪ Reverts" },
+    # 不符合以上规则的提交归入"其他"
+    { message = ".*", group = "📝 Changes" },
 ]
 # 过滤掉纯版本 bump 提交（如 "chore: bump v2.5.6"）
 filter_commits = false
