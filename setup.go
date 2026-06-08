@@ -57,8 +57,12 @@ func setupApp() (*app.App, *GuiApp, bool) {
 
 	// 端口预检
 	if err := coreApp.InitConfigLoad(); err != nil {
-		slog.Error("配置加载失败", "error", err)
-		os.Exit(1)
+		if !errors.Is(err, app.ErrFirstRun) {
+			slog.Error("配置加载失败", "error", err)
+			os.Exit(1)
+		}else{
+			os.Setenv("GUI_FIRST_RUN", "1")
+		}
 	}
 
 	httpPortAvailable, subStorePortAvailable := coreApp.CheckPortConflict()
@@ -78,9 +82,11 @@ func setupApp() (*app.App, *GuiApp, bool) {
 
 	// 初始化
 	if err := coreApp.Initialize(); err != nil {
-		if errors.Is(err, app.ErrFirstRun) {
+		sendOSNotification("首次运行", "setupApp")
+		if errors.Is(err, app.ErrFirstRun) || os.Getenv("GUI_FIRST_RUN") == "1"{
 			resolvedPath := coreApp.GetConfigPath()
-			slog.Info("首次运行：config.yaml 已创建", "path", resolvedPath)
+			sendOSNotification("首次运行", "setupApp")
+			slog.Info("哈哈哈首次运行：config.yaml 已创建", "path", resolvedPath)
 			os.Setenv("GUI_FIRST_RUN", "1")
 
 			coreApp = app.New(originVersion, version, resolvedPath)
