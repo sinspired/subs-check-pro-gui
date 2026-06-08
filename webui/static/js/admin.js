@@ -2038,8 +2038,20 @@ import { initQuickPreview } from './cfg-quickpreview.js';
 
   function showLogin(show) {
     getPublicVersion()
-    if (els.loginModal) els.loginModal.classList.toggle('login-hidden', !show)
-    if (show) els.apiKeyInput?.focus()
+    const isWails = !!window.__WAILS_GUI?.baseURL
+
+
+    showToast(!show || isWails,"info")
+
+    if (els.loginModal) els.loginModal.classList.toggle('login-hidden', !show || isWails)
+    if (show) {
+      if (isWails) {
+        // 调用 Wails binding 切回登录小窗
+        fetch('/gui/back-to-login').catch(() => { })
+      } else {
+        els.apiKeyInput?.focus()
+      }
+    }
   }
 
   function setAuthUI(ok) {
