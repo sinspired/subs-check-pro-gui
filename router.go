@@ -61,6 +61,8 @@ func registerGuiRoutes(router *gin.Engine) {
 	router.GET("/gui/enter", handleGuiEnter)
 	router.GET("/gui/popup", handleGuiPopup)
 	router.GET("/gui/back-to-login", handleGuiBackToLogin)
+	router.GET("/gui/open-about", handleGuiOpenAbout)       // 打开「关于」窗口
+	router.GET("/gui/check-update", handleGuiCheckUpdate)   // 触发更新检查
 }
 
 // registerGuiAutoLogin 向后兼容别名（setup.go 调用时使用）。
@@ -255,4 +257,40 @@ func isLoopback(c *gin.Context) bool {
 	}
 	ip := net.ParseIP(remoteIP)
 	return ip != nil && ip.IsLoopback()
+}
+
+// ── /gui/open-about ───────────────────────────────────────────────────────────
+
+// handleGuiOpenAbout 在 Go 侧调用 OpenAboutWindow()，在 Wails 主线程打开「关于」窗口。
+//
+// 调用方：admin.html 内的 JS 通过 fetch('/gui/open-about') 触发，
+// 替换原先打开 projectMenu 弹出菜单的行为，实现「项目信息」按钮直接跳转到关于页。
+func handleGuiOpenAbout(c *gin.Context) {
+	if !isLoopback(c) {
+		c.String(http.StatusForbidden, "forbidden")
+		return
+	}
+	c.String(http.StatusOK, "ok")
+	if globalGuiApp != nil {
+		application.InvokeAsync(func() {
+			globalGuiApp.OpenAboutWindow()
+		})
+	}
+}
+
+// ── /gui/check-update ─────────────────────────────────────────────────────────
+
+// handleGuiCheckUpdate 在 Go 侧调用 CheckForUpdates()，触发 Wails 更新流程。
+//
+// 调用方：admin.html 内的 JS（如项目菜单「检查更新」按钮）通过
+// fetch('/gui/check-update') 触发，无需 Wails JS 绑定即可发起更新检查。
+func handleGuiCheckUpdate(c *gin.Context) {
+	if !isLoopback(c) {
+		c.String(http.StatusForbidden, "forbidden")
+		return
+	}
+	c.String(http.StatusOK, "ok")
+	if globalGuiApp != nil {
+		go globalGuiApp.CheckForUpdates()
+	}
 }

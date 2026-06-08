@@ -3,9 +3,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -753,6 +755,117 @@ func (g *GuiApp) CheckForUpdates() {
 			slog.Warn("CheckForUpdates: 检查更新失败", "error", err)
 		}
 	}()
+}
+
+// UpdateInfo 前端展示更新状态所需的结构体。
+type UpdateInfo struct {
+	// HasUpdate 为 true 表示检测到新版本
+	HasUpdate bool `json:"hasUpdate"`
+	// LatestVersion 最新版本号（如 "v2.6.0"）
+	LatestVersion string `json:"latestVersion"`
+	// CurrentVersion 当前版本号
+	CurrentVersion string `json:"currentVersion"`
+	// ReleaseNotes 发布说明（Markdown）
+	ReleaseNotes string `json:"releaseNotes"`
+	// DownloadURL 下载页面 URL（通过 ghproxy.net 加速）
+	DownloadURL string `json:"downloadURL"`
+	// Error 检查失败时的错误描述（前端可展示）
+	Error string `json:"error"`
+}
+
+// GetUpdateInfo 向 GitHub API 查询最新 Release，返回更新状态给前端。
+//
+// 使用场景：
+//   - AboutApp.tsx「检查更新」按钮 → 在「关于」窗口内内联展示更新结果，风格与整体 UI 一致
+//   - 不依赖 Wails 内置 updater 窗口，可完全自定义展示样式
+//
+// 下载 URL 自动附加 https://ghproxy.net/ 前缀，改善中国大陆下载速度。
+func (g *GuiApp) GetUpdateInfo() UpdateInfo {
+	const apiURL = "https://api.github.com/repos/sinspired/subs-check-pro-gui/releases/latest"
+
+	// 构造请求，设置 User-Agent（GitHub API 要求）
+	req, err := http.NewRequestWithContext(contextBackground(), http.MethodGet, apiURL, nil)
+	if err != nil {
+		return UpdateInfo{Error: "构造请求失败: " + err.Error()}
+	}
+	req.Header.Set("User-Agent", "subs-check-pro-gui/"+GuiVersion)
+	req.Header.Set("Accept", "application/vnd.github+json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return UpdateInfo{Error: "网络请求失败: " + err.Error()}
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return UpdateInfo{Error: fmt.Sprintf("GitHub API 返回 %d", resp.StatusCode)}
+	}
+
+	// 解析响应，只读取需要的字段
+	var release struct {
+		TagName string `json:"tag_name"`
+		Body    string `json:"body"`
+		HTMLURL string `json:"html_url"`
+		Assets  []struct {
+			Name               string `json:"name"`
+			BrowserDownloadURL string `json:"browser_download_url"`
+		} `json:"assets"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return UpdateInfo{Error: "解析响应失败: " + err.Error()}
+	}
+
+	latest := strings.TrimPrefix(release.TagName, "v")
+	current := strings.TrimPrefix(GuiVersion, "v")
+	if current == "" || current == "dev" {
+		current = "0.0.0"
+	}
+
+	// 简单语义化版本比较：latest > current → 有更新
+	hasUpdate := semverGreater(latest, current)
+
+	// 下载页面 URL：GitHub Release 页面，通过 ghproxy.net 加速
+	downloadURL := ghProxyBase + release.HTMLURL
+
+	return UpdateInfo{
+		HasUpdate:      hasUpdate,
+		LatestVersion:  release.TagName,
+		CurrentVersion: GuiVersion,
+		ReleaseNotes:   release.Body,
+		DownloadURL:    downloadURL,
+	}
+}
+
+// semverGreater 简单比较两个版本号字符串（格式 "x.y.z"），
+// 返回 a > b（true 表示 a 比 b 更新）。
+// 不处理预发布标签（-alpha/-beta），仅比较数字段。
+func semverGreater(a, b string) bool {
+	parse := func(s string) [3]int {
+		var parts [3]int
+		segs := strings.SplitN(s, ".", 3)
+		for i, seg := range segs {
+			if i >= 3 {
+				break
+			}
+			// 截断预发布后缀（如 "2-alpha1" → "2"）
+			seg = strings.FieldsFunc(seg, func(r rune) bool {
+				return r == '-' || r == '+'
+			})[0]
+			n, _ := strconv.Atoi(seg)
+			parts[i] = n
+		}
+		return parts
+	}
+	pa, pb := parse(a), parse(b)
+	for i := 0; i < 3; i++ {
+		if pa[i] > pb[i] {
+			return true
+		}
+		if pa[i] < pb[i] {
+			return false
+		}
+	}
+	return false
 }
 
 // OpenSubLinksWindow 打开或聚焦「订阅链接」独立窗口（单例模式）。

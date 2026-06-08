@@ -117,3 +117,70 @@ export class AppInfo {
         return new AppInfo($$parsedSource as Partial<AppInfo>);
     }
 }
+
+/**
+ * UpdateInfo 前端展示更新状态所需的结构体。
+ */
+export class UpdateInfo {
+    /**
+     * HasUpdate 为 true 表示检测到新版本
+     */
+    "hasUpdate": boolean;
+
+    /**
+     * LatestVersion 最新版本号（如 "v2.6.0"）
+     */
+    "latestVersion": string;
+
+    /**
+     * CurrentVersion 当前版本号
+     */
+    "currentVersion": string;
+
+    /**
+     * ReleaseNotes 发布说明（Markdown）
+     */
+    "releaseNotes": string;
+
+    /**
+     * DownloadURL 下载页面 URL（通过 ghproxy.net 加速）
+     */
+    "downloadURL": string;
+
+    /**
+     * Error 检查失败时的错误描述（前端可展示）
+     */
+    "error": string;
+
+    /** Creates a new UpdateInfo instance. */
+    constructor($$source: Partial<UpdateInfo> = {}) {
+        if (!("hasUpdate" in $$source)) {
+            this["hasUpdate"] = false;
+        }
+        if (!("latestVersion" in $$source)) {
+            this["latestVersion"] = "";
+        }
+        if (!("currentVersion" in $$source)) {
+            this["currentVersion"] = "";
+        }
+        if (!("releaseNotes" in $$source)) {
+            this["releaseNotes"] = "";
+        }
+        if (!("downloadURL" in $$source)) {
+            this["downloadURL"] = "";
+        }
+        if (!("error" in $$source)) {
+            this["error"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new UpdateInfo instance from a string or object.
+     */
+    static createFrom($$source: any = {}): UpdateInfo {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new UpdateInfo($$parsedSource as Partial<UpdateInfo>);
+    }
+}

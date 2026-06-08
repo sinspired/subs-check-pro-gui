@@ -3088,36 +3088,41 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     })
 
     function openProjectMenu(anchorEl) {
-      const pm = els.projectMenu
-      const sm = document.getElementById('shareMenu')
-      if (!pm) return
+      const isWails = !!window.__WAILS_GUI?.baseURL
+      if (!isWails) {
+        const pm = els.projectMenu
+        const sm = document.getElementById('shareMenu')
+        if (!pm) return
 
-      // 打开项目菜单时，先关闭分享菜单
-      sm?.classList.remove('active')
+        // 打开项目菜单时，先关闭分享菜单
+        sm?.classList.remove('active')
 
-      if (pm.classList.contains('active')) {
-        pm.classList.remove('active')
-        return
-      }
+        if (pm.classList.contains('active')) {
+          pm.classList.remove('active')
+          return
+        }
 
-      pm.classList.add('active')
+        pm.classList.add('active')
 
-      const rect = anchorEl.getBoundingClientRect()
-      const menuW = pm.offsetWidth || 180
-      const vw = window.innerWidth
-      const GAP = 6
+        const rect = anchorEl.getBoundingClientRect()
+        const menuW = pm.offsetWidth || 180
+        const vw = window.innerWidth
+        const GAP = 6
 
-      if (vw < 768) {
-        // 小屏：按钮下方，水平居中对齐按钮
-        let left = rect.left + rect.width / 2 - menuW / 2
-        if (left < GAP) left = GAP
-        if (left + menuW > vw - GAP) left = vw - menuW - GAP
-        pm.style.top = `${rect.bottom + GAP}px`
-        pm.style.left = `${left}px`
-      } else {
-        // 大屏：保持原有位置逻辑
-        pm.style.top = `${rect.top}px`
-        pm.style.left = `${rect.right * 0.9}px`
+        if (vw < 768) {
+          // 小屏：按钮下方，水平居中对齐按钮
+          let left = rect.left + rect.width / 2 - menuW / 2
+          if (left < GAP) left = GAP
+          if (left + menuW > vw - GAP) left = vw - menuW - GAP
+          pm.style.top = `${rect.bottom + GAP}px`
+          pm.style.left = `${left}px`
+        } else {
+          // 大屏：保持原有位置逻辑
+          pm.style.top = `${rect.top}px`
+          pm.style.left = `${rect.right * 0.9}px`
+        }
+      }else{
+        fetch('/gui/open-about').catch(() => { })
       }
     }
 

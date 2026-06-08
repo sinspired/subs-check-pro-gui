@@ -89,6 +89,21 @@ export function GetListenPort(): $CancellablePromise<string> {
 }
 
 /**
+ * GetUpdateInfo 向 GitHub API 查询最新 Release，返回更新状态给前端。
+ * 
+ * 使用场景：
+ *   - AboutApp.tsx「检查更新」按钮 → 在「关于」窗口内内联展示更新结果，风格与整体 UI 一致
+ *   - 不依赖 Wails 内置 updater 窗口，可完全自定义展示样式
+ * 
+ * 下载 URL 自动附加 https://ghproxy.net/ 前缀，改善中国大陆下载速度。
+ */
+export function GetUpdateInfo(): $CancellablePromise<$models.UpdateInfo> {
+    return $Call.ByID(1712625151).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
+/**
  * HideToTray 供前端"关闭按钮对话框"选择最小化时调用。
  */
 export function HideToTray(): $CancellablePromise<void> {
@@ -247,3 +262,4 @@ export function ValidatePort(port: string): $CancellablePromise<string> {
 
 // Private type creation functions
 const $$createType0 = $models.AppInfo.createFrom;
+const $$createType1 = $models.UpdateInfo.createFrom;

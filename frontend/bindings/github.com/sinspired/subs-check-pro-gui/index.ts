@@ -9,5 +9,6 @@ export {
 };
 
 export {
-    AppInfo
+    AppInfo,
+    UpdateInfo
 } from "./models.js";

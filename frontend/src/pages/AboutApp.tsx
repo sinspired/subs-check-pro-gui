@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useTheme } from '../hooks/useTheme';
 import { useWailsReady } from '../hooks/useWailsReady';
-import { GuiApp, AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
+import { GuiApp, AppInfo, UpdateInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 import { useToast } from '../hooks/useToast';
 import { Toast } from '../components/Toast';
 
@@ -21,13 +21,15 @@ async function openLink(url: string, windowSize: 'extraLarge' | 'large' | 'mediu
 }
 
 // ── 类型 ──────────────────────────────────────────────────────────
-type Tab = 'intro' | 'features' | 'resources';
+type Tab = 'intro' | 'features' | 'resources' | 'update';
 
 // ── 静态数据 ──────────────────────────────────────────────────────
 const NAV_ITEMS: { id: Tab; label: string; hint: string }[] = [
   { id: 'intro', label: '系统概览', hint: 'Overview' },
   { id: 'features', label: '核心特性', hint: 'Features' },
   { id: 'resources', label: '生态资源', hint: 'Resources' },
+  { id: 'update', label: '检查更新', hint: 'Update' },
+
 ];
 
 const FEATURES = [
@@ -133,6 +135,11 @@ export function AboutApp() {
   const [info, setInfo] = useState<AppInfo | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('intro');
 
+  // ── 更新检查状态 ────────────────────────────────────────────────
+  // idle: 初始状态  checking: 查询中  done: 查询完成
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'done'>('idle');
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+
   const { msg, visible, toast } = useToast();
 
   useEffect(() => {
@@ -146,6 +153,21 @@ export function AboutApp() {
   function switchTab(tab: Tab) {
     if (tab !== activeTab) setActiveTab(tab);
   }
+
+  /** 调用 Go binding 检查更新，结果内联显示在「检查更新」面板内 */
+  async function checkUpdate() {
+    setUpdateStatus('checking');
+    setUpdateInfo(null);
+    try {
+      const result = await GuiApp.GetUpdateInfo();
+      setUpdateInfo(result);
+    } catch (e) {
+      setUpdateInfo({ hasUpdate: false, latestVersion: '', currentVersion: guiVer, releaseNotes: '', downloadURL: '', error: String(e) });
+    } finally {
+      setUpdateStatus('done');
+    }
+  }
+
 
   return (
     <div class="aw-root">
@@ -488,6 +510,139 @@ export function AboutApp() {
                   );
                 })()}
               </div>
+            </div>
+          )}
+
+          {/* ── 检查更新 ── */}
+          {activeTab === 'update' && (
+            <div class="aw-panel aw-update-panel" key="update">
+
+              {/* 当前版本信息卡 */}
+              <div class="aw-update-ver-card">
+                <div class="aw-update-ver-row">
+                  <span class="aw-update-ver-dot gui-dot" />
+                  <span class="aw-update-ver-label">桌面客户端</span>
+                  <span class="aw-update-ver-val">{guiVer}</span>
+                </div>
+                <div class="aw-update-ver-divider" />
+                <div class="aw-update-ver-row">
+                  <span class="aw-update-ver-dot core-dot" />
+                  <span class="aw-update-ver-label">内核引擎</span>
+                  <span class="aw-update-ver-val">{coreVer}</span>
+                </div>
+              </div>
+
+              {/* 检查按钮 */}
+              <button
+                class={`aw-update-check-btn ${updateStatus === 'checking' ? 'checking' : ''}`}
+                onClick={checkUpdate}
+                disabled={updateStatus === 'checking'}
+              >
+                {updateStatus === 'checking' ? (
+                  <>
+                    <span class="aw-update-spinner" />
+                    检查中…
+                  </>
+                ) : (
+                  <>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="23 4 23 10 17 10" />
+                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                    </svg>
+                    检查更新
+                  </>
+                )}
+              </button>
+
+              {/* 结果区：仅在 done 状态时显示 */}
+              {updateStatus === 'done' && updateInfo && (
+                <div class={`aw-update-result ${updateInfo.error ? 'error' : updateInfo.hasUpdate ? 'has-update' : 'up-to-date'}`}>
+
+                  {/* 错误状态 */}
+                  {updateInfo.error ? (
+                    <div class="aw-update-state-row">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                      </svg>
+                      <span>检查失败：{updateInfo.error}</span>
+                    </div>
+
+                  ) : updateInfo.hasUpdate ? (
+                    /* 有新版本 */
+                    <>
+                      <div class="aw-update-state-row has-update">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="8 17 12 21 16 17" />
+                          <line x1="12" y1="12" x2="12" y2="21" />
+                          <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29" />
+                        </svg>
+                        <span>
+                          发现新版本&nbsp;
+                          <strong>{updateInfo.latestVersion}</strong>
+                          &nbsp;（当前&nbsp;{updateInfo.currentVersion}）
+                        </span>
+                      </div>
+
+                      {/* Release Notes 折叠展示（前 400 字符） */}
+                      {updateInfo.releaseNotes && (
+                        <pre class="aw-update-notes">
+                          {updateInfo.releaseNotes.length > 400
+                            ? updateInfo.releaseNotes.slice(0, 400) + '\n…'
+                            : updateInfo.releaseNotes}
+                        </pre>
+                      )}
+
+                      {/* 下载按钮：通过 ghproxy.net 加速 */}
+                      <button
+                        class="aw-update-dl-btn"
+                        onClick={() => openLink(updateInfo.downloadURL, 'wide')}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        前往下载&nbsp;{updateInfo.latestVersion}
+                      </button>
+
+                      {/* 自动安装按钮（通过 Wails 内置 updater，下载已走 ghproxy） */}
+                      <button
+                        class="aw-update-auto-btn"
+                        onClick={() => GuiApp.CheckForUpdates()}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                        自动下载并安装
+                      </button>
+                    </>
+
+                  ) : (
+                    /* 已是最新 */
+                    <div class="aw-update-state-row up-to-date">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      <span>已是最新版本&nbsp;<strong>{updateInfo.currentVersion}</strong></span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 底部说明 */}
+              <p class="aw-update-note">
+                · 「前往下载」将在应用内窗口打开 Release 页面，通过 ghproxy.net 加速访问。<br />
+                · 「自动下载并安装」使用 Wails 内置更新器，下载同样经过代理加速，安装后需重启。
+              </p>
+
             </div>
           )}
 

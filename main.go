@@ -4,6 +4,7 @@ package main
 import (
 	"embed"
 	"log/slog"
+	"net/http"
 	"os"
 	"strings"
 
@@ -48,6 +49,13 @@ func main() {
 	if currentVer == "" || currentVer == "dev" {
 		currentVer = "0.0.0" // dev 模式不触发真实更新检查
 	}
+
+	// ── ghproxy 代理：为 GitHub Release 下载注入 Transport ──────────────────
+	// 仅拦截 github.com/*/releases/download/* 及 objects.githubusercontent.com 请求，
+	// GitHub API（api.github.com）保持直连。
+	// 该 Transport 对整个进程生效，不影响其他 HTTP 请求（Gin、Sub-Store 等均走本地回环）。
+	http.DefaultTransport = newGHProxyTransport(http.DefaultTransport)
+
 	ghProvider, ghErr := github.New(github.Config{
 		Repository:    "sinspired/subs-check-pro-gui",
 		ChecksumAsset: "SHA256SUMS", // Release 中与产物同级的校验文件
