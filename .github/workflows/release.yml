@@ -271,6 +271,20 @@ jobs:
           echo "=== Release files ==="
           ls -lah dist/
 
+      # ── 生成 SHA256SUMS（供 Wails updater ChecksumAsset 验证）──
+      # 文件格式：<sha256sum>  <filename>，与 sha256sum / shasum -a 256 输出一致
+      - name: Generate SHA256SUMS
+        working-directory: dist
+        run: |
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum * > SHA256SUMS
+          else
+            # macOS runner 使用 shasum
+            shasum -a 256 * > SHA256SUMS
+          fi
+          echo "=== SHA256SUMS ==="
+          cat SHA256SUMS
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:

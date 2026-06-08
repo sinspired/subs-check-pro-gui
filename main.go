@@ -5,10 +5,13 @@ import (
 	"embed"
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 	"github.com/wailsapp/wails/v3/pkg/services/notifications"
+	"github.com/wailsapp/wails/v3/pkg/updater"
+	"github.com/wailsapp/wails/v3/pkg/updater/providers/github"
 )
 
 //go:embed all:frontend/dist
@@ -38,6 +41,31 @@ func main() {
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
 	})
+
+	// ── Wails Updater：检查 GitHub Release 更新 ──────────────────────────────
+	// GuiVersion 由 ldflags 注入（如 "v2.5.6"），updater 要求不带 v 前缀
+	currentVer := strings.TrimPrefix(GuiVersion, "v")
+	if currentVer == "" || currentVer == "dev" {
+		currentVer = "0.0.0" // dev 模式不触发真实更新检查
+	}
+	ghProvider, ghErr := github.New(github.Config{
+		Repository:    "sinspired/subs-check-pro-gui",
+		ChecksumAsset: "SHA256SUMS", // Release 中与产物同级的校验文件
+	})
+	if ghErr != nil {
+		slog.Warn("Updater: 初始化 GitHub provider 失败", "error", ghErr)
+	} else {
+		if err := wailsApp.Updater.Init(updater.Config{
+			CurrentVersion: currentVer,
+			Providers:      []updater.Provider{ghProvider},
+		}); err != nil {
+			slog.Warn("Updater: Init 失败", "error", err)
+		} else {
+			slog.Debug("Updater: 已初始化", "currentVersion", currentVer)
+		}
+	}
+	// 将 updater 引用注入 guiApp，供 binding 和托盘菜单调用
+	guiApp.updaterApp = wailsApp
 
 	// ── 窗口1：登录小窗（加载 Wails 前端资产）────────────────────────────────
 	loginWin := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{

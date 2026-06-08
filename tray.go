@@ -210,9 +210,15 @@ func buildTrayMenu(
 	menu.AddSeparator()
 
 	// About menu
+	menu.Add("检查更新").OnClick(func(_ *application.Context) {
+		guiApp.CheckForUpdates()
+	})
+
 	menu.Add("关于").OnClick(func(_ *application.Context) {
 		guiApp.OpenAboutWindow()
 	})
+
+	menu.AddSeparator()
 
 	menu.Add("退出").OnClick(func(_ *application.Context) {
 		slog.Info("GUI：强制退出")

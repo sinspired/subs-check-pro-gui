@@ -2,7 +2,9 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
 	"strconv"
@@ -16,6 +18,11 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 )
+
+// contextBackground 返回 context.Background()，避免直接依赖 context 包命名冲突。
+func contextBackground() context.Context {
+	return context.Background()
+}
 
 // globalGuiApp 包级指针，供 router handler（如 handleGuiBackToLogin）访问。
 var globalGuiApp *GuiApp
@@ -59,6 +66,10 @@ type GuiApp struct {
 
 	// autostart Wails 跨平台开机自启管理器，由 main.go 在初始化后注入。
 	autostart *application.AutostartManager
+
+	// updaterApp 持有 wails App 引用，供 CheckForUpdates 调用 Updater。
+	// 由 main.go 在初始化 updater 后注入。
+	updaterApp *application.App
 }
 
 // AppInfo 前端展示所需的应用运行信息。
@@ -240,7 +251,7 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 		conflictHTTP = !httpAvail
 		conflictSubStore = !subAvail
 	}
-	autostartEnabled,_ := g.autostart.IsEnabled()
+	autostartEnabled, _ := g.autostart.IsEnabled()
 
 	coreVer := Version
 	if CurrentCommit != "" && CurrentCommit != "unknown" {
@@ -727,6 +738,21 @@ func (g *GuiApp) OpenAboutWindow() {
 			g.aboutWin = nil
 		})
 	})
+}
+
+// CheckForUpdates 触发更新检查，在 Wails 更新窗口中展示结果。
+// 供前端按钮和托盘菜单调用。
+func (g *GuiApp) CheckForUpdates() {
+	if g.updaterApp == nil {
+		sendOSNotification("Subs Check Pro", "更新检查暂不可用")
+		return
+	}
+	go func() {
+		ctx := contextBackground()
+		if err := g.updaterApp.Updater.CheckAndInstall(ctx); err != nil {
+			slog.Warn("CheckForUpdates: 检查更新失败", "error", err)
+		}
+	}()
 }
 
 // OpenSubLinksWindow 打开或聚焦「订阅链接」独立窗口（单例模式）。

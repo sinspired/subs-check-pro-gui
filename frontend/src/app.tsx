@@ -131,6 +131,14 @@ export function App() {
     }
   }
 
+  async function handleCheckForUpdates() {
+    try {
+      await GuiApp.CheckForUpdates();
+    } catch (e: any) {
+      toast('检查更新失败：' + (e?.message ?? ''));
+    }
+  }
+
   // ── 左侧品牌面板（分栏视图专用）────────────────────────────────
   const BrandPanel = () => (
     <aside class="brand-panel">
@@ -139,7 +147,7 @@ export function App() {
         <img src="/logo.svg" alt="logo" class="brand-icon" />
       </div>
 
-      {/* ── 底部工具行：开机自启 | 竖线 | github | tg | docker | 竖线 | ⓘ 关于 */}
+      {/* ── 底部工具行：开机自启 | 竖线 | github | tg | docker | 竖线 | 🔄 检查更新 */}
       <nav class="brand-links">
         {/* 开机自启图标按钮 */}
         <button
@@ -168,21 +176,16 @@ export function App() {
           <img src="/docker.svg" alt="Docker" class="brand-social-icon" />
         </a>
 
-        {/* 竖线分割（与左侧开机自启对称） */}
+        {/* 竖线分割 */}
         {/* <span class="brand-sep" /> */}
 
-        {/* ⓘ 关于按钮：复用 brand-autostart 样式，无 active 态，始终灰色 */}
+        {/* 🔄 检查更新按钮（替换原关于按钮位置） */}
         <button
           class="brand-autostart"
-          title="关于 Subs Check Pro"
-          onClick={GuiApp.OpenAboutWindow}
+          title="检查更新"
+          onClick={handleCheckForUpdates}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="16" x2="12" y2="12" />
-            <line x1="12" y1="8" x2="12.01" y2="8" />
-          </svg>
+          <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="15" height="15"><path d="M520.533 460.8l-179.2 170.667h358.4L520.533 460.8zm-52.906 170.65v204.817H290.133c-122.47 0-221.866-103.766-221.866-231.63 0-105.13 67.003-193.62 158.856-222.344C275.046 267.861 384.65 187.733 512 187.733s236.954 80.128 284.877 194.56C888.73 410.54 955.733 499.49 955.733 604.638c0 127.863-99.396 231.629-221.866 231.629H556.373V631.45" fill="currentColor" /></svg>
         </button>
       </nav>
     </aside>

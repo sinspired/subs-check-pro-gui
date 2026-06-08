@@ -22,6 +22,14 @@ export function BackToLogin(): $CancellablePromise<void> {
 }
 
 /**
+ * CheckForUpdates 触发更新检查，在 Wails 更新窗口中展示结果。
+ * 供前端按钮和托盘菜单调用。
+ */
+export function CheckForUpdates(): $CancellablePromise<void> {
+    return $Call.ByID(1256446317);
+}
+
+/**
  * CompleteInit 在用户修正端口冲突后，由前端调用，完成后端初始化。
  */
 export function CompleteInit(): $CancellablePromise<void> {
