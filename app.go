@@ -54,6 +54,9 @@ type GuiApp struct {
 	// pendingInit 为 true 时表示端口预检发现冲突，Initialize() 尚未调用。
 	pendingInit bool
 
+	// isFirstRun 标记本次启动是否为首次运行（创建了默认配置）
+	isFirstRun bool
+
 	// inWebUI 为 true 表示窗口已切换到外部 WebUI 页面。
 	// 此时 Wails JS runtime 不可用，关闭事件须走 Go 原生对话框。
 	inWebUI atomic.Bool
@@ -179,10 +182,6 @@ func (g *GuiApp) OpenBrandURL(url string, windowSize string) {
 }
 
 // EnterWebUI 由前端调用：切换到本地 WebUI 大窗，隐藏登录小窗。
-//
-// 迁移后不再需要传入 Gin 的 enterURL：
-//   - webUIWin 直接加载 Wails 资产服务器上的 /webui/admin.html
-//   - APIKey 和端口由 admin.html 内联脚本通过 Wails binding 自行获取
 func (g *GuiApp) EnterWebUI() {
 	if g.webUIWin == nil || g.loginWin == nil {
 		return
@@ -193,8 +192,6 @@ func (g *GuiApp) EnterWebUI() {
 	g.webUIWin.Show()
 	g.webUIWin.Center()
 	g.webUIWin.Focus()
-	// ✅ 打开开发者工具（仅开发模式使用，生产环境建议去掉）
-	g.webUIWin.OpenDevTools()
 	g.loginWin.Hide()
 }
 
@@ -234,7 +231,6 @@ func (g *GuiApp) BackToLogin() {
 	g.loginWin.Show()
 	g.loginWin.Center()
 	g.loginWin.Focus()
-	g.loginWin.OpenDevTools()
 	g.webUIWin.Hide()
 }
 
@@ -271,7 +267,7 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 		SubStorePort:         subStorePort,
 		SubStorePath:         subStorePath,
 		KeyIsRandom:          os.Getenv("GUI_KEY_IS_RANDOM") == "1",
-		IsFirstRun:           os.Getenv("GUI_FIRST_RUN") == "1",
+		IsFirstRun:           g.isFirstRun, 
 		ConfigPath:           g.configPath,
 		PortConflictHTTP:     conflictHTTP,
 		PortConflictSubStore: conflictSubStore,
