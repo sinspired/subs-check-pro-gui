@@ -657,20 +657,19 @@ function resolveTheme(t) {
 }
 
 fetch('/admin/theme')
-  .then(r => r.json())
-  .then(d => {
-    // ✅ 已删除调试 console.log
-    applyTheme(resolveTheme(d.theme));
-  })
-  .catch(() => {
-    applyTheme(resolveTheme('auto'));
-  });
+    .then(r => r.json())
+    .then(d => {
+        applyTheme(resolveTheme(d.theme));
+    })
+    .catch(() => {
+        applyTheme(resolveTheme('auto'));
+    });
 
 
 document.getElementById('themeToggle')?.addEventListener('click', () => {
     const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     applyTheme(next);
-    try { localStorage.setItem('scp_theme', next); } catch (_) {}
+    try { localStorage.setItem('scp_theme', next); } catch (_) { }
     fetch('/admin/theme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -678,7 +677,7 @@ document.getElementById('themeToggle')?.addEventListener('click', () => {
     }).catch(() => { });
 });
 document.getElementById('themeToggle')?.addEventListener('dblclick', () => {
-    try { localStorage.removeItem('scp_theme'); } catch (_) {}
+    try { localStorage.removeItem('scp_theme'); } catch (_) { }
     fetch('/admin/theme', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

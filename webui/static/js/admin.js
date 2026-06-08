@@ -2040,9 +2040,6 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     getPublicVersion()
     const isWails = !!window.__WAILS_GUI?.baseURL
 
-
-    showToast(!show || isWails,"info")
-
     if (els.loginModal) els.loginModal.classList.toggle('login-hidden', !show || isWails)
     if (show) {
       if (isWails) {
