@@ -109,7 +109,7 @@ func main() {
 		hideWindow(webUIWin)
 		e.Cancel()
 		sendOSNotification(
-			"Subs Check Pro 仍在后台运行",
+			"Subs Check Pro 后台运行",
 			"右键点击托盘图标，选择「立即退出」可关闭程序",
 		)
 	})
@@ -118,7 +118,7 @@ func main() {
 	webUIWin.OnWindowEvent(events.Common.WindowMinimise, func(e *application.WindowEvent) {
 		webUIWin.Hide()
 		windowVisible.Store(false)
-		sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击托盘图标可恢复窗口")
+		sendOSNotification("管理界面", "已最小化到系统托盘")
 		slog.Debug("WebUI 窗口已最小化到系统托盘")
 	})
 
@@ -126,7 +126,7 @@ func main() {
 	loginWin.OnWindowEvent(events.Common.WindowMinimise, func(e *application.WindowEvent) {
 		loginWin.Hide()
 		windowVisible.Store(false)
-		sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击托盘图标可恢复窗口")
+		sendOSNotification("登录窗口", "已最小化到系统托盘")
 		slog.Debug("登录窗口已最小化到系统托盘")
 	})
 
@@ -141,7 +141,7 @@ func main() {
 				slog.Error("关闭应用失败", "error", err)
 			}
 		}
-		sendOSNotification("Subs Check Pro", "已退出")
+		sendOSNotification("Subs Check Pro", "已关闭")
 	})
 
 	// 单实例唤醒：显示当前活跃窗口

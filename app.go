@@ -310,7 +310,7 @@ func (g *GuiApp) CompleteInit() error {
 	g.configPath = g.backend.GetConfigPath()
 	g.pendingInit = false
 
-	sendOSNotification("Subs Check Pro", "服务已成功启动")
+	sendOSNotification("Subs Check PRO 内核", "服务已成功启动")
 	return nil
 }
 
@@ -397,12 +397,12 @@ func (g *GuiApp) HideToTray() {
 		return
 	}
 	hideWindow(g.window)
-	sendOSNotification("Subs Check Pro", "已最小化到系统托盘\n单击托盘图标可恢复窗口")
+	sendOSNotification("主程序", "已最小化到系统托盘")
 }
 
 // QuitApp 供前端"关闭按钮对话框"选择退出时调用。
 func (g *GuiApp) QuitApp() {
-	sendOSNotification("Subs Check Pro", "正在退出…")
+	sendOSNotification("主程序", "正在关闭…")
 	app := application.Get()
 	if app != nil {
 		app.Quit()

@@ -192,10 +192,10 @@ func buildTrayMenu(
 
 		if next {
 			err = guiApp.autostart.Enable()
-			sendOSNotification("Subs Check Pro", "已开启开机自启")
+			sendOSNotification("Subs Check Pro", "已设置开机自启")
 		} else {
 			err = guiApp.autostart.Disable()
-			sendOSNotification("Subs Check Pro", "已关闭开机自启")
+			sendOSNotification("Subs Check Pro", "已取消开机自启")
 		}
 		if guiApp.loginWin != nil {
 			guiApp.loginWin.EmitEvent("autostart:changed", next)
@@ -216,7 +216,7 @@ func buildTrayMenu(
 
 	menu.Add("退出").OnClick(func(_ *application.Context) {
 		slog.Info("GUI：强制退出")
-		sendOSNotification("Subs Check Pro", "正在退出…")
+		sendOSNotification("Subs Check Pro", "正在关闭…")
 		onQuit()
 	})
 

@@ -18,7 +18,7 @@ import { QuitDialog } from './components/QuitDialog';
 
 import { GuiApp } from '../bindings/github.com/sinspired/subs-check-pro-gui';
 import { AppInfo } from '../bindings/github.com/sinspired/subs-check-pro-gui';
-import { Notifier  } from '../bindings/github.com/sinspired/subs-check-pro-gui';
+import { Notifier } from '../bindings/github.com/sinspired/subs-check-pro-gui';
 
 // UI 状态机：每个状态对应一个独立视图
 type View = 'loading' | 'error' | 'portConflict' | 'main' | 'password' | 'about';
@@ -124,8 +124,8 @@ export function App() {
       // 回查确保前端与系统状态一致（托盘菜单下次点击时也会读取系统状态）
       const actual = await GuiApp.GetAutoStartEnabled();
       setAutostart(actual);
-      toast(actual ? '已开启开机自启' : '已关闭开机自启');
-      Notifier.SendOSNotification('开机自启', actual ? '已开启' : '已关闭');
+      toast(actual ? '已设置开机自启' : '已取消开机自启');
+      Notifier.SendOSNotification(actual ? '已设置开机自启' : '已取消开机自启', '');
     } catch (e: any) {
       toast('设置失败：' + (e?.message ?? '功能暂不可用'));
     }
