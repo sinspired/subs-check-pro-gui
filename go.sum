@@ -377,8 +377,8 @@ github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e h1:ur8uMsPIF
 github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e/go.mod h1:+e5fBW3bpPyo+3uLo513gIUblc03egGjMM0+5GKbzK8=
 github.com/sinspired/checkip v0.4.1 h1:+NLaj9UpU9/gpNlH0p1RmwUFoZldaHe+csBdIWIDa3I=
 github.com/sinspired/checkip v0.4.1/go.mod h1:10GI/01Kjj0JnOxncAA18SkTx1jx5oBW91FGZq+kyK4=
-github.com/sinspired/subs-check-pro/v2 v2.5.7 h1:qqXlNpjm+Ghzbd6ilKm9w017guei1Q0lBb2T4pjSn3E=
-github.com/sinspired/subs-check-pro/v2 v2.5.7/go.mod h1:0NuF22N0TlFBJcpWx730828meRDvwMoNUdN+Hi5LdT0=
+github.com/sinspired/subs-check-pro/v2 v2.5.8 h1:AsUskEc1hOlLR/UdwhO+7af4ThQsWIGMvibZh8lN3lI=
+github.com/sinspired/subs-check-pro/v2 v2.5.8/go.mod h1:0NuF22N0TlFBJcpWx730828meRDvwMoNUdN+Hi5LdT0=
 github.com/sirupsen/logrus v1.7.0/go.mod h1:yWOB1SBYBC5VeMP7gHvWumXLIWorT60ONWic61uBYv0=
 github.com/sirupsen/logrus v1.9.4 h1:TsZE7l11zFCLZnZ+teH4Umoq5BhEIfIzfRDZ1Uzql2w=
 github.com/sirupsen/logrus v1.9.4/go.mod h1:ftWc9WdOfJ0a92nsE2jF5u5ZwH8Bv2zdeOC42RjbV2g=
