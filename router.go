@@ -44,13 +44,6 @@ func guiCORSMiddleware() gin.HandlerFunc {
 
 // registerGuiRoutes 注册所有 /gui/* 辅助路由，并补全 CORS 中间件。
 // 统一入口，便于在 setup.go 和 CompleteInit 中复用。
-//
-// ⚠️ CORS 修复说明：
-// guiCORSMiddleware 之前已定义但从未注册，导致 Wails webview 从
-// http://wails.localhost（Windows）/ wails://localhost（macOS）
-// 直接向 http://127.0.0.1:PORT/api/* 发起绝对 URL 请求时被浏览器拦截。
-// 此处 router.Use() 全局注册，确保所有路由均返回正确的 CORS 响应头。
-// 主要修复手段是前端改用相对路径（走 Wails 资产代理），此处作防御性补充。
 func registerGuiRoutes(router *gin.Engine) {
 	if router == nil {
 		slog.Warn("HTTP 服务未启动（端口冲突），跳过 /gui/* 路由注册")
@@ -61,16 +54,9 @@ func registerGuiRoutes(router *gin.Engine) {
 	router.GET("/gui/enter", handleGuiEnter)
 	router.GET("/gui/popup", handleGuiPopup)
 	router.GET("/gui/back-to-login", handleGuiBackToLogin)
-	router.GET("/gui/open-about", handleGuiOpenAbout)       // 打开「关于」窗口
-	router.GET("/gui/check-update", handleGuiCheckUpdate)   // 触发更新检查
+	router.GET("/gui/open-about", handleGuiOpenAbout)     // 打开「关于」窗口
+	router.GET("/gui/check-update", handleGuiCheckUpdate) // 触发更新检查
 }
-
-// registerGuiAutoLogin 向后兼容别名（setup.go 调用时使用）。
-func registerGuiAutoLogin(router *gin.Engine) {
-	registerGuiRoutes(router)
-}
-
-// ── /gui/enter ────────────────────────────────────────────────────────────────
 
 // handleGuiEnter 一次性自动登录中转路由：验证 nonce → 写 session → 跳转 /admin。
 func handleGuiEnter(c *gin.Context) {
@@ -128,10 +114,7 @@ func handleGuiEnter(c *gin.Context) {
 </head><body></body></html>`, apiKey, apiKey, extraLS, redirect))
 }
 
-// ── /gui/popup ────────────────────────────────────────────────────────────────
-
 // handleGuiPopup 接收来自 WebUI 注入脚本的"新窗口"请求，
-// 在 Go 端创建无地址栏的 Wails 弹出窗口，风格与主窗口一致。
 //
 // 调用方：webUIWin 内注入的 JS 通过 fetch('/gui/popup?url=...&size=small') 触发。
 // 安全策略：仅允许 localhost 访问，URL 只接受 http/https 协议。
@@ -196,12 +179,10 @@ func handleGuiPopup(c *gin.Context) {
 				Backdrop:                application.MacBackdropTranslucent,
 				TitleBar:                application.MacTitleBarHiddenInset,
 			},
-			DevToolsEnabled: true,
 		})
 		popup.Show()
 		popup.Center()
 		popup.Focus()
-		popup.OpenDevTools()
 
 		finalURL := capturedURL
 		time.AfterFunc(300*time.Millisecond, func() {
@@ -232,8 +213,6 @@ func popupSize(size string) (width, height int) {
 	}
 }
 
-// ── 辅助 ──────────────────────────────────────────────────────────────────────
-
 // handleGuiBackToLogin 接收来自 WebUI 的"返回登录窗口"请求。
 // 仅限 localhost 访问，调用 globalGuiApp.BackToLogin() 切回登录小窗。
 func handleGuiBackToLogin(c *gin.Context) {
@@ -259,8 +238,6 @@ func isLoopback(c *gin.Context) bool {
 	return ip != nil && ip.IsLoopback()
 }
 
-// ── /gui/open-about ───────────────────────────────────────────────────────────
-
 // handleGuiOpenAbout 在 Go 侧调用 OpenAboutWindow()，在 Wails 主线程打开「关于」窗口。
 //
 // 调用方：admin.html 内的 JS 通过 fetch('/gui/open-about') 触发，
@@ -277,8 +254,6 @@ func handleGuiOpenAbout(c *gin.Context) {
 		})
 	}
 }
-
-// ── /gui/check-update ─────────────────────────────────────────────────────────
 
 // handleGuiCheckUpdate 在 Go 侧调用 CheckForUpdates()，触发 Wails 更新流程。
 //

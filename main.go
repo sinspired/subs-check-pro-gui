@@ -21,11 +21,11 @@ var assets embed.FS
 func main() {
 	ensureSingleInstance()
 
-	coreApp, guiApp, appInitOK := setupApp()
-	globalGuiApp = guiApp // 供 router handler 访问
-
 	notifier := notifications.New()
 	InitNotifier(notifier)
+
+	coreApp, guiApp, appInitOK := setupApp()
+	globalGuiApp = guiApp // 供 router handler 访问
 
 	wailsApp := application.New(application.Options{
 		Name:        "Subs Check Pro",
