@@ -54,6 +54,7 @@
   position: relative;
   overflow: hidden;
   -webkit-app-region: drag; /* 整个侧边栏可拖动 */
+  --wails-draggable: drag
 }
 
 /* 右侧细分隔线（渐变淡入淡出，避免截断感） */
