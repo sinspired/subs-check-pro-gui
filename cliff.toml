@@ -7,6 +7,7 @@
 header = "# Changelog\n\n"
 # 每个 tag 的正文模板（Tera 模板语法）
 body = """
+## What's Changed
 # {% if version %}\
 # ## {{ version }} - {{ timestamp | date(format="%Y-%m-%d") }}
 # {% else %}\
@@ -21,7 +22,20 @@ body = """
 {% endfor %}\n
 """
 # 底部
-footer = ""
+footer = """
+    {%- if github.contributors | filter(attribute="is_first_time", value=true) | length != 0 %}
+        ### New Contributors
+    {%- endif -%}
+
+    {% for contributor in github.contributors | filter(attribute="is_first_time", value=true) %}
+    * @{{ contributor.username }} made their first contribution
+        {%- if contributor.pr_number %} in \
+        [#{{ contributor.pr_number }}]({{ self::remote_url() }}/pull/{{ contributor.pr_number }}) \
+        {%- endif %}
+    {%- endfor %}\n
+
+    {%- if github.contributors | filter(attribute="is_first_time", value=true) | length != 0 %}{% raw %}\n{% endraw -%}{% endif %}
+"""
 # 去除首尾空白
 trim = true
 
