@@ -29,6 +29,7 @@ func main() {
 		Services: []application.Service{
 			application.NewService(guiApp),
 			application.NewService(notifier),
+			application.NewService(&Notifier{}),
 		},
 		Assets: application.AssetOptions{
 			Handler: newCombinedAssetHandler(guiApp.configPath, guiApp.GetListenPort),

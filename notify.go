@@ -8,10 +8,16 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/services/notifications"
 )
 
+type Notifier struct{}
+
 var (
 	appNotifier *notifications.NotificationService
 	notifyOnce  sync.Once
 )
+
+func (n *Notifier) SendOSNotification(title, message string) {
+	sendOSNotification(title, message)
+}
 
 // InitNotifier 在 main.go 中初始化一次。
 func InitNotifier(n *notifications.NotificationService) {

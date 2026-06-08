@@ -187,25 +187,23 @@ func buildTrayMenu(
 		}
 
 		next := !enabled
+
+		autostartItem.SetChecked(next)
+
 		if next {
 			err = guiApp.autostart.Enable()
+			sendOSNotification("Subs Check Pro", "已开启开机自启")
 		} else {
 			err = guiApp.autostart.Disable()
+			sendOSNotification("Subs Check Pro", "已关闭开机自启")
+		}
+		if guiApp.loginWin != nil {
+			guiApp.loginWin.EmitEvent("autostart:changed", next)
 		}
 		if err != nil {
 			slog.Warn("设置开机自启失败", "error", err)
 			sendOSNotification("Subs Check Pro", "设置开机自启失败："+err.Error())
 			return
-		}
-
-		autostartItem.SetChecked(next)
-		if guiApp.loginWin != nil {
-			guiApp.loginWin.EmitEvent("autostart:changed", next)
-		}
-		if next {
-			sendOSNotification("Subs Check Pro", "已开启开机自启")
-		} else {
-			sendOSNotification("Subs Check Pro", "已关闭开机自启")
 		}
 	})
 

@@ -631,9 +631,13 @@ code {
 /* ── Toast ── */
 .toast {
   position: fixed;
+  top: 10px; /* 顶部 */
+  left: 10px; /* 靠左 */
+  /* 
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
+   */
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 8px;
