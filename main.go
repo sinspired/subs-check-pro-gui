@@ -52,6 +52,11 @@ func main() {
 		DisableResize: false,
 		Frameless:     false,
 		URL:           "/",
+		KeyBindings: map[string]func(window application.Window){
+			"F1": func(window application.Window) {
+				guiApp.OpenAboutWindow()
+			},
+		},
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 30,
 			Backdrop:                application.MacBackdropTranslucent,
@@ -78,6 +83,11 @@ func main() {
 		DisableResize: false,
 		Frameless:     false,
 		URL:           "about:blank",
+		KeyBindings: map[string]func(window application.Window){
+			"F1": func(window application.Window) {
+				guiApp.OpenAboutWindow()
+			},
+		},
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
 			Backdrop:                application.MacBackdropTranslucent,
