@@ -7,11 +7,11 @@
 header = "# Changelog\n\n"
 # 每个 tag 的正文模板（Tera 模板语法）
 body = """
-{% if version %}\
-## {{ version }} - {{ timestamp | date(format="%Y-%m-%d") }}
-{% else %}\
-## Unreleased
-{% endif %}\
+# {% if version %}\
+# ## {{ version }} - {{ timestamp | date(format="%Y-%m-%d") }}
+# {% else %}\
+# ## Unreleased
+# {% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
 ### {{ group | upper_first }}
 {% for commit in commits %}
