@@ -89,6 +89,7 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     searchBtn: $('#searchBtn'),
     logoutBtn: $('#logoutBtn'),
     logoutBtnMobile: $('#btnlogoutMobile'),
+    logoutText: $('#logoutText'),
     openEditorBtn: $('#openEditor'),
     themeToggleBtn: $('#mainThemeToggle'),
     iconMoon: $('#iconMoon'),
@@ -2856,12 +2857,10 @@ import { initQuickPreview } from './cfg-quickpreview.js';
     if (window.__WAILS_GUI?.baseURL) {
       // 调用 Wails binding 切回登录小窗
       // 设置按钮文本
-      els.logoutBtn.textContent = "切换配置";
-      els.logoutBtnMobile.textContent = "切换配置";
+      els.logoutText.textContent = "切换配置";
     } else {
       // 设置按钮文本
-      els.logoutBtn.textContent = "退出登录";
-      els.logoutBtnMobile.textContent = "退出登录";
+      els.logoutText.textContent = "退出登录";
     }
 
     els.logoutBtn?.addEventListener('click', logoutHandler)
