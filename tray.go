@@ -172,28 +172,33 @@ func buildTrayMenu(
 	})
 
 	menu.AddSeparator()
-	// ── 开机自启（Checkbox 菜单项，自动显示对勾）────────────────────
+	// ── 开机自启（Checkbox 菜单项）────────────────────────────────────────
 	autostartItem := menu.Add("开机自启")
-	autostartItem.SetChecked(false) // 默认未勾选，异步更新
+	autostartItem.SetChecked(false) // 默认未勾选，启动后异步更新
 
-	// 将菜单项引用存入 guiApp，供前端调用 SetAutoStart 后反向同步 checkbox
 	guiApp.autostartMenuItem = autostartItem
 
 	autostartItem.OnClick(func(_ *application.Context) {
-		enabled, err := guiApp.GetAutoStartEnabled()
+		enabled, err := guiApp.autostart.IsEnabled()
 		if err != nil {
 			slog.Warn("读取开机自启状态失败", "error", err)
 			sendOSNotification("Subs Check Pro", "读取开机自启状态失败")
 			return
 		}
+
 		next := !enabled
-		if err := guiApp.SetAutoStartEnabled(next); err != nil {
+		if next {
+			err = guiApp.autostart.Enable()
+		} else {
+			err = guiApp.autostart.Disable()
+		}
+		if err != nil {
 			slog.Warn("设置开机自启失败", "error", err)
 			sendOSNotification("Subs Check Pro", "设置开机自启失败："+err.Error())
 			return
 		}
+
 		autostartItem.SetChecked(next)
-		// 向前端登录窗口发射事件，同步开机自启按钮状态
 		if guiApp.loginWin != nil {
 			guiApp.loginWin.EmitEvent("autostart:changed", next)
 		}

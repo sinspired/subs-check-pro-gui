@@ -24,6 +24,7 @@ var globalGuiApp *GuiApp
 type GuiApp struct {
 	configPath string
 	backend    *coreapp.App
+
 	// window 持有主窗口引用（loginWin 的别名），兼容托盘等旧引用。
 	// 由 main.go 在创建窗口后注入。
 	window *application.WebviewWindow
@@ -55,6 +56,9 @@ type GuiApp struct {
 	// subLinksWin 「订阅链接」独立窗口，单例引用。
 	// nil 表示窗口已关闭或尚未创建；OpenSubLinksWindow 负责创建和复用。
 	subLinksWin *application.WebviewWindow
+
+	// autostart Wails 跨平台开机自启管理器，由 main.go 在初始化后注入。
+	autostart *application.AutostartManager
 }
 
 // AppInfo 前端展示所需的应用运行信息。
@@ -164,8 +168,8 @@ func (g *GuiApp) OpenBrandURL(url string, windowSize string) {
 // EnterWebUI 由前端调用：切换到本地 WebUI 大窗，隐藏登录小窗。
 //
 // 迁移后不再需要传入 Gin 的 enterURL：
-//  - webUIWin 直接加载 Wails 资产服务器上的 /webui/admin.html
-//  - APIKey 和端口由 admin.html 内联脚本通过 Wails binding 自行获取
+//   - webUIWin 直接加载 Wails 资产服务器上的 /webui/admin.html
+//   - APIKey 和端口由 admin.html 内联脚本通过 Wails binding 自行获取
 func (g *GuiApp) EnterWebUI() {
 	if g.webUIWin == nil || g.loginWin == nil {
 		return
@@ -236,8 +240,7 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 		conflictHTTP = !httpAvail
 		conflictSubStore = !subAvail
 	}
-
-	autostartEnabled, _ := queryAutoStart()
+	autostartEnabled,_ := g.autostart.IsEnabled()
 
 	coreVer := Version
 	if CurrentCommit != "" && CurrentCommit != "unknown" {
@@ -514,25 +517,25 @@ func isPortInUse(port string) bool {
 
 // GetAutoStartEnabled 查询当前开机自启状态（供托盘菜单调用）。
 func (g *GuiApp) GetAutoStartEnabled() (bool, error) {
-	return queryAutoStart()
+	return g.autostart.IsEnabled()
 }
 
 // SetAutoStartEnabled 设置开机自启状态（供托盘菜单内部调用，不重复更新托盘 checkbox）。
 func (g *GuiApp) SetAutoStartEnabled(enable bool) error {
-	return applyAutoStart(enable)
+	return g.autostart.Enable()
 }
 
 // SetAutoStart 供前端 JS 绑定调用，切换开机自启。
 // 成功后同步更新托盘菜单 checkbox，保证两侧状态一致。
-func (g *GuiApp) SetAutoStart(enable bool) error {
-	if err := applyAutoStart(enable); err != nil {
-		return err
-	}
+func (g *GuiApp) SetAutoStart(enabled bool) error {
 	// 同步托盘菜单项 checkbox（若托盘已初始化）
 	if g.autostartMenuItem != nil {
-		g.autostartMenuItem.SetChecked(enable)
+		g.autostartMenuItem.SetChecked(enabled)
 	}
-	return nil
+	if enabled {
+		return g.autostart.Enable()
+	}
+	return g.autostart.Disable()
 }
 
 // OpenSubStoreUI 在弹出窗口中打开 Sub-Store 订阅管理页面。

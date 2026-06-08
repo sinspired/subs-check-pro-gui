@@ -95,6 +95,7 @@ func main() {
 	guiApp.loginWin = loginWin
 	guiApp.webUIWin = webUIWin
 	guiApp.window = loginWin // 兼容旧托盘引用
+	guiApp.autostart = wailsApp.Autostart
 
 	// ── 登录窗口关闭钩子：转发给前端 QuitDialog ──────────────────────────────
 	loginWin.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
