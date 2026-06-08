@@ -43,9 +43,7 @@ jobs:
         id: cliff
         uses: orhun/git-cliff-action@v4
         with:
-          # --latest   : 只生成上一个 tag 到本 tag 的变更（而非全量）
-          # --strip header : 去掉 cliff 自动加的标题行，由 release body 自己控制
-          args: --latest --strip header
+          args: --latest
         env:
           OUTPUT: CHANGES.md # 同时写入文件（供后续步骤引用）
           GITHUB_REPO: ${{ github.repository }}

@@ -6,12 +6,6 @@
 //  1. Wails 前端调用 GetEnterNonce(remember) 获取一次性 nonce
 //  2. 前端导航到 /gui/enter?n=<nonce>（而非 ?t=<apiKey>）
 //  3. /gui/enter 通过 consumeNonce 换取 apiKey，nonce 立即作废
-//
-// 安全特性：
-//   - nonce 随机生成，32 字节，不含 apiKey 信息
-//   - 单次有效，使用后立即删除
-//   - 30 秒过期自动清理
-//   - apiKey 不再出现在浏览器 URL、历史记录或代理日志中
 package main
 
 import (
