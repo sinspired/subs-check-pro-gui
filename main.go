@@ -51,6 +51,7 @@ func main() {
 		MaxHeight:     420,
 		DisableResize: false,
 		Frameless:     false,
+		AlwaysOnTop:   false,
 		URL:           "/",
 		KeyBindings: map[string]func(window application.Window){
 			"F1": func(window application.Window) {
@@ -96,7 +97,7 @@ func main() {
 		Windows: application.WindowsWindow{
 			DisableIcon:             false,
 			HiddenOnTaskbar:         false,
-			EnableSwipeGestures:     false,
+			EnableSwipeGestures:     true,
 			GeneralAutofillEnabled:  true,
 			PasswordAutosaveEnabled: true,
 		},
