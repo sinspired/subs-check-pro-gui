@@ -2703,15 +2703,21 @@ import { initQuickPreview } from './cfg-quickpreview.js';
         const a = e.target.closest('a[href]')
         if (!a) return
         const href = a.getAttribute('href')
-        if (!href || href.startsWith('#') || href.startsWith('javascript:')) return
+        if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('blob:') || href.startsWith('data:')) return
+        if (a.dataset.wailsNoIntercept !== undefined) return
         e.preventDefault()
         e.stopPropagation()
         if (href.startsWith('http://') || href.startsWith('https://')) {
-          // 外部链接：用 openInternalURL 走 /gui/popup
-          openInternalURL(href)
+          // 外部绝对链接：直接送给 /gui/popup，不经过 openInternalURL（后者会错误地拼 baseURL）
+          const theme = document.documentElement.getAttribute('data-theme') || 'light'
+          const externalURL = href + (href.includes('?') ? '&' : '?') + 'theme=' + theme
+          fetch('/gui/popup?url=' + encodeURIComponent(externalURL) + '&size=medium')
+            .catch(() => { })
         } else {
-          // 内部相对路径：拼上 baseURL 再走 /gui/popup
-          const fullURL = window.__WAILS_GUI.baseURL.replace(/\/$/, '') + href
+          // 内部相对路径：拼上 baseURL 再走 /gui/popup（与 openInternalURL 逻辑一致）
+          const theme = document.documentElement.getAttribute('data-theme') || 'light'
+          const sep = href.includes('?') ? '&' : '?'
+          const fullURL = window.__WAILS_GUI.baseURL.replace(/\/$/, '') + href + sep + 'theme=' + theme
           fetch('/gui/popup?url=' + encodeURIComponent(fullURL) + '&size=medium')
             .catch(() => { })
         }
@@ -2838,10 +2844,12 @@ import { initQuickPreview } from './cfg-quickpreview.js';
       const a = document.createElement('a')
       a.href = url
       a.download = 'subs-check-pro-logs.txt'
+      a.dataset.wailsNoIntercept = ''  // 豁免全局 Wails 拦截器
+      a.style.display = 'none'
       document.body.appendChild(a)
       a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
+      // 延迟 remove，确保下载触发后再清理（部分浏览器/WebView 需要）
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url) }, 500)
       showToast('已开始下载日志', 'success')
     })
 
