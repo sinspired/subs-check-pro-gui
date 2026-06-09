@@ -256,9 +256,6 @@ button:focus-visible {
   color: var(--accent);
   background: var(--first-run-bg);
   border: 1px solid var(--first-run-bd);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* ── 标签 ── */

@@ -38,10 +38,6 @@ export function CompleteInit(): $CancellablePromise<void> {
 
 /**
  * EnterWebUI 由前端调用：切换到本地 WebUI 大窗，隐藏登录小窗。
- * 
- * 迁移后不再需要传入 Gin 的 enterURL：
- *   - webUIWin 直接加载 Wails 资产服务器上的 /webui/admin.html
- *   - APIKey 和端口由 admin.html 内联脚本通过 Wails binding 自行获取
  */
 export function EnterWebUI(): $CancellablePromise<void> {
     return $Call.ByID(551937120);
