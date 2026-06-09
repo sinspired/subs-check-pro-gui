@@ -130,7 +130,7 @@ func (g *GuiApp) OpenBrandURL(url string, windowSize string) {
 		height = 1440
 	case "large":
 		width = 1600
-		height = 1200
+		height = 1100
 	case "medium":
 		width = 1200
 		height = 800
@@ -141,8 +141,8 @@ func (g *GuiApp) OpenBrandURL(url string, windowSize string) {
 		width = 600
 		height = 600
 	case "wide":
-		width = 1600
-		height = 900
+		width = 1400
+		height = 850
 	}
 
 	// application.InvokeAsync 确保窗口创建在 Wails 主线程执行
@@ -734,9 +734,13 @@ func (g *GuiApp) CheckForUpdates() {
 		return
 	}
 	go func() {
-		ctx := contextBackground()
+ctx := contextBackground()
 		if err := g.updaterApp.Updater.CheckAndInstall(ctx); err != nil {
 			slog.Warn("CheckForUpdates: 检查更新失败", "error", err)
+			sendOSNotification("更新失败", err.Error())
+		} else {
+			// 如果走到这里且没有 Error，说明新版本的二进制已成功解压并覆盖旧文件
+			sendOSNotification("更新完成", "新版本已安装，请彻底退出并在重新启动软件后生效。")
 		}
 	}()
 }

@@ -4,7 +4,6 @@ package main
 import (
 	"embed"
 	"log/slog"
-	"net/http"
 	"os"
 	"strings"
 
@@ -18,9 +17,16 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
-func main() {
-	ensureSingleInstance()
+// singleInstanceKey 单实例 IPC 通道加密密钥。
+// 固定写入源码，保证同一应用不同版本之间的实例可互相通信（勿随机生成）。
+var singleInstanceKey = [32]byte{
+    0x73, 0x75, 0x62, 0x73, 0x2d, 0x63, 0x68, 0x65,
+    0x63, 0x6b, 0x2d, 0x70, 0x72, 0x6f, 0x2d, 0x67,
+    0x75, 0x69, 0x2d, 0x73, 0x69, 0x6e, 0x67, 0x6c,
+    0x65, 0x2d, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6e,
+}
 
+func main() {
 	notifier := notifications.New()
 	InitNotifier(notifier)
 
@@ -41,6 +47,19 @@ func main() {
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
+
+		// 第二次启动时：唤醒第一实例的当前活跃窗口（登录小窗 或 WebUI 大窗）。
+		// application.InvokeAsync 确保窗口操作在 Wails 主线程执行。
+		SingleInstance: &application.SingleInstanceOptions{
+			UniqueID:      "com.sinspired.subs-check-pro-gui",
+			EncryptionKey: singleInstanceKey,
+			OnSecondInstanceLaunch: func(data application.SecondInstanceData) {
+				slog.Debug("收到第二实例唤醒", "args", data.Args)
+				application.InvokeAsync(func() {
+					guiApp.showActiveWindow()
+				})
+			},
+		},
 	})
 
 	// ── Wails Updater：检查 GitHub Release 更新 ──────────────────────────────
@@ -54,11 +73,72 @@ func main() {
 	// 仅拦截 github.com/*/releases/download/* 及 objects.githubusercontent.com 请求，
 	// GitHub API（api.github.com）保持直连。
 	// 该 Transport 对整个进程生效，不影响其他 HTTP 请求（Gin、Sub-Store 等均走本地回环）。
-	http.DefaultTransport = newGHProxyTransport(http.DefaultTransport)
+	// http.DefaultTransport = newGHProxyTransport(http.DefaultTransport)
 
 	ghProvider, ghErr := github.New(github.Config{
 		Repository:    "sinspired/subs-check-pro-gui",
 		ChecksumAsset: "SHA256SUMS", // Release 中与产物同级的校验文件
+		HTTPClient:    buildUpdaterHTTPClient(),
+		// 自定义资产匹配器：Windows 优先选择纯二进制 .exe，跳过 setup 安装包；
+		// 其他平台保持与默认匹配器相同的 GOOS+GOARCH 子串逻辑。
+		AssetMatcher: func(req updater.CheckRequest, assets []github.ReleaseAsset) int {
+			platform := strings.ToLower(req.Platform)
+			arch := strings.ToLower(req.Arch)
+
+			// 与默认匹配器一致的 arch 别名表
+			archAliases := []string{arch}
+			switch arch {
+			case "amd64":
+				archAliases = append(archAliases, "x86_64", "x64")
+			case "x64":
+				archAliases = append(archAliases, "amd64", "x86_64")
+			case "arm64":
+				archAliases = append(archAliases, "aarch64")
+			case "386":
+				archAliases = append(archAliases, "i386", "x86", "ia32")
+			}
+
+			matchesPlatformArch := func(name string) bool {
+				lower := strings.ToLower(name)
+				if !strings.Contains(lower, platform) {
+					return false
+				}
+				for _, a := range archAliases {
+					if strings.Contains(lower, a) {
+						return true
+					}
+				}
+				return false
+			}
+
+			if platform == "windows" {
+				// 第一优先：匹配平台+架构且以 .exe 结尾、名称中不含 "setup" 的纯二进制
+				for i, a := range assets {
+					lower := strings.ToLower(a.Name)
+					if matchesPlatformArch(a.Name) &&
+						strings.HasSuffix(lower, ".exe") &&
+						!strings.Contains(lower, "setup") {
+						return i
+					}
+				}
+				// 回退：任意匹配平台+架构的 .exe（含 setup）
+				for i, a := range assets {
+					lower := strings.ToLower(a.Name)
+					if matchesPlatformArch(a.Name) && strings.HasSuffix(lower, ".exe") {
+						return i
+					}
+				}
+				return -1
+			}
+
+			// 非 Windows：标准 平台+架构 子串匹配
+			for i, a := range assets {
+				if matchesPlatformArch(a.Name) {
+					return i
+				}
+			}
+			return -1
+		},
 	})
 	if ghErr != nil {
 		slog.Warn("Updater: 初始化 GitHub provider 失败", "error", ghErr)
@@ -70,6 +150,7 @@ func main() {
 			slog.Warn("Updater: Init 失败", "error", err)
 		} else {
 			slog.Debug("Updater: 已初始化", "currentVersion", currentVer)
+			initUpdaterDebugLog(wailsApp) // 启动文件日志监听
 		}
 	}
 	// 将 updater 引用注入 guiApp，供 binding 和托盘菜单调用
@@ -190,14 +271,6 @@ func main() {
 		}
 		sendOSNotification("Subs Check Pro", "已关闭")
 	})
-
-	// 单实例唤醒：显示当前活跃窗口
-	go func() {
-		for range showSignalCh {
-			slog.Debug("收到单实例唤醒信号，显示主窗口")
-			guiApp.showActiveWindow()
-		}
-	}()
 
 	onQuit := func() {
 		wailsApp.Quit()
