@@ -588,15 +588,16 @@ func (g *GuiApp) OpenSubStoreUI() {
 	}
 
 	application.InvokeAsync(func() {
-		// loading.html 的 hash 仅用于显示目标主机名提示；
-		// 实际跳转由 300ms 后的 Go 端 SetURL 完成（规避 JS 跨 origin 导航拦截）。
+		// Sub-Store 运行在本机回环地址，直接加载含 ?api= 参数的目标 URL 并立即
+		// Show()，消除 loading.html→SetURL 双跳引起的多次闪烁。
+		// Go 端 NewWithOptions 指定 URL 属于宿主进程指令，不受 JS 跨 origin 限制。
 		popup := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Title:     "Sub-Store — 订阅管理",
 			Width:     1200,
 			Height:    800,
 			MinWidth:  800,
 			MinHeight: 600,
-			URL:       "/loading.html#" + baseURL, // hash 只显示主机名，不含 query
+			URL:       targetURL,
 			Mac: application.MacWindow{
 				InvisibleTitleBarHeight: 50,
 				Backdrop:                application.MacBackdropTranslucent,
@@ -606,14 +607,6 @@ func (g *GuiApp) OpenSubStoreUI() {
 		popup.Show()
 		popup.Center()
 		popup.Focus()
-
-		// 300 ms 后 Go 端发起真实导航（含 ?api= 参数）
-		final := targetURL
-		time.AfterFunc(300*time.Millisecond, func() {
-			application.InvokeAsync(func() {
-				popup.SetURL(final)
-			})
-		})
 	})
 }
 
@@ -667,13 +660,15 @@ func (g *GuiApp) OpenInternalPage(path string, title string, windowSize string) 
 	}
 
 	application.InvokeAsync(func() {
+		// 内置页面经由本机 /gui/enter?n=<nonce>&redirect=<path> 中转写入 sessionStorage
+		// 实现自动登录，直接加载该 URL 并立即 Show()，消除 loading.html→SetURL 双跳闪烁。
 		popup := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Title:     "Subs Check Pro — " + title,
 			Width:     width,
 			Height:    height,
 			MinWidth:  800,
 			MinHeight: 600,
-			URL:       "/loading.html#" + baseURL,
+			URL:       targetURL,
 			Mac: application.MacWindow{
 				InvisibleTitleBarHeight: 50,
 				Backdrop:                application.MacBackdropTranslucent,
@@ -683,13 +678,6 @@ func (g *GuiApp) OpenInternalPage(path string, title string, windowSize string) 
 		popup.Show()
 		popup.Center()
 		popup.Focus()
-
-		final := targetURL
-		time.AfterFunc(300*time.Millisecond, func() {
-			application.InvokeAsync(func() {
-				popup.SetURL(final)
-			})
-		})
 	})
 }
 
