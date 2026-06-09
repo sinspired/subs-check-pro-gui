@@ -16,6 +16,19 @@ body = """
 {{ commit.message | upper_first }} ([`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/sinspired/subs-check-pro-gui/commit/{{ commit.id }}))\
 {% endfor %}
 {% endfor %}\n
+
+{% if version %}
+{% set raw_ver = version | trim_start_matches(pat="v") %}
+<br>
+
+**Download based on your OS:**
+
+| OS | Download |
+| --- | --- |
+| Windows | [Setup x64](https://github.com/sinspired/subs-check-pro-gui/releases/download/{{ version }}/subs-check-pro-gui-{{ raw_ver }}-windows-x64-setup.exe) <br> [Portable x64](https://github.com/sinspired/subs-check-pro-gui/releases/download/{{ version }}/subs-check-pro-gui-{{ raw_ver }}-windows-x64.zip) |
+| macOS | [DMG Apple Silicon](https://github.com/sinspired/subs-check-pro-gui/releases/download/{{ version }}/subs-check-pro-gui-{{ raw_ver }}-macos-arm64.dmg) <br> [DMG Intel x64](https://github.com/sinspired/subs-check-pro-gui/releases/download/{{ version }}/subs-check-pro-gui-{{ raw_ver }}-macos-x64.dmg) |
+| Linux | [Tar.gz x64](https://github.com/sinspired/subs-check-pro-gui/releases/download/{{ version }}/subs-check-pro-gui-{{ raw_ver }}-linux-x64.tar.gz) |
+{% endif %}
 """
 # 底部
 footer = """

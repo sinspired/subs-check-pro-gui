@@ -9,24 +9,12 @@ on:
 permissions:
   contents: write
 
-# ─────────────────────────────────────────────────────────
-# 产物命名规范：
+  # 产物命名规范：
 #   subs-check-pro-gui_<tag>_<goos>_<arch>[.ext]
 # 示例：
-#   subs-check-pro-gui_v2.5.6_windows_amd64.exe          ← 便携版（绿色版）
-#   subs-check-pro-gui_v2.5.6_windows_amd64-setup.exe    ← NSIS 安装包
-#   subs-check-pro-gui_v2.5.6_darwin_amd64.app.tar.gz    ← macOS .app bundle
-#   subs-check-pro-gui_v2.5.6_darwin_arm64.app.tar.gz
-#   subs-check-pro-gui_v2.5.6_linux_amd64                ← 裸二进制（便携版）
-#   subs-check-pro-gui_v2.5.6_linux_amd64.deb            ← Debian/Ubuntu 安装包
-#   subs-check-pro-gui_v2.5.6_linux_arm64
-#   subs-check-pro-gui_v2.5.6_linux_arm64.deb
-# ─────────────────────────────────────────────────────────
-
+#   subs-check-pro-gui_v2.5.6_windows_amd64.exe    
 jobs:
-  # ══════════════════════════════════════════════
-  # Job 1: 用 git-cliff 生成 Changelog
-  # ══════════════════════════════════════════════
+  # 1. 生成 Changelog
   changelog:
     name: Generate Changelog
     runs-on: ubuntu-latest
@@ -43,15 +31,13 @@ jobs:
         id: cliff
         uses: orhun/git-cliff-action@v4
         with:
-          args: --latest
+          args: --latest --strip header
         env:
           OUTPUT: CHANGES.md # 同时写入文件（供后续步骤引用）
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # ══════════════════════════════════════════════
-  # Job 2: 各平台并行编译 + 打包
-  # ══════════════════════════════════════════════
+  # 2. 矩阵构建各平台产物并按照规范重命名
   build:
     name: Build (${{ matrix.goos }}/${{ matrix.arch }})
     needs: changelog # 等 changelog 生成完再开始（可选，避免冗余）
@@ -88,7 +74,7 @@ jobs:
 
     env:
       APP_NAME: subs-check-pro-gui
-      VERSION: ${{ github.ref_name }} # 形如 v2.5.6
+      VERSION: ${{ github.ref_name }}
 
     steps:
       - name: Checkout
