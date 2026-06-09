@@ -600,7 +600,7 @@ export function AboutApp() {
                       {/* 下载按钮：通过 ghproxy.net 加速 */}
                       <button
                         class="aw-update-dl-btn"
-                        onClick={() => openLink(updateInfo.downloadURL, 'wide')}
+                        onClick={() => openLink(updateInfo.downloadURL, 'medium')}
                       >
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
                           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
