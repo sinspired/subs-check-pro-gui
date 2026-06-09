@@ -31,6 +31,17 @@ Unicode true
 ## !define REQUEST_EXECUTION_LEVEL "admin"            # Default "admin"  see also https://nsis.sourceforge.io/Docs/Chapter4.html
 ## !define WAILS_INSTALL_SCOPE     "user"             # Default "machine" - set to "user" for per-user install ($LOCALAPPDATA) without UAC prompt
 ####
+## Default to per-user install: no UAC prompt during setup, app runs without admin rights.
+## Install path: %LOCALAPPDATA%\Programs\<ProductName>  (modern desktop app best practice)
+## Override at build time: makensis -DWAILS_INSTALL_SCOPE=machine -DREQUEST_EXECUTION_LEVEL=admin ...
+####
+!ifndef WAILS_INSTALL_SCOPE
+  !define WAILS_INSTALL_SCOPE "user"
+!endif
+!ifndef REQUEST_EXECUTION_LEVEL
+  !define REQUEST_EXECUTION_LEVEL "user"
+!endif
+####
 ## Include the wails tools
 ####
 !include "wails_tools.nsh"
