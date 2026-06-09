@@ -12,9 +12,11 @@
 package main
 
 import (
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 const ghProxyBase = "https://proxy.linkpc.dpdns.org/"
@@ -80,4 +82,25 @@ func proxyURL(original *url.URL) *url.URL {
 		return nil
 	}
 	return u
+}
+
+// 新增函数（可放在 updater_proxy.go 末尾）
+func buildUpdaterHTTPClient() *http.Client {
+    baseTransport := &http.Transport{
+        Proxy: http.ProxyFromEnvironment,
+        DialContext: (&net.Dialer{
+            Timeout:   60 * time.Second,
+            KeepAlive: 60 * time.Second,
+        }).DialContext,
+        ForceAttemptHTTP2:     true,
+        MaxIdleConns:          10,
+        IdleConnTimeout:       300 * time.Second,
+        TLSHandshakeTimeout:   30 * time.Second,
+        ExpectContinueTimeout: 1 * time.Second,
+        // ResponseHeaderTimeout 不设（0 = 无限制）——慢速代理不会因首字节延迟中断
+    }
+    return &http.Client{
+        Transport: newGHProxyTransport(baseTransport),
+        Timeout:   0, // 不设 client 超时，避免大文件下载被截断
+    }
 }
