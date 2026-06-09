@@ -297,12 +297,7 @@ func (g *GuiApp) CompleteInit() error {
 	}
 
 	if err := g.backend.Initialize(); err != nil {
-
 		return fmt.Errorf("初始化后端失败: %w", err)
-	}
-
-	if err := g.backend.EnsureRouterAndWebUI(); err != nil {
-		return fmt.Errorf("初始化 HTTP 路由失败: %w", err)
 	}
 
 	// 注意：只调用一次 registerGuiRoutes，不重复调用 registerGuiAutoLogin（两者等价）。

@@ -63,7 +63,7 @@ func shouldProxy(u *url.URL) bool {
 	}
 	host := strings.ToLower(u.Host)
 	switch {
-	case host == "github.com" && strings.Contains(u.Path, "/releases/download/"):
+	case host == "github.com" && strings.Contains(u.Path, "/releases/download/") ||  host == "api.github.com": 
 		return true
 	case host == "objects.githubusercontent.com":
 		return true
