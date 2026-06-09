@@ -54,6 +54,7 @@ tasks:
       - task: generate:syso
         vars:
           ARCH: '{{.ARCH}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
       - '{{if eq .OBFUSCATED "true"}}garble {{.GARBLE_ARGS}} build{{else}}go build{{end}} {{.BUILD_FLAGS}} -o "{{.BIN_DIR}}/{{.APP_NAME}}.exe"'
       - cmd: powershell Remove-item *.syso
         platforms: [windows]
@@ -88,6 +89,7 @@ tasks:
       - task: generate:syso
         vars:
           ARCH: '{{.ARCH}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
       - docker run --rm -v "{{.ROOT_DIR}}:/app" {{.DOCKER_MOUNTS}} -e APP_NAME="{{.APP_NAME}}" {{if .EXTRA_TAGS}}-e EXTRA_TAGS="{{.EXTRA_TAGS}}"{{end}} {{if eq .OBFUSCATED "true"}}-e OBFUSCATED=true{{end}} {{if .GARBLE_ARGS}}-e GARBLE_ARGS="{{.GARBLE_ARGS}}"{{end}} {{.CROSS_IMAGE}} windows {{.DOCKER_ARCH}}
       - cmd: docker run --rm -v "{{.ROOT_DIR}}:/app" alpine chown -R $(id -u):$(id -g) /app/bin
         platforms: [linux, darwin]
@@ -105,23 +107,92 @@ tasks:
       - task: '{{if eq (.FORMAT | default "nsis") "msix"}}create:msix:package{{else}}create:nsis:installer{{end}}'
         vars:
           INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
     vars:
       FORMAT: '{{.FORMAT | default "nsis"}}'
       INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+      GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
 
+  # ──────────────────────────────────────────────────────────────────────────
+  # generate:syso — 生成 Windows .syso（PE 版本资源 + 清单）
+  #
+  # 在调用 wails3 generate syso 之前，先用 Python 生成两个临时文件：
+  #   build/windows/info_gen_<ARCH>.json        — 注入正确的 file_version / ProductVersion
+  #   build/windows/wails_gen_<ARCH>.exe.manifest — 注入正确的 assemblyIdentity version
+  #
+  # 版本转换规则（semver → 4段数字）：
+  #   v1.0.0-beta.5  →  1.0.0.5   （取尾部数字作第4段）
+  #   v1.2.3         →  1.2.3.0   （无尾部数字则补 0）
+  # ──────────────────────────────────────────────────────────────────────────
   generate:syso:
-    summary: Generates Windows `.syso` file
+    summary: Generates Windows `.syso` file with version from GUI_VERSION
     dir: build
     cmds:
-      - wails3 generate syso -arch {{.ARCH}} -icon windows/icon.ico -manifest windows/wails.exe.manifest -info windows/info.json -out ../wails_windows_{{.ARCH}}.syso
+      # Step 1: 生成注入版本的临时 info json 和 manifest
+      - |
+        python3 - << 'PYEOF'
+        import json, re
+        ver = '{{.GUI_VERSION}}'.lstrip('v')
+        if not ver or ver == 'dev':
+            ver = '0.0.0'
+        m = re.match(r'^(\d+)\.(\d+)\.(\d+)(?:[^0-9]*(\d+))?', ver)
+        if m:
+            numeric = '{}.{}.{}.{}'.format(m.group(1), m.group(2), m.group(3), m.group(4) or '0')
+        else:
+            numeric = '1.0.0.0'
+
+        # --- info_gen_<ARCH>.json ---
+        with open('windows/info.json', encoding='utf-8') as f:
+            data = json.load(f)
+        data['fixed']['file_version'] = numeric
+        for lang_data in data.get('info', {}).values():
+            if 'ProductVersion' in lang_data:
+                lang_data['ProductVersion'] = ver
+        # 确保 0000 / 0409 两个常用 LCID 都有 ProductVersion
+        for lcid in ('0000', '0409'):
+            data['info'].setdefault(lcid, {})['ProductVersion'] = ver
+        with open('windows/info_gen_{{.ARCH}}.json', 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=chr(9))
+
+        # --- wails_gen_<ARCH>.exe.manifest ---
+        with open('windows/wails.exe.manifest', encoding='utf-8') as f:
+            mf = f.read()
+        # 只替换 assemblyIdentity 的 version 属性（第一处，避免误替换）
+        mf = re.sub(
+            r'(name="com\.sinspired\.subs-check-pro-gui"\s+version=")[^"]*"',
+            r'\g<1>' + numeric + '"',
+            mf, count=1
+        )
+        with open('windows/wails_gen_{{.ARCH}}.exe.manifest', 'w', encoding='utf-8') as f:
+            f.write(mf)
+
+        print('generate:syso  display={} numeric={}'.format(ver, numeric))
+        PYEOF
+      # Step 2: 用临时文件生成 .syso
+      - wails3 generate syso -arch {{.ARCH}} -icon windows/icon.ico -manifest windows/wails_gen_{{.ARCH}}.exe.manifest -info windows/info_gen_{{.ARCH}}.json -out ../wails_windows_{{.ARCH}}.syso
+      # Step 3: 清理临时文件
+      - cmd: rm "windows\info_gen_{{.ARCH}}.json" "windows\wails_gen_{{.ARCH}}.exe.manifest"
+        platforms: [windows]
+      - cmd: rm -f windows/info_gen_{{.ARCH}}.json windows/wails_gen_{{.ARCH}}.exe.manifest
+        platforms: [linux, darwin]
     vars:
       ARCH: '{{.ARCH | default ARCH}}'
+      GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
 
+  # ──────────────────────────────────────────────────────────────────────────
+  # create:nsis:installer — 打包 NSIS 安装包
+  #
+  # 通过 makensis -D 覆盖 wails_tools.nsh 中的硬编码版本：
+  #   INFO_PRODUCTVERSION          — 显示版本字符串（写入注册表 DisplayVersion）
+  #   INFO_PRODUCTVERSION_NUMERIC  — 4段纯数字版本（用于 VIProductVersion / VIFileVersion）
+  # ──────────────────────────────────────────────────────────────────────────
   create:nsis:installer:
     summary: Creates an NSIS installer
     dir: build/windows/nsis
     deps:
       - task: build
+        vars:
+          GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
     preconditions:
       - sh: '[ "{{.INSTALL_SCOPE}}" = "user" ] || [ "{{.INSTALL_SCOPE}}" = "machine" ]'
         msg: "INSTALL_SCOPE must be 'user' or 'machine', got '{{.INSTALL_SCOPE}}'"
@@ -130,14 +201,22 @@ tasks:
       - wails3 generate webview2bootstrapper -dir "{{.ROOT_DIR}}/build/windows/nsis"
       - |
         {{if eq OS "windows"}}
-        makensis {{if eq .INSTALL_SCOPE "user"}}-DWAILS_INSTALL_SCOPE=user -DREQUEST_EXECUTION_LEVEL=user {{end}}-DARG_WAILS_{{.ARG_FLAG}}_BINARY="{{.ROOT_DIR}}\{{.BIN_DIR}}\{{.APP_NAME}}.exe" project.nsi
+        makensis {{if eq .INSTALL_SCOPE "user"}}-DWAILS_INSTALL_SCOPE=user -DREQUEST_EXECUTION_LEVEL=user {{end}}-DINFO_PRODUCTVERSION="{{.GUI_VERSION_STR}}" -DINFO_PRODUCTVERSION_NUMERIC="{{.GUI_VERSION_NUMERIC}}" -DARG_WAILS_{{.ARG_FLAG}}_BINARY="{{.ROOT_DIR}}\{{.BIN_DIR}}\{{.APP_NAME}}.exe" project.nsi
         {{else}}
-        makensis {{if eq .INSTALL_SCOPE "user"}}-DWAILS_INSTALL_SCOPE=user -DREQUEST_EXECUTION_LEVEL=user {{end}}-DARG_WAILS_{{.ARG_FLAG}}_BINARY="{{.ROOT_DIR}}/{{.BIN_DIR}}/{{.APP_NAME}}.exe" project.nsi
+        makensis {{if eq .INSTALL_SCOPE "user"}}-DWAILS_INSTALL_SCOPE=user -DREQUEST_EXECUTION_LEVEL=user {{end}}-DINFO_PRODUCTVERSION="{{.GUI_VERSION_STR}}" -DINFO_PRODUCTVERSION_NUMERIC="{{.GUI_VERSION_NUMERIC}}" -DARG_WAILS_{{.ARG_FLAG}}_BINARY="{{.ROOT_DIR}}/{{.BIN_DIR}}/{{.APP_NAME}}.exe" project.nsi
         {{end}}
     vars:
       ARCH: '{{.ARCH | default ARCH}}'
       ARG_FLAG: '{{if eq .ARCH "amd64"}}AMD64{{else}}ARM64{{end}}'
       INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+      GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
+      # 去掉 v 前缀的显示版本，写入注册表 DisplayVersion
+      GUI_VERSION_STR:
+        sh: echo '{{.GUI_VERSION}}' | sed 's/^v//'
+      # 4 段纯数字版本，供 VIProductVersion / VIFileVersion 使用（必须是 X.X.X.X 格式）
+      GUI_VERSION_NUMERIC:
+        sh: |
+          python3 -c "import re; v='{{.GUI_VERSION}}'.lstrip('v') or '0.0.0'; m=re.match(r'^(\d+)\.(\d+)\.(\d+)(?:[^0-9]*(\d+))?',v); print('{}.{}.{}.{}'.format(m.group(1),m.group(2),m.group(3),m.group(4) or '0') if m else '1.0.0.0')"
 
   create:msix:package:
     summary: Creates an MSIX package
@@ -193,8 +272,10 @@ tasks:
       - task: create:nsis:installer
         vars:
           INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
     vars:
       INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+      GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
     cmds:
       - wails3 tool sign --input "build/windows/nsis/{{.APP_NAME}}-installer.exe" {{if .SIGN_CERTIFICATE}}--certificate {{.SIGN_CERTIFICATE}}{{end}} {{if .SIGN_THUMBPRINT}}--thumbprint {{.SIGN_THUMBPRINT}}{{end}} {{if .TIMESTAMP_SERVER}}--timestamp {{.TIMESTAMP_SERVER}}{{end}}
     preconditions:
