@@ -121,17 +121,22 @@
 </div>
 <script>
 (function () {
-  // 从 URL hash 读取目标域名，仅用于显示提示文字。
-  // 实际导航由 Go 端通过 SetURL() 触发，不依赖 JS location.replace。
   var hash = location.hash.slice(1);
   if (!hash) return;
   var target = decodeURIComponent(hash);
-  if (!/^https?:\/\//.test(target)) return;
+
   try {
-    var host = new URL(target).hostname;
+    // 检查是否是 proxy.domain/https://... 的形式
+    var proxyMatch = target.match(/^https?:\/\/[^/]+\/(https?:\/\/.+)$/);
+    var realUrl = proxyMatch ? proxyMatch[1] : target;
+
+    if (!/^https?:\/\//.test(realUrl)) return;
+
+    var host = new URL(realUrl).hostname;
     document.getElementById('lbl').textContent = host;
   } catch (_) {}
 })();
+
 </script>
 </body>
 </html>
