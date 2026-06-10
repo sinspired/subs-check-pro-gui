@@ -124,7 +124,7 @@ func InitDebugLog(wailsApp *application.App, guiVersion string) {
 		writeLog("[user] 关闭更新窗口（取消）")
 	})
 
-	slog.Info("updater 调试日志已启用", "path", logPath())
+	slog.Debug("updater 调试日志已启用", "path", logPath())
 }
 
 func logStagedSize(staged string) {

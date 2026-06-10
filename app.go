@@ -531,7 +531,7 @@ func (g *GuiApp) CheckForUpdates() {
 	}
 	go func() {
 		if err := g.updaterApp.Updater.CheckAndInstall(context.Background()); err != nil {
-			slog.Warn("CheckForUpdates: 检查更新失败", "error", err)
+			slog.Warn("检查更新失败", "error", err)
 			sendOSNotification("更新失败", err.Error())
 		} else {
 			sendOSNotification("更新完成", "新版本已安装，请彻底退出并在重新启动软件后生效。")
