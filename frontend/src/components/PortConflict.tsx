@@ -105,16 +105,14 @@ export function PortConflict({ info, toast, onFixed }: Props) {
       return;
     }
 
-    try {
-      const cur = await GuiApp.GetAppInfo();
-      if (cur.pendingInit) {
-        await GuiApp.CompleteInit();
-      }
-    } catch (e: any) {
-      toast('❌ 服务启动失败：' + (e?.message || '未知错误'));
-      setApplying(false);
-      return;
-    }
+  // pendingInit 在此视图下必为 true，直接调用 CompleteInit()
+  try {
+    await GuiApp.CompleteInit();
+  } catch (e: any) {
+    toast('❌ 服务启动失败：' + (e?.message || '未知错误'));
+    setApplying(false);
+    return;
+  }
 
     let newInfo: AppInfo;
     try {

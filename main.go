@@ -208,7 +208,6 @@ func main() {
 	// 注入窗口引用
 	guiApp.loginWin = loginWin
 	guiApp.webUIWin = webUIWin
-	guiApp.window = loginWin
 	guiApp.autostart = wailsApp.Autostart
 
 	// 窗口关闭/最小化拦截（窗口级别使用 RegisterHook）
