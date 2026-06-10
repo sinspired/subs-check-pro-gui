@@ -156,12 +156,12 @@ func handleGuiPopup(c *gin.Context) {
 	// 在 Wails 主线程创建弹出窗口
 	wailsApp := application.Get()
 	if wailsApp == nil {
-		slog.Error("/gui/popup: application.Get() returned nil") // 加这行
+		slog.Error("/gui/popup: application.Get() returned nil")
 		return
 	}
 
 	capturedURL := rawURL
-	slog.Info("/gui/popup: invoking popup", "url", capturedURL) // 加这行
+	slog.Debug("/gui/popup: invoking popup", "url", capturedURL)
 	application.InvokeAsync(func() {
 		// loading.html 中 hash 仅用于显示域名提示。
 		// 实际导航由 Go 端 SetURL 完成，避免 JS 跨 origin 导航被 WebView 拦截。

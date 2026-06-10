@@ -197,22 +197,6 @@ export function QuitApp(): $CancellablePromise<void> {
 }
 
 /**
- * ResizeToMain 将登录小窗无闪烁地切换为管理界面大窗。
- * 
- * 实现策略（Wails v3 原生方式）：
- *  1. 标记进入 WebUI 模式（关闭按钮改走 Go 原生对话框）
- *  2. 立即隐藏窗口（用户看不到后续的尺寸/导航变化）
- *  3. 调整窗口大小并居中
- *  4. 启动定时器，在外部页面加载完成后再显示窗口
- * 
- * 前端在此函数返回后立即执行 window.location.replace()，
- * 定时器在导航和页面渲染完成后触发 Show()，实现无感切换。
- */
-export function ResizeToMain(): $CancellablePromise<void> {
-    return $Call.ByID(1128121742);
-}
-
-/**
  * SetAutoStart 供前端 JS 绑定调用，切换开机自启。
  * 成功后同步更新托盘菜单 checkbox，保证两侧状态一致。
  */

@@ -329,31 +329,6 @@ func (g *GuiApp) SetPorts(httpPort, subStorePort string) error {
 	return g.backend.SetPorts(httpPort, subStorePort)
 }
 
-// ResizeToMain 将登录小窗无闪烁地切换为管理界面大窗。
-//
-// 实现策略（Wails v3 原生方式）：
-//  1. 标记进入 WebUI 模式（关闭按钮改走 Go 原生对话框）
-//  2. 立即隐藏窗口（用户看不到后续的尺寸/导航变化）
-//  3. 调整窗口大小并居中
-//  4. 启动定时器，在外部页面加载完成后再显示窗口
-//
-// 前端在此函数返回后立即执行 window.location.replace()，
-// 定时器在导航和页面渲染完成后触发 Show()，实现无感切换。
-func (g *GuiApp) ResizeToMain() {
-	if g.loginWin == nil {
-		return
-	}
-	g.inWebUI.Store(true)
-	g.loginWin.Hide()
-	g.loginWin.SetSize(1024, 768)
-	g.loginWin.Center()
-	time.AfterFunc(600*time.Millisecond, func() {
-		g.loginWin.Show()
-		g.loginWin.Focus()
-		windowVisible.Store(true)
-	})
-}
-
 // ShowWindow 供前端主动调用，显示并聚焦主窗口。
 func (g *GuiApp) ShowWindow() {
 	if g.loginWin == nil {

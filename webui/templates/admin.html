@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 
 <head>
+  {{if .wailsGUI}}
   <script>
     // 由 Go 模板注入，供 admin.js bootstrap() 读取，免去登录框交互
     window.__WAILS_GUI = {
@@ -10,6 +11,7 @@
       baseURL: "http://127.0.0.1:{{.listenPort}}"
     };
   </script>
+  {{end}}
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#ffffff" />
@@ -28,7 +30,8 @@
 
 <body>
   <!-- 登录框 -->
-  <div id="loginModal" class="login-modal login-hidden" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+  <div id="loginModal" class="login-modal{{if .wailsGUI}} login-hidden{{end}}" role="dialog" aria-modal="true"
+    aria-labelledby="loginTitle">
     <div class="login-card" role="document">
       <div class="login-logo" aria-hidden="true">
         <img src="/static/icon/favicon.svg" alt="logo" style="width:100px;height:100px" />
