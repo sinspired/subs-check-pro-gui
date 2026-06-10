@@ -2616,11 +2616,11 @@ import { initQuickPreview } from './cfg-quickpreview.js';
         if (isPre(latestV)) {
           // 新版本是预览版
           els.versionInline.classList.add('pre-release')
-          els.versionInline.textContent = `v${latestV}`
+          els.versionInline.textContent = currentV
           els.versionInline.title = `发现新预览版，建议谨慎更新`
         } else {
           // 新版本是稳定版
-          els.versionInline.textContent = `v${latestV} `
+          els.versionInline.textContent = currentV
           els.versionInline.title = `点击前往 GitHub 更新稳定版`
         }
 
@@ -2668,11 +2668,11 @@ import { initQuickPreview } from './cfg-quickpreview.js';
           // 新版本是预览版
           els.versionBadge.classList.add('pre-release')
           els.versionBadge.title = `发现新预览版 v${latestV}，建议谨慎更新`
-          els.versionLogin.textContent = `v${latestV}`
+          els.versionLogin.textContent = currentV
         } else {
           // 新版本是正式版
           els.versionBadge.title = `有新版本 v${latestV}`
-          els.versionLogin.textContent = `v${latestV}`
+          els.versionLogin.textContent = currentV
         }
 
         // 点击跳转
