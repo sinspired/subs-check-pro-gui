@@ -12,6 +12,10 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as updater$0 from "./updater/models.js";
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as $models from "./models.js";
 
 /**
@@ -87,6 +91,12 @@ export function GetListenPort(): $CancellablePromise<string> {
 export function GetUpdateInfo(): $CancellablePromise<$models.UpdateInfo> {
     return $Call.ByID(1712625151).then(($result: any) => {
         return $$createType1($result);
+    });
+}
+
+export function GetUpdateStatus(): $CancellablePromise<updater$0.UpdateStatus> {
+    return $Call.ByID(3197368653).then(($result: any) => {
+        return $$createType2($result);
     });
 }
 
@@ -203,3 +213,4 @@ export function ValidatePort(port: string): $CancellablePromise<string> {
 // Private type creation functions
 const $$createType0 = $models.AppInfo.createFrom;
 const $$createType1 = $models.UpdateInfo.createFrom;
+const $$createType2 = updater$0.UpdateStatus.createFrom;

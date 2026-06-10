@@ -40,19 +40,18 @@ func setupApp() (*app.App, *GuiApp) {
 	// InitConfigLoad() 完成后路径已确定，提前写入供登录窗口首帧渲染使用。
 	guiApp.configPath = coreApp.GetConfigPath()
 
+	// 端口冲突检测
+	httpOK, subOK := coreApp.CheckPortConflict()
+	if !httpOK || !subOK {
+		guiApp.pendingInit = true
+	}
+
 	return coreApp, guiApp
 }
 
 // startBackend 在 Wails 框架就绪（ApplicationStarted）后调用，完成后端完整初始化。
 // 端口冲突时设置 pendingInit=true 并返回 false，等待用户通过 UI 解决后由 CompleteInit 续接。
-func startBackend(coreApp *app.App, guiApp *GuiApp) bool {
-	// 端口冲突检测
-	httpOK, subOK := coreApp.CheckPortConflict()
-	if !httpOK || !subOK {
-		guiApp.pendingInit = true
-		return false
-	}
-
+func startBackend(coreApp *app.App) bool {
 	if err := coreApp.Initialize(); err != nil {
 		slog.Error("应用初始化失败，无法启动 GUI", "error", err)
 		os.Exit(1)

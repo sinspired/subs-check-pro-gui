@@ -5,6 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
+	coreapp "github.com/sinspired/subs-check-pro/v2/app"
+	"github.com/sinspired/subs-check-pro/v2/config"
+	"github.com/sinspired/subs-check-pro/v2/utils"
+	"github.com/wailsapp/wails/v3/pkg/application"
+	"github.com/wailsapp/wails/v3/pkg/events"
+
+	"github.com/sinspired/subs-check-pro-gui/updater"
 	"log/slog"
 	"net"
 	"net/http"
@@ -13,13 +21,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
-
-	coreapp "github.com/sinspired/subs-check-pro/v2/app"
-	"github.com/sinspired/subs-check-pro-gui/updater"
-	"github.com/sinspired/subs-check-pro/v2/config"
-	"github.com/sinspired/subs-check-pro/v2/utils"
-	"github.com/wailsapp/wails/v3/pkg/application"
-	"github.com/wailsapp/wails/v3/pkg/events"
 )
 
 // globalGuiApp 包级指针，供 router handler（如 handleGuiBackToLogin）访问。
@@ -661,4 +662,8 @@ func (g *GuiApp) OpenSubLinksWindow() {
 			g.subLinksWin = nil
 		})
 	})
+}
+
+func (g *GuiApp) GetUpdateStatus() updater.UpdateStatus {
+	return updater.GetUpdateStatus()
 }

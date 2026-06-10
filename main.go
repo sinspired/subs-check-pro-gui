@@ -82,6 +82,17 @@ func main() {
 		if err := wailsApp.Updater.Init(updater.Config{
 			CurrentVersion: currentVer,
 			Providers:      []updater.Provider{ghProvider},
+			// 自定义更新窗口
+			Window: &updater.BuiltinWindow{
+				HTML: guiupdater.CustomWindowHTML,
+				Options: updater.WindowOptions{
+					Title:         "Subs Check Pro — 检查更新",
+					Width:         520,
+					Height:        560,
+					DisableResize: true,
+					AlwaysOnTop:   false,
+				},
+			},
 		}); err != nil {
 			slog.Warn("Updater: Init 失败", "error", err)
 		} else {
@@ -182,7 +193,7 @@ func main() {
 
 	// 退出生命周期清理
 	wailsApp.OnShutdown(func() {
-		slog.Debug("GUI 程序正在退出，执行清理工作…")
+		slog.Info("GUI 程序正在退出，执行清理工作…")
 		if guiApp.IsBackendReady() {
 			if err := coreApp.Shutdown(); err != nil {
 				slog.Error("关闭应用失败", "error", err)
@@ -197,8 +208,11 @@ func main() {
 
 	// Wails 就绪后才启动后端
 	wailsApp.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(_ *application.ApplicationEvent) {
-		appInitOK := startBackend(coreApp, guiApp)
+		appInitOK := startBackend(coreApp)
 		slog.Debug("Wails 就绪，后端初始化完成", "appReady", appInitOK)
+
+		// 启动时检查更新
+		go guiupdater.CheckUpdateStatus(wailsApp)
 	})
 
 	if err := wailsApp.Run(); err != nil {

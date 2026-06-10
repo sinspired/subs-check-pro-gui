@@ -965,6 +965,38 @@ code {
 .brand-autostart.active:hover {
   color: #86efac;
 }
+/* 有更新可用：accent 色高亮 + 脉冲小点 */
+.brand-autostart.update-available {
+  color: var(--accent);
+  opacity: 1;
+  position: relative;
+}
+.brand-autostart.update-available:hover {
+  color: var(--accent);
+}
+.brand-autostart.update-available::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: upd-badge-pulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes upd-badge-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.65);
+  }
+}
 
 /* 竖线分割 */
 .brand-sep {

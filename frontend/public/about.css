@@ -928,6 +928,14 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+/* 有新版本时按钮加深色调强化视觉 */
+.aw-update-check-btn.has-update {
+  background: color-mix(in srgb, var(--accent) 85%, #059669);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.aw-update-check-btn.has-update:hover:not(:disabled) {
+  opacity: 0.9;
+}
 
 /* 检查中旋转动画 */
 .aw-update-spinner {
