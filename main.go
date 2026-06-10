@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 
 	guiupdater "github.com/sinspired/subs-check-pro-gui/updater"
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -82,6 +83,7 @@ func main() {
 		if err := wailsApp.Updater.Init(updater.Config{
 			CurrentVersion: currentVer,
 			Providers:      []updater.Provider{ghProvider},
+			CheckInterval:  6 * time.Hour,
 			// 自定义更新窗口
 			Window: &updater.BuiltinWindow{
 				HTML: guiupdater.CustomWindowHTML,
