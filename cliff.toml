@@ -18,18 +18,19 @@ body = """
 {% endfor %}\n
 
 {% if version %}
-{% set raw_ver = version | trim_start_matches(pat="v") %}
+{% set base = "https://github.com/sinspired/subs-check-pro-gui/releases/download/" ~ version ~ "/subs-check-pro-gui_" ~ version ~ "_" %}
 <br>
 
 **Download based on your OS:**
 
 | OS | Download |
 | --- | --- |
-| Windows | [Setup x64](https://github.com/sinspired/subs-check-pro-gui/releases/download/{{ version }}/subs-check-pro-gui-{{ raw_ver }}-windows-x64-setup.exe) <br> [Portable x64](https://github.com/sinspired/subs-check-pro-gui/releases/download/{{ version }}/subs-check-pro-gui-{{ raw_ver }}-windows-x64.zip) |
-| macOS | [DMG Apple Silicon](https://github.com/sinspired/subs-check-pro-gui/releases/download/{{ version }}/subs-check-pro-gui-{{ raw_ver }}-macos-arm64.dmg) <br> [DMG Intel x64](https://github.com/sinspired/subs-check-pro-gui/releases/download/{{ version }}/subs-check-pro-gui-{{ raw_ver }}-macos-x64.dmg) |
-| Linux | [Tar.gz x64](https://github.com/sinspired/subs-check-pro-gui/releases/download/{{ version }}/subs-check-pro-gui-{{ raw_ver }}-linux-x64.tar.gz) |
+| Windows | [Setup x64]({{ base }}windows_x64_setup.exe) <br> [Portable x64]({{ base }}windows_x64.exe) |
+| macOS | [Apple Silicon]({{ base }}darwin_arm64.app.tar.gz) <br> [Intel x64]({{ base }}darwin_x64.app.tar.gz) |
+| Linux | [x64 binary]({{ base }}linux_x64) <br> [x64 .deb]({{ base }}linux_x64.deb) <br> [arm64 binary]({{ base }}linux_arm64) <br> [arm64 .deb]({{ base }}linux_arm64.deb) |
 {% endif %}
 """
+
 # 底部
 footer = """
 """
