@@ -1,4 +1,3 @@
-// main.go
 package main
 
 import (
@@ -17,21 +16,23 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
-// singleInstanceKey 单实例 IPC 通道加密密钥。
-// 固定写入源码，保证同一应用不同版本之间的实例可互相通信（勿随机生成）。
+// singleInstanceKey 单实例 IPC 通道加密密钥，保证同一应用不同版本之间的实例可互相通信
 var singleInstanceKey = [32]byte{
-    0x73, 0x75, 0x62, 0x73, 0x2d, 0x63, 0x68, 0x65,
-    0x63, 0x6b, 0x2d, 0x70, 0x72, 0x6f, 0x2d, 0x67,
-    0x75, 0x69, 0x2d, 0x73, 0x69, 0x6e, 0x67, 0x6c,
-    0x65, 0x2d, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6e,
+	0x73, 0x75, 0x62, 0x73, 0x2d, 0x63, 0x68, 0x65,
+	0x63, 0x6b, 0x2d, 0x70, 0x72, 0x6f, 0x2d, 0x67,
+	0x75, 0x69, 0x2d, 0x73, 0x69, 0x6e, 0x67, 0x6c,
+	0x65, 0x2d, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6e,
 }
 
 func main() {
 	notifier := notifications.New()
 	InitNotifier(notifier)
 
-	coreApp, guiApp, appInitOK := setupApp()
-	globalGuiApp = guiApp // 供 router handler 访问
+	// 轻量级初始化（Wails 就绪前）
+	// 仅加载配置、创建结构体，不启动后端，规避 updater helper 实例
+	// 提前拉起 Node 子进程后直接退出留下幽灵进程的问题。
+	coreApp, guiApp := setupApp()
+	globalGuiApp = guiApp
 
 	wailsApp := application.New(application.Options{
 		Name:        "Subs Check Pro",
@@ -48,8 +49,7 @@ func main() {
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
 		},
 
-		// 第二次启动时：唤醒第一实例的当前活跃窗口（登录小窗 或 WebUI 大窗）。
-		// application.InvokeAsync 确保窗口操作在 Wails 主线程执行。
+		// 第二次启动时：唤醒第一实例
 		SingleInstance: &application.SingleInstanceOptions{
 			UniqueID:      "com.sinspired.subs-check-pro-gui",
 			EncryptionKey: singleInstanceKey,
@@ -62,30 +62,21 @@ func main() {
 		},
 	})
 
-	// ── Wails Updater：检查 GitHub Release 更新 ──────────────────────────────
-	// GuiVersion 由 ldflags 注入（如 "v2.5.6"），updater 要求不带 v 前缀
+	// Wails Updater：检查 GitHub Release 更新
 	currentVer := strings.TrimPrefix(GuiVersion, "v")
 	if currentVer == "" || currentVer == "dev" {
-		currentVer = "0.0.0" // dev 模式不触发真实更新检查
+		currentVer = "0.0.0"
 	}
-
-	// ── ghproxy 代理：为 GitHub Release 下载注入 Transport ──────────────────
-	// 仅拦截 github.com/*/releases/download/* 及 objects.githubusercontent.com 请求，
-	// GitHub API（api.github.com）保持直连。
-	// 该 Transport 对整个进程生效，不影响其他 HTTP 请求（Gin、Sub-Store 等均走本地回环）。
-	// http.DefaultTransport = newGHProxyTransport(http.DefaultTransport)
 
 	ghProvider, ghErr := github.New(github.Config{
 		Repository:    "sinspired/subs-check-pro-gui",
-		ChecksumAsset: "SHA256SUMS", // Release 中与产物同级的校验文件
+		ChecksumAsset: "SHA256SUMS",
 		HTTPClient:    buildUpdaterHTTPClient(),
-		// 自定义资产匹配器：Windows 优先选择纯二进制 .exe，跳过 setup 安装包；
-		// 其他平台保持与默认匹配器相同的 GOOS+GOARCH 子串逻辑。
+		// 自定义资产匹配器：Windows 优先选择纯二进制 .exe，跳过 setup 安装包
 		AssetMatcher: func(req updater.CheckRequest, assets []github.ReleaseAsset) int {
 			platform := strings.ToLower(req.Platform)
 			arch := strings.ToLower(req.Arch)
 
-			// 与默认匹配器一致的 arch 别名表
 			archAliases := []string{arch}
 			switch arch {
 			case "amd64":
@@ -112,16 +103,12 @@ func main() {
 			}
 
 			if platform == "windows" {
-				// 第一优先：匹配平台+架构且以 .exe 结尾、名称中不含 "setup" 的纯二进制
 				for i, a := range assets {
 					lower := strings.ToLower(a.Name)
-					if matchesPlatformArch(a.Name) &&
-						strings.HasSuffix(lower, ".exe") &&
-						!strings.Contains(lower, "setup") {
+					if matchesPlatformArch(a.Name) && strings.HasSuffix(lower, ".exe") && !strings.Contains(lower, "setup") {
 						return i
 					}
 				}
-				// 回退：任意匹配平台+架构的 .exe（含 setup）
 				for i, a := range assets {
 					lower := strings.ToLower(a.Name)
 					if matchesPlatformArch(a.Name) && strings.HasSuffix(lower, ".exe") {
@@ -131,7 +118,6 @@ func main() {
 				return -1
 			}
 
-			// 非 Windows：标准 平台+架构 子串匹配
 			for i, a := range assets {
 				if matchesPlatformArch(a.Name) {
 					return i
@@ -150,13 +136,12 @@ func main() {
 			slog.Warn("Updater: Init 失败", "error", err)
 		} else {
 			slog.Debug("Updater: 已初始化", "currentVersion", currentVer)
-			initUpdaterDebugLog(wailsApp) // 启动文件日志监听
+			initUpdaterDebugLog(wailsApp)
 		}
 	}
-	// 将 updater 引用注入 guiApp，供 binding 和托盘菜单调用
 	guiApp.updaterApp = wailsApp
 
-	// ── 窗口1：登录小窗（加载 Wails 前端资产）────────────────────────────────
+	// 登录窗，加载wails3前端资产
 	loginWin := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:          "login",
 		Title:         "Subs Check Pro",
@@ -189,7 +174,7 @@ func main() {
 		},
 	})
 
-	// ── 窗口2：WebUI 大窗（加载外部 Gin 服务，初始隐藏）─────────────────────
+	// WebUI 大窗（加载 admin 页面，初始隐藏）
 	webUIWin := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:          "webui",
 		Title:         "Subs Check Pro",
@@ -220,19 +205,18 @@ func main() {
 		},
 	})
 
-	// 将窗口引用注入 guiApp
+	// 注入窗口引用
 	guiApp.loginWin = loginWin
 	guiApp.webUIWin = webUIWin
-	guiApp.window = loginWin // 兼容旧托盘引用
+	guiApp.window = loginWin
 	guiApp.autostart = wailsApp.Autostart
 
-	// ── 登录窗口关闭钩子：转发给前端 QuitDialog ──────────────────────────────
+	// 窗口关闭/最小化拦截（窗口级别使用 RegisterHook）
 	loginWin.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
 		e.Cancel()
 		loginWin.EmitEvent("window:close-requested", nil)
 	})
 
-	// ── WebUI 窗口关闭钩子：隐藏到托盘 ───────────────────────────────────────
 	webUIWin.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
 		hideWindow(webUIWin)
 		e.Cancel()
@@ -242,28 +226,21 @@ func main() {
 		)
 	})
 
-	// ── WebUI 窗口最小化：隐藏到托盘 ─────────────────────────────────────────
 	webUIWin.OnWindowEvent(events.Common.WindowMinimise, func(e *application.WindowEvent) {
 		webUIWin.Hide()
 		windowVisible.Store(false)
 		sendOSNotification("管理界面", "已最小化到系统托盘")
-		slog.Debug("WebUI 窗口已最小化到系统托盘")
 	})
 
-	// ── 登录窗口最小化：同样隐藏到托盘 ──────────────────────────────────────
 	loginWin.OnWindowEvent(events.Common.WindowMinimise, func(e *application.WindowEvent) {
 		loginWin.Hide()
 		windowVisible.Store(false)
 		sendOSNotification("登录窗口", "已最小化到系统托盘")
-		slog.Debug("登录窗口已最小化到系统托盘")
 	})
 
-	// 退出时统一清理
+	// 退出生命周期清理
 	wailsApp.OnShutdown(func() {
 		slog.Info("GUI 程序正在退出，执行清理工作…")
-		// 使用动态方法而非启动时快照的 appInitOK：
-		// 端口冲突场景下 appInitOK==false，CompleteInit() 成功后仍不会更新，
-		// 导致 coreApp.Shutdown() 被跳过，Sub-Store 进程残留。
 		if guiApp.IsBackendReady() {
 			if err := coreApp.Shutdown(); err != nil {
 				slog.Error("关闭应用失败", "error", err)
@@ -272,13 +249,14 @@ func main() {
 		sendOSNotification("Subs Check Pro", "已关闭")
 	})
 
-	onQuit := func() {
-		wailsApp.Quit()
-	}
-
+	onQuit := func() { wailsApp.Quit() }
 	startSysTray(wailsApp, guiApp, coreApp, onQuit)
 
-	slog.Debug("Wails 双窗口已启动", "appReady", appInitOK)
+	// Wails 就绪后才启动后端
+	wailsApp.Event.OnApplicationEvent(events.Common.ApplicationStarted, func(_ *application.ApplicationEvent) {
+		appInitOK := startBackend(coreApp, guiApp)
+		slog.Debug("Wails 就绪，后端初始化完成", "appReady", appInitOK)
+	})
 
 	if err := wailsApp.Run(); err != nil {
 		slog.Error("Wails 运行失败", "error", err)
