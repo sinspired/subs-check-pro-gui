@@ -4,14 +4,14 @@
  * 端口冲突解决界面。
  *
  * 流程：
- *   1. 首次渲染 → 自动对初始端口调用 ValidatePort() 检测
+ *   1. 首次渲染 → 自动对冲突端口调用 ValidatePort() 检测
  *   2. 输入变化 → debounce 300ms → ValidatePort()（格式 + 占用双检）
- *   3. 全部 ok → 按钮可点 → SetPorts()（内存 + YAML 持久化）→ CompleteInit()
- *   4. CompleteInit() 无异常即视为成功（backend 内部冲突标记不可信），直接 onFixed()
+ *   3. 全部 ok → 按钮可点 → SetPorts() → CompleteInit() → onFixed()
  *
- * 布局：
- *   - 单端口冲突 → 单列居中
- *   - 双端口均冲突 → 两列左右排列（pc-fields--row）
+ * 字段显示规则：
+ *   - 仅 HTTP 冲突   → 单列，只显示 HTTP 字段
+ *   - 仅 Sub 冲突    → 单列，只显示 Sub-Store 字段
+ *   - 两者均冲突     → 双列，两字段并排
  */
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
@@ -35,20 +35,17 @@ function initField(port: string): FieldState {
   return { value: port, status: 'idle', errMsg: '' };
 }
 
-// function StatusBadge({ status, msg }: { status: PortStatus; msg: string }) {
-//   if (status === 'idle')     return null;
-//   if (status === 'checking') return <span class="pc-status checking">检测中…</span>;
-//   if (status === 'ok')       return <span class="pc-status ok">✓ 可用</span>;
-//   return <span class="pc-status error" title={msg}>✗ {msg}</span>;
-// }
-
 export function PortConflict({ info, toast, onFixed }: Props) {
-  // Sub-Store 端口冲突时才显示该字段
-  const showSub = !!(
-    info.subStorePort &&
-    info.subStorePort !== '未启用' &&
-    info.portConflictSubStore
-  );
+  // 根据后端实际冲突标志决定显示哪些字段
+  const showHTTP = !!info.portConflictHTTP;
+  const showSub = !!(info.portConflictSubStore && info.subStorePort);
+  const showBoth = showHTTP && showSub;
+
+  const subtitle = showBoth
+    ? '以下两个端口均被占用，请各自修改后启动'
+    : showHTTP
+      ? 'HTTP 监听端口已被占用，请修改后启动'
+      : 'Sub-Store 端口已被占用，请修改后启动';
 
   const [http, setHttp] = useState<FieldState>(initField(info.listenPort || '8199'));
   const [sub, setSub] = useState<FieldState>(initField(info.subStorePort || ''));
@@ -57,12 +54,13 @@ export function PortConflict({ info, toast, onFixed }: Props) {
   const httpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const subTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 所有可见字段均通过校验时才允许提交
   const canApply =
     !applying &&
-    http.status === 'ok' &&
+    (!showHTTP || http.status === 'ok') &&
     (!showSub || sub.status === 'ok');
 
-  // ── 实时检测（debounce 300ms）────────────────────────────────
+  // ── 实时校验（debounce 300ms）────────────────────────────────
   function scheduleCheck(
     value: string,
     setField: (s: FieldState) => void,
@@ -70,8 +68,10 @@ export function PortConflict({ info, toast, onFixed }: Props) {
   ) {
     if (timerRef.current) clearTimeout(timerRef.current);
     const v = value.trim();
-    if (!v) { setField({ value, status: 'idle', errMsg: '' }); return; }
-
+    if (!v) {
+      setField({ value, status: 'idle', errMsg: '' });
+      return;
+    }
     setField({ value, status: 'checking', errMsg: '' });
     timerRef.current = setTimeout(async () => {
       try {
@@ -83,16 +83,9 @@ export function PortConflict({ info, toast, onFixed }: Props) {
     }, 300);
   }
 
-  function onHttpInput(e: Event) {
-    scheduleCheck((e.target as HTMLInputElement).value, setHttp, httpTimer);
-  }
-  function onSubInput(e: Event) {
-    scheduleCheck((e.target as HTMLInputElement).value, setSub, subTimer);
-  }
-
-  // 首次渲染自动触发检测
+  // 首次渲染自动触发各冲突字段的校验
   useEffect(() => {
-    scheduleCheck(http.value, setHttp, httpTimer);
+    if (showHTTP) scheduleCheck(http.value, setHttp, httpTimer);
     if (showSub) scheduleCheck(sub.value, setSub, subTimer);
   }, []);
 
@@ -100,16 +93,18 @@ export function PortConflict({ info, toast, onFixed }: Props) {
   async function applyPorts() {
     setApplying(true);
 
-    // Step 1: 更新端口（内存 + YAML 持久化）
+    // 未冲突的端口保持原值不变
+    const newHTTP = showHTTP ? http.value.trim() : (info.listenPort || '');
+    const newSub = showSub ? sub.value.trim() : (info.subStorePort || '');
+
     try {
-      await GuiApp.SetPorts(http.value.trim(), showSub ? sub.value.trim() : '');
+      await GuiApp.SetPorts(newHTTP, newSub);
     } catch (e: any) {
       toast('❌ ' + (e?.message || '端口设置失败'));
       setApplying(false);
       return;
     }
 
-    // Step 2: 若后端尚未初始化，完成初始化（启动 HTTP + Sub-Store）
     try {
       const cur = await GuiApp.GetAppInfo();
       if (cur.pendingInit) {
@@ -120,6 +115,7 @@ export function PortConflict({ info, toast, onFixed }: Props) {
       setApplying(false);
       return;
     }
+
     let newInfo: AppInfo;
     try {
       newInfo = await GuiApp.GetAppInfo();
@@ -135,7 +131,7 @@ export function PortConflict({ info, toast, onFixed }: Props) {
 
   // ── 渲染 ─────────────────────────────────────────────────────
   return (
-    <div class={`pc-root${showSub ? ' pc-root--wide' : ''}`}>
+    <div class={`pc-root${showBoth ? ' pc-root--wide' : ''}`}>
 
       {/* 标题区 */}
       <div class="pc-header">
@@ -150,48 +146,46 @@ export function PortConflict({ info, toast, onFixed }: Props) {
         </div>
         <div>
           <h2 class="pc-title">端口冲突</h2>
-          <p class="pc-subtitle">
-            {showSub
-              ? '以下两个端口均被占用，请各自修改后启动'
-              : '以下端口已被其他程序占用，请修改后启动'}
-          </p>
+          <p class="pc-subtitle">{subtitle}</p>
         </div>
       </div>
 
-      {/* 端口字段区：双冲突时左右排列 */}
-      <div class={`pc-fields${showSub ? ' pc-fields--row' : ''}`}>
+      {/* 端口字段区 */}
+      <div class={`pc-fields${showBoth ? ' pc-fields--row' : ''}`}>
 
-        {/* HTTP 监听端口 */}
-        <div class={`pc-field${http.status === 'error' ? ' has-error' : ''}${http.status === 'ok' ? ' has-ok' : ''}`}>
-          <div class="pc-field-top">
-            <label class="pc-label">
-              HTTP
-              {info.portConflictHTTP && <span class="pc-conflict-tag">冲突</span>}
-            </label>
-            {/* <StatusBadge status={http.status} msg={http.errMsg} /> */}
+        {showHTTP && (
+          <div class={`pc-field${http.status === 'error' ? ' has-error' : ''}${http.status === 'ok' ? ' has-ok' : ''}`}>
+            <div class="pc-field-top">
+              <label class="pc-label">
+                HTTP
+                <span class={`pc-conflict-tag${http.status === 'ok' ? ' ok' : ''}`}>
+                  {http.status === 'checking' ? '检测中…' : http.status === 'ok' ? '可用' : '冲突'}
+                </span>
+              </label>
+            </div>
+            <input
+              class="pc-input"
+              type="number"
+              min="1024" max="65535"
+              value={http.value}
+              disabled={applying}
+              onInput={e => scheduleCheck((e.target as HTMLInputElement).value, setHttp, httpTimer)}
+              placeholder="1024 – 65535"
+            />
+            {http.status === 'error' && <p class="pc-errmsg">{http.errMsg}</p>}
+            <p class="pc-hint">订阅转换 Web 服务</p>
           </div>
-          <input
-            class="pc-input"
-            type="number"
-            min="1024" max="65535"
-            value={http.value}
-            disabled={applying}
-            onInput={onHttpInput}
-            placeholder="1024 – 65535"
-          />
-          {http.status === 'error' && <p class="pc-errmsg">{http.errMsg}</p>}
-          <p class="pc-hint">订阅转换 Web 服务</p>
-        </div>
+        )}
 
-        {/* Sub-Store 端口（仅在冲突时显示） */}
         {showSub && (
           <div class={`pc-field${sub.status === 'error' ? ' has-error' : ''}${sub.status === 'ok' ? ' has-ok' : ''}`}>
             <div class="pc-field-top">
               <label class="pc-label">
                 Sub-Store
-                {info.portConflictSubStore && <span class="pc-conflict-tag">冲突</span>}
+                <span class={`pc-conflict-tag${sub.status === 'ok' ? ' ok' : ''}`}>
+                  {sub.status === 'checking' ? '检测中…' : sub.status === 'ok' ? '可用' : '冲突'}
+                </span>
               </label>
-              {/* <StatusBadge status={sub.status} msg={sub.errMsg} /> */}
             </div>
             <input
               class="pc-input"
@@ -199,7 +193,7 @@ export function PortConflict({ info, toast, onFixed }: Props) {
               min="1024" max="65535"
               value={sub.value}
               disabled={applying}
-              onInput={onSubInput}
+              onInput={e => scheduleCheck((e.target as HTMLInputElement).value, setSub, subTimer)}
               placeholder="1024 – 65535"
             />
             {sub.status === 'error' && <p class="pc-errmsg">{sub.errMsg}</p>}
@@ -210,9 +204,11 @@ export function PortConflict({ info, toast, onFixed }: Props) {
 
       {/* 摘要状态 */}
       <div class="pc-summary">
-        {applying ? <span class="pc-summary-wait">正在启动服务，请稍候…</span>
-          : canApply ? <span class="pc-summary-ok">✓ 端口可用，点击下方按钮启动</span>
-            : <span class="pc-summary-hint">请修改端口直到全部显示「✓ 可用」</span>}
+        {applying
+          ? <span class="pc-summary-wait">正在启动服务，请稍候…</span>
+          : canApply
+            ? <span class="pc-summary-ok">✓ 端口可用，点击下方按钮启动</span>
+            : <span class="pc-summary-hint">请修改端口直到显示「✓ 可用」</span>}
       </div>
 
       {/* 应用按钮 */}

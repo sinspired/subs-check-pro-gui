@@ -1467,6 +1467,11 @@ code {
   letter-spacing: 0.4px;
 }
 
+.pc-conflict-tag.ok {
+  background: var(--color-success-bg, #d1fae5);
+  color: var(--color-success, #059669);
+}
+
 /* 状态徽章 */
 .pc-status {
   font-size: 11px;
