@@ -45,6 +45,9 @@ export function App() {
   const [cfgPath, setCfgPath] = useState('');
   const [showQuit, setShowQuit] = useState(false);
   const [autostartEnabled, setAutostart] = useState(false);
+  // 当 Wails updater 检测到新版本时为 true（按钮高亮提示）
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [updateVersion, setUpdateVersion] = useState('');
 
   // ── Wails 就绪后立即拉取应用信息 ──────────────────────────────
   useEffect(() => {
@@ -64,6 +67,45 @@ export function App() {
       setShowQuit(true);
     });
     return () => { unsub && unsub(); };
+  }, [ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    const syncUpdateState = async () => {
+      try {
+        const st = await GuiApp.GetUpdateStatus();
+        setUpdateAvailable(!!st.available);
+        setUpdateVersion(st.version || '');
+      } catch {
+        // 忽略
+      }
+    };
+
+    syncUpdateState();
+
+    const unsubAvailable = Events.On('wails:updater:update-available', (event) => {
+      const rel: any = event?.data ?? {};
+      setUpdateAvailable(true);
+      setUpdateVersion(rel.version ?? rel.Version ?? '');
+    });
+
+    const unsubNoUpdate = Events.On('wails:updater:no-update', () => {
+      setUpdateAvailable(false);
+      setUpdateVersion('');
+    });
+
+    const unsubReady = Events.On('wails:updater:update-ready', (event) => {
+      const rel: any = event?.data ?? {};
+      setUpdateAvailable(true);
+      setUpdateVersion(rel.version ?? rel.Version ?? '');
+    });
+
+    return () => {
+      unsubAvailable && unsubAvailable();
+      unsubNoUpdate && unsubNoUpdate();
+      unsubReady && unsubReady();
+    };
   }, [ready]);
 
   // ── 监听托盘「开机自启」切换事件，回查系统真实状态后同步按钮 ──────────
@@ -181,8 +223,8 @@ export function App() {
 
         {/* 🔄 检查更新按钮（替换原关于按钮位置） */}
         <button
-          class="brand-autostart"
-          title="检查更新"
+          class={`brand-autostart${updateAvailable ? ' update-available' : ''}`}
+          title={updateAvailable ? `有可用更新${updateVersion ? ` (${updateVersion})` : ''}，点击安装` : '检查更新'}
           onClick={handleCheckForUpdates}
         >
           <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="15" height="15"><path d="M520.533 460.8l-179.2 170.667h358.4L520.533 460.8zm-52.906 170.65v204.817H290.133c-122.47 0-221.866-103.766-221.866-231.63 0-105.13 67.003-193.62 158.856-222.344C275.046 267.861 384.65 187.733 512 187.733s236.954 80.128 284.877 194.56C888.73 410.54 955.733 499.49 955.733 604.638c0 127.863-99.396 231.629-221.866 231.629H556.373V631.45" fill="currentColor" /></svg>

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>检查更新 — Subs Check Pro</title>
+    <style>
+        /* ── reset ── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ── design tokens — 与主窗口 style.css 保持一致 ── */
+        :root {
+            --bg: #f2f4f6;
+            --fg: #111827;
+            --fg-dim: #6b7280;
+            --fg-faint: #9ca3af;
+            --card: #ffffff;
+            --border: rgba(0, 0, 0, 0.08);
+            --accent: #0ea5a0;
+            --success: #22c55e;
+            --error: #ef4444;
+            --radius: 10px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #111317;
+                --fg: #e5e7eb;
+                --fg-dim: #9ca3af;
+                --fg-faint: #6b7280;
+                --card: #15171b;
+                --border: rgba(255, 255, 255, 0.07);
+            }
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            color: var(--fg);
+            font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC",
+                "Microsoft YaHei", sans-serif;
+            font-size: 13px;
+            line-height: 1.6;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ── layout ── */
+        .upd-titlebar {
+            height: 32px;
+            -webkit-app-region: drag;
+            --wails-draggable: drag;
+            flex-shrink: 0;
+        }
+
+        .upd-root {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 0 28px 20px;
+            overflow: hidden;
+        }
+
+        /* ── hero block ── */
+        .upd-hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px 0 14px;
+            gap: 8px;
+        }
+
+        .upd-icon-wrap {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: color-mix(in srgb, var(--accent) 12%, transparent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.35s ease;
+        }
+
+        .upd-icon-wrap.is-success {
+            background: color-mix(in srgb, var(--success) 12%, transparent);
+        }
+
+        .upd-icon-wrap.is-error {
+            background: color-mix(in srgb, var(--error) 12%, transparent);
+        }
+
+        .upd-hero-title {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            color: var(--fg);
+        }
+
+        .upd-hero-sub {
+            font-size: 12px;
+            color: var(--fg-dim);
+            min-height: 1.4em;
+            text-align: center;
+        }
+
+        /* ── version pill ── */
+        .upd-ver-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: color-mix(in srgb, var(--border) 80%, transparent);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3px 12px 3px 10px;
+            font-size: 11.5px;
+            color: var(--fg-dim);
+        }
+
+        .upd-ver-pill .cur {
+            font-weight: 500;
+        }
+
+        .upd-ver-pill .arr {
+            color: var(--fg-faint);
+        }
+
+        .upd-ver-pill .next {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* ── progress ── */
+        .upd-progress-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            margin: 6px 0 2px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .upd-progress-container.visible {
+            opacity: 1;
+        }
+
+        .upd-progress-wrap {
+            flex: 1;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .upd-progress-bar {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+
+        @keyframes upd-shimmer {
+            0% {
+                transform: translateX(-150%);
+            }
+
+            100% {
+                transform: translateX(500%);
+            }
+        }
+
+        .upd-progress-bar.indeterminate {
+            width: 30%;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            animation: upd-shimmer 1.5s infinite;
+        }
+
+        .upd-progress-label {
+            font-size: 11px;
+            color: var(--fg-faint);
+            text-align: right;
+            min-width: 36px;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+
+        /* ── release notes ── */
+        .upd-notes {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 14px;
+            margin: 8px 0 10px;
+            font-size: 12px;
+            line-height: 1.75;
+            color: var(--fg-dim);
+        }
+
+        .upd-notes::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .upd-notes::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .upd-notes::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .upd-notes h1,
+        .upd-notes h2,
+        .upd-notes h3 {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--fg);
+            margin: 10px 0 4px;
+        }
+
+        .upd-notes h1:first-child,
+        .upd-notes h2:first-child,
+        .upd-notes h3:first-child {
+            margin-top: 0;
+        }
+
+        .upd-notes p {
+            margin: 3px 0;
+        }
+
+        .upd-notes ul,
+        .upd-notes ol {
+            padding-left: 18px;
+            margin: 4px 0;
+        }
+
+        .upd-notes li {
+            margin: 2px 0;
+        }
+
+        .upd-notes code {
+            font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+            font-size: 11px;
+            background: color-mix(in srgb, var(--border) 60%, transparent);
+            padding: 1px 4px;
+            border-radius: 3px;
+        }
+
+        .upd-notes pre {
+            background: color-mix(in srgb, var(--border) 50%, transparent);
+            padding: 8px 10px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 6px 0;
+        }
+
+        .upd-notes pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .upd-notes strong {
+            color: var(--fg);
+            font-weight: 600;
+        }
+
+        .upd-notes-placeholder {
+            color: var(--fg-faint);
+            font-size: 12px;
+            text-align: center;
+            padding: 24px 0;
+        }
+
+        /* ── actions ── */
+        .upd-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .upd-btn-primary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            width: 100%;
+            padding: 9px 0;
+            border: none;
+            border-radius: var(--radius);
+            background: var(--accent);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.12s;
+        }
+
+        .upd-btn-primary:hover {
+            opacity: 0.88;
+        }
+
+        .upd-btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .upd-btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .upd-btn-ghost-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .upd-btn-ghost {
+            border: none;
+            background: none;
+            color: var(--fg-dim);
+            font-size: 11.5px;
+            cursor: pointer;
+            padding: 3px 10px;
+            border-radius: 6px;
+            transition: background 0.18s, color 0.18s;
+        }
+
+        .upd-btn-ghost:hover {
+            background: color-mix(in srgb, var(--border) 70%, transparent);
+            color: var(--fg);
+        }
+
+        /* ── spinner ── */
+        @keyframes upd-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .upd-spinner {
+            width: 13px;
+            height: 13px;
+            border: 2px solid color-mix(in srgb, #fff 35%, transparent);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: upd-spin 0.7s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* ── utility ── */
+        .upd-hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="upd-root">
+        <!-- drag titlebar -->
+        <div class="upd-titlebar"></div>
+
+        <!-- hero -->
+        <div class="upd-hero">
+            <div class="upd-icon-wrap" id="iconWrap">
+                <!-- default: refresh -->
+                <svg id="icoRefresh" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
+                <!-- success: check -->
+                <svg id="icoCheck" class="upd-hidden" width="26" height="26" viewBox="0 0 24 24" fill="none"
+                    stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <!-- error: alert -->
+                <svg id="icoError" class="upd-hidden" width="26" height="26" viewBox="0 0 24 24" fill="none"
+                    stroke="var(--error)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+            </div>
+
+            <div class="upd-hero-title" id="heroTitle">正在检查更新…</div>
+
+            <div class="upd-ver-pill upd-hidden" id="verPill">
+                <span class="cur" id="verCur"></span>
+                <span class="arr">→</span>
+                <span class="next" id="verNext"></span>
+            </div>
+
+            <div class="upd-hero-sub" id="heroSub">请稍候</div>
+        </div>
+
+        <!-- progress (Flex 排版同一行) -->
+        <div class="upd-progress-container" id="progressContainer">
+            <div class="upd-progress-wrap">
+                <div class="upd-progress-bar indeterminate" id="progressBar"></div>
+            </div>
+            <div class="upd-progress-label" id="progressLabel"></div>
+        </div>
+
+        <!-- release notes -->
+        <div class="upd-notes" id="notes">
+            <div class="upd-notes-placeholder" id="notesPlaceholder">暂无发布说明</div>
+            <div id="notesContent" class="upd-hidden"></div>
+        </div>
+
+        <!-- actions -->
+        <div class="upd-actions">
+            <button class="upd-btn-primary upd-hidden" id="btnInstall">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="8 17 12 21 16 17" />
+                    <line x1="12" y1="12" x2="12" y2="21" />
+                    <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29" />
+                </svg>
+                下载并安装
+            </button>
+            <button class="upd-btn-primary upd-hidden" id="btnRestart">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23 4 23 10 17 10" />
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
+                重启并应用更新
+            </button>
+            <button class="upd-btn-primary upd-hidden" id="btnRetry">重试</button>
+
+            <div class="upd-btn-ghost-row">
+                <button class="upd-btn-ghost upd-hidden" id="btnSkip">跳过此版本</button>
+                <button class="upd-btn-ghost upd-hidden" id="btnLater">稍后提醒</button>
+                <button class="upd-btn-ghost" id="btnClose">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            /* ── runtime API (injected by Wails before this script runs) ── */
+            var Events = window.wails && window.wails.Events;
+            if (!Events) { console.error('[updater-win] wails.Events not available'); return; }
+            var On = Events.On.bind(Events);
+            var Emit = Events.Emit.bind(Events);
+
+            /* ── DOM refs ── */
+            var iconWrap = document.getElementById('iconWrap');
+            var icoRefresh = document.getElementById('icoRefresh');
+            var icoCheck = document.getElementById('icoCheck');
+            var icoError = document.getElementById('icoError');
+            var heroTitle = document.getElementById('heroTitle');
+            var heroSub = document.getElementById('heroSub');
+            var verPill = document.getElementById('verPill');
+            var verCur = document.getElementById('verCur');
+            var verNext = document.getElementById('verNext');
+
+            // 已更新为进度条 Flex 容器
+            var progressContainer = document.getElementById('progressContainer');
+            var progressBar = document.getElementById('progressBar');
+            var progressLabel = document.getElementById('progressLabel');
+
+            var notesPlaceholder = document.getElementById('notesPlaceholder');
+            var notesContent = document.getElementById('notesContent');
+            var btnInstall = document.getElementById('btnInstall');
+            var btnRestart = document.getElementById('btnRestart');
+            var btnRetry = document.getElementById('btnRetry');
+            var btnSkip = document.getElementById('btnSkip');
+            var btnLater = document.getElementById('btnLater');
+            var btnClose = document.getElementById('btnClose');
+
+            /* 提取 Wails3 事件数据包装（兼容不同版本） */
+            function extractData(e) {
+                var d = (e && e.data !== undefined) ? e.data : (e || {});
+                // Wails 3 通常将事件参数包裹在数组中
+                if (Array.isArray(d) && d.length > 0) {
+                    d = d[0];
+                }
+                if (typeof d === 'string') {
+                    try { d = JSON.parse(d); } catch (ex) { }
+                }
+                return d || {};
+            }
+
+            /* 原生关闭窗口方法 */
+            function closeWindow() {
+                Emit('wails:updater:window:close');
+                // Wails v3 提供了统一的原生窗口关闭方法，兜底使用标准 window.close()
+                if (window.wails && window.wails.Window && typeof window.wails.Window.Close === 'function') {
+                    window.wails.Window.Close();
+                } else {
+                    window.close();
+                }
+            }
+
+            /* ── helpers ── */
+            function show(el) { el.classList.remove('upd-hidden'); }
+            function hide(el) { el.classList.add('upd-hidden'); }
+
+            function fmtBytes(n) {
+                if (!n) return '';
+                if (n < 1024) return n + ' B';
+                if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+                return (n / 1024 / 1024).toFixed(1) + ' MB';
+            }
+
+            /* minimal Markdown → safe HTML renderer (已修复 \r\n 换行符影响) */
+            function md2html(src) {
+                if (!src) return '';
+                var s = src
+                    .replace(/\r\n/g, '\n') /* 标准化所有换行符 */
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    /* fenced code blocks */
+                    .replace(/```[\w]*\n([\s\S]*?)```/gm, function (_, code) {
+                        return '<pre><code>' + code.trimEnd() + '</code></pre>';
+                    })
+                    /* inline code */
+                    .replace(/`([^`]+)`/g, '<code>$1</code>')
+                    /* headings */
+                    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+                    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+                    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+                    /* bold / italic */
+                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                    /* unordered list items → wrap in <ul> */
+                    .replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+                /* group consecutive <li> into <ul> */
+                s = s.replace(/(<li>[^]*?<\/li>\n?)+/g, function (m) {
+                    return '<ul>' + m + '</ul>';
+                });
+                /* paragraphs for plain lines */
+                s = s.split('\n').map(function (line) {
+                    var t = line.trim();
+                    if (!t) return '';
+                    if (/<(h[1-3]|ul|ol|li|pre|p)/.test(t)) return t;
+                    return '<p>' + t + '</p>';
+                }).join('');
+                return s;
+            }
+
+            function setNotes(html) {
+                if (html) {
+                    notesContent.innerHTML = html;
+                    show(notesContent);
+                    hide(notesPlaceholder);
+                } else {
+                    notesContent.innerHTML = '';
+                    hide(notesContent);
+                    show(notesPlaceholder);
+                }
+            }
+
+            /* ── icon mode ── */
+            function iconNeutral() {
+                iconWrap.className = 'upd-icon-wrap';
+                show(icoRefresh); hide(icoCheck); hide(icoError);
+            }
+            function iconSuccess() {
+                iconWrap.className = 'upd-icon-wrap is-success';
+                hide(icoRefresh); show(icoCheck); hide(icoError);
+            }
+            function iconFail() {
+                iconWrap.className = 'upd-icon-wrap is-error';
+                hide(icoRefresh); hide(icoCheck); show(icoError);
+            }
+
+            /* ── state renderers ── */
+            function stateChecking() {
+                heroTitle.textContent = '正在检查更新…';
+                heroSub.textContent = '请稍候';
+                iconNeutral();
+                hide(verPill);
+                progressContainer.classList.add('visible');
+                progressBar.className = 'upd-progress-bar indeterminate';
+                progressLabel.textContent = '';
+                setNotes('');
+                hide(btnInstall); hide(btnRestart); hide(btnRetry);
+                hide(btnSkip); show(btnLater); show(btnClose);
+                btnInstall.disabled = false;
+                btnRestart.disabled = false;
+                btnInstall.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>下载并安装';
+            }
+
+            function stateAvailable(rel) {
+                heroTitle.textContent = '发现新版本';
+                // 兼容 Wails V3 属性大小写传递
+                var ver = rel.version || rel.Version || '';
+                var size = rel.size || rel.Size || 0;
+                var sub = ver;
+                if (size) sub += '  ·  ' + fmtBytes(size);
+                heroSub.textContent = sub;
+                iconNeutral();
+
+                var currVer = rel.currentVersion || rel.CurrentVersion || '';
+                if (currVer && ver) {
+                    verCur.textContent = currVer;
+                    verNext.textContent = ver;
+                    show(verPill);
+                } else { hide(verPill); }
+
+                progressContainer.classList.remove('visible');
+                progressLabel.textContent = '';
+
+                // 兼容 ReleaseNotes 字段不同的大小写或取值名称
+                var releaseNotes = rel.releaseNotes || rel.ReleaseNotes || rel.body || rel.Body || rel.notes || rel.Notes || '';
+                setNotes(md2html(releaseNotes));
+
+                show(btnInstall); hide(btnRestart); hide(btnRetry);
+                show(btnSkip); show(btnLater); show(btnClose);
+            }
+
+            function stateUpToDate(rel) {
+                var ver = rel ? (rel.currentVersion || rel.CurrentVersion) : '';
+                heroTitle.textContent = '已是最新版本';
+                heroSub.textContent = ver ? '当前版本  ' + ver : '无需更新';
+                iconSuccess();
+                hide(verPill);
+                progressContainer.classList.remove('visible');
+                progressLabel.textContent = '';
+                setNotes('');
+                hide(btnInstall); hide(btnRestart); hide(btnRetry);
+                hide(btnSkip); hide(btnLater); show(btnClose);
+            }
+
+            var downloadTotalSize = 0; // 收拢到内部作用域
+
+            function stateDownloading(p) {
+                heroTitle.textContent = '正在下载更新…';
+                iconNeutral();
+
+                // 兼容不同平台的结构体差异与大小写差异
+                var total = p.total || p.Total || p.totalBytes || p.TotalBytes || downloadTotalSize || 0;
+                if (total > 0) downloadTotalSize = total; // 缓存有效 totalSize 避免闪退为 0
+
+                var written = p.written || p.Written || p.bytesWritten || p.BytesWritten || 0;
+                var rate = p.rate || p.Rate || p.bytesPerSecond || p.BytesPerSecond || 0;
+
+                // 原生速率解析
+                var rateStr = rate > 0 ? (fmtBytes(rate) + '/s') : '';
+
+                if (downloadTotalSize > 0) {
+                    var pct = Math.min(100, (written / downloadTotalSize * 100));
+                    progressBar.className = 'upd-progress-bar';
+                    progressBar.style.width = pct.toFixed(1) + '%';
+                    progressLabel.textContent = pct.toFixed(0) + '%';
+
+                    var subStr = fmtBytes(written) + ' / ' + fmtBytes(downloadTotalSize);
+                    if (rateStr) subStr += '  ·  ' + rateStr;
+                    heroSub.textContent = subStr;
+                } else {
+                    progressBar.className = 'upd-progress-bar indeterminate';
+                    progressLabel.textContent = '';
+                    var subStr = fmtBytes(written);
+                    if (rateStr) subStr += '  ·  ' + rateStr;
+                    heroSub.textContent = subStr;
+                }
+
+                progressContainer.classList.add('visible');
+                hide(btnInstall); hide(btnRestart); hide(btnRetry);
+                hide(btnSkip); show(btnLater); show(btnClose);
+            }
+
+            function stateReady() {
+                heroTitle.textContent = '更新已就绪';
+                heroSub.textContent = '点击下方按钮重启并应用';
+                iconSuccess();
+                progressContainer.classList.remove('visible');
+                progressLabel.textContent = '';
+                hide(btnInstall); show(btnRestart); hide(btnRetry);
+                hide(btnSkip); hide(btnLater); show(btnClose);
+            }
+
+            function stateError(msg) {
+                heroTitle.textContent = '更新失败';
+                heroSub.textContent = msg || '未知错误';
+                iconFail();
+                progressContainer.classList.remove('visible');
+                progressLabel.textContent = '';
+                setNotes('');
+                hide(btnInstall); hide(btnRestart); show(btnRetry);
+                hide(btnSkip); hide(btnLater); show(btnClose);
+            }
+
+            /* ── Wails event subscriptions ── */
+            On('wails:updater:check-started', function () {
+                stateChecking();
+            });
+
+            On('wails:updater:update-available', function (e) {
+                stateAvailable(extractData(e));
+            });
+
+            // 兼听 Wails 新旧事件名
+            On('wails:updater:no-update-available', function (e) {
+                stateUpToDate(extractData(e));
+            });
+            On('wails:updater:no-update', function (e) {
+                stateUpToDate(extractData(e));
+            });
+
+            On('wails:updater:download-progress', function (e) {
+                stateDownloading(extractData(e));
+            });
+
+            // 兼听 Wails 新旧事件名
+            On('wails:updater:ready-to-install', function () {
+                stateReady();
+            });
+            On('wails:updater:update-ready', function () {
+                stateReady();
+            });
+
+            On('wails:updater:error', function (e) {
+                var d = extractData(e);
+                var msg = typeof d === 'string' ? d : (d ? JSON.stringify(d) : '');
+                stateError(msg);
+            });
+
+            /* ── button handlers ── */
+            btnInstall.addEventListener('click', function () {
+                btnInstall.disabled = true;
+                btnInstall.innerHTML = '<span class="upd-spinner"></span>&nbsp;下载中…';
+                Emit('wails:updater:user:install');
+            });
+
+            btnRestart.addEventListener('click', function () {
+                btnRestart.disabled = true;
+                btnRestart.innerHTML = '<span class="upd-spinner"></span>&nbsp;重启中…';
+                Emit('wails:updater:user:restart');
+            });
+
+            btnRetry.addEventListener('click', function () {
+                stateChecking();
+                Emit('wails:updater:window:ready'); /* ask host to re-check */
+            });
+
+            btnSkip.addEventListener('click', function () {
+                Emit('wails:updater:user:skip');
+                closeWindow();
+            });
+
+            btnLater.addEventListener('click', function () {
+                Emit('wails:updater:user:remind-later');
+                closeWindow();
+            });
+
+            btnClose.addEventListener('click', function () {
+                Emit('wails:updater:user:remind-later');
+                closeWindow();
+            });
+
+            /* ── handshake: ask host to replay current state ── */
+            stateChecking(); /* initial paint before host replies */
+            Emit('wails:updater:window:ready');
+        })();
+    </script>
+</body>
+
+</html>

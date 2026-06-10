@@ -2,8 +2,8 @@
 package main
 
 import (
-	_ "embed"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +13,9 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	guiupdater "github.com/sinspired/subs-check-pro-gui/updater"
+	"github.com/wailsapp/wails/v3/pkg/updater"
 
 	"github.com/sinspired/subs-check-pro/v2/app"
 	"github.com/sinspired/subs-check-pro/v2/config"
@@ -56,9 +59,53 @@ func startSysTray(
 		tray.SetTooltip(formatSysTrayTooltip(coreApp, guiApp))
 	}
 
-	menu := buildTrayMenu(wailsApp, guiApp, coreApp, onQuit, updateTooltip)
+	menu, checkUpdateItem := buildTrayMenu(wailsApp, guiApp, coreApp, onQuit, updateTooltip)
 	tray.SetMenu(menu)
 
+	wailsApp.Event.On(updater.EventUpdateAvailable, func(e *application.CustomEvent) {
+		application.InvokeAsync(func() {
+			rel, _ := e.Data.(*updater.Release)
+			version := ""
+
+			if rel != nil {
+				version = rel.Version
+			}
+			if version == "" {
+				version = guiupdater.GetUpdateStatus().Version
+			}
+
+			if version != "" {
+				checkUpdateItem.SetLabel("有新版本 v" + version)
+			} else {
+				checkUpdateItem.SetLabel("有新版本")
+			}
+		})
+	})
+
+	wailsApp.Event.On(updater.EventNoUpdate, func(_ *application.CustomEvent) {
+		application.InvokeAsync(func() {
+			checkUpdateItem.SetLabel("检查更新")
+		})
+	})
+
+	wailsApp.Event.On(updater.EventUpdateReady, func(e *application.CustomEvent) {
+		application.InvokeAsync(func() {
+			rel, _ := e.Data.(*updater.Release)
+			version := ""
+			if rel != nil {
+				version = rel.Version
+			}
+			if version == "" {
+				version = guiupdater.GetUpdateStatus().Version
+			}
+
+			if version != "" {
+				checkUpdateItem.SetLabel("更新就绪 v" + version + "（点击安装）")
+			} else {
+				checkUpdateItem.SetLabel("更新就绪（点击安装）")
+			}
+		})
+	})
 	tray.OnClick(func() {
 		if windowVisible.Load() {
 			guiApp.hideActiveWindow()
@@ -84,7 +131,7 @@ func buildTrayMenu(
 	coreApp *app.App,
 	onQuit func(),
 	updateTooltip func(),
-) *application.Menu {
+) (*application.Menu, *application.MenuItem) {
 	menu := wailsApp.NewMenu()
 
 	menu.Add("Subs Check Pro 桌面端").SetBitmap(logo32).SetEnabled(false)
@@ -135,7 +182,7 @@ func buildTrayMenu(
 	stopCheckAndExitMenu.OnClick(func(_ *application.Context) {
 		if gracefulQuitPending.CompareAndSwap(false, true) {
 			sendOSNotification("Subs Check Pro", "正在等待检测完成后退出\n再次点击将立即强制退出")
-			slog.Debug("GUI：已发送停止检测信号，等待检测完成后退出")
+			slog.Debug("托盘：已发送停止检测信号，等待检测完成后退出")
 
 			gracefulQuitOnce.Do(func() {
 				go func() {
@@ -145,7 +192,7 @@ func buildTrayMenu(
 
 					waitForBackendIdle(5 * time.Minute)
 
-					slog.Info("GUI：后端检测已完成，开始优雅退出")
+					slog.Info("后端检测已完成，开始优雅退出")
 					sendOSNotification("Subs Check Pro", "检测已完成，正在退出…")
 					onQuit()
 				}()
@@ -194,7 +241,8 @@ func buildTrayMenu(
 
 	menu.AddSeparator()
 
-	menu.Add("检查更新").OnClick(func(_ *application.Context) {
+	checkUpdateItem := menu.Add("检查更新")
+	checkUpdateItem.OnClick(func(_ *application.Context) {
 		guiApp.CheckForUpdates()
 	})
 
@@ -209,6 +257,26 @@ func buildTrayMenu(
 		sendOSNotification("Subs Check Pro", "正在关闭…")
 		onQuit()
 	})
+
+	// 每2小时检查更新
+	go func() {
+		ticker := time.NewTicker(4 * time.Hour)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			guiupdater.CheckUpdateStatus(wailsApp)
+			st := guiupdater.GetUpdateStatus()
+			if st.Available {
+				if st.Version != "" {
+					checkUpdateItem.SetLabel("有新版本 v" + st.Version)
+				} else {
+					checkUpdateItem.SetLabel("有新版本")
+				}
+			} else {
+				checkUpdateItem.SetLabel("检查更新")
+			}
+		}
+	}()
 
 	// 启动后台协程，定时更新托盘状态
 	go func() {
@@ -255,7 +323,7 @@ func buildTrayMenu(
 		}
 	}()
 
-	return menu
+	return menu, checkUpdateItem
 }
 
 // ── 后端 HTTP API 辅助函数 ────────────────────────────────────────────────────
@@ -372,17 +440,27 @@ func renderProgressString(coreApp *app.App) string {
 func formatSysTrayTooltip(coreApp *app.App, guiApp *GuiApp) string {
 	base := "Subs Check Pro GUI" + " - 端口 " + strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
 
+	st := guiupdater.GetUpdateStatus()
+	updateLine := ""
+	if st.Available {
+		if st.Version != "" {
+			updateLine = "\n有新版本 v" + st.Version
+		} else {
+			updateLine = "\n有新版本"
+		}
+	}
+
 	if !guiApp.IsBackendReady() {
-		return base + "\n后端未启动"
+		return base + "\n后端未启动" + updateLine
 	}
 
 	if coreApp.IsChecking() {
-		return base + "\n" + renderProgressString(coreApp)
+		return base + "\n" + renderProgressString(coreApp) + updateLine
 	}
 
 	lastResult := coreApp.GetLastCheckResult()
 	if lastResult != "" {
-		return base + "\n" + lastResult + "\n空闲 √"
+		return base + "\n" + lastResult + "\n空闲 √" + updateLine
 	}
-	return base + "\n空闲 √"
+	return base + "\n空闲 √" + updateLine
 }
