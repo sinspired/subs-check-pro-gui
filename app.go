@@ -79,7 +79,7 @@ type AppInfo struct {
 	// GuiVersion 桌面客户端版本（ldflags 注入，如 "v1.2.0"）
 	GuiVersion string `json:"guiVersion"`
 	// CoreVersion 内核版本+短提交哈希（如 "v2.5.4@7c23868"）
-	CoreVersion   string `json:"coreVersion"`
+	CoreVersion string `json:"coreVersion"`
 	// OriginVersion 内核版本
 	OriginVersion string `json:"originVersion"`
 }
@@ -533,12 +533,30 @@ func (g *GuiApp) CheckForUpdates() {
 		sendOSNotification("Subs Check Pro", "更新检查暂不可用")
 		return
 	}
+
+	ctx := context.Background()
+
+	updateInfo, err := g.updaterApp.Updater.Check(ctx)
+	if err != nil {
+		slog.Warn("检查更新失败", "error", err)
+		sendOSNotification("更新失败", err.Error())
+		return
+	}
+
+	if updateInfo == nil {
+		// 已经是最新版
+		slog.Info("当前已是最新版")
+		sendOSNotification("Subs Check Pro GUI", "已经是最新版")
+		return
+	}
+
 	go func() {
 		// TODO: 使用 Check 让用户选择是否下载更新
 		if err := g.updaterApp.Updater.CheckAndInstall(context.Background()); err != nil {
 			slog.Warn("检查更新失败", "error", err)
 			sendOSNotification("更新失败", err.Error())
 		} else {
+			// FIXME: 如果本身已经是最新版，不应发送通知
 			sendOSNotification("更新完成", "新版本已安装，请彻底退出并在重新启动软件后生效。")
 		}
 	}()
