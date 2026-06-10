@@ -34,46 +34,27 @@ type GuiApp struct {
 	configPath string
 	backend    *coreapp.App
 
-	// window 持有主窗口引用（loginWin 的别名），兼容托盘等旧引用。
-	// 由 main.go 在创建窗口后注入。
-	window *application.WebviewWindow
-
-	// loginWin 登录小窗（加载 Wails 前端资产）。
-	// 由 main.go 在创建窗口后注入。
+	// loginWin 登录小窗（加载 Wails 前端资产）。由 main.go 注入。
 	loginWin *application.WebviewWindow
-
-	// webUIWin WebUI 大窗（加载外部 Gin 服务，初始隐藏）。
-	// 由 main.go 在创建窗口后注入。
+	// webUIWin WebUI 大窗（加载 webui/admin.html，初始隐藏）。由 main.go 注入。
 	webUIWin *application.WebviewWindow
 
 	// autostartMenuItem 托盘菜单中"开机自启"菜单项的引用。
-	// 由 tray.go 的 buildTrayMenu 在创建菜单项后注入，
-	// 供前端调用 SetAutoStart 时同步回托盘 checkbox 状态。
 	autostartMenuItem *application.MenuItem
 
 	// pendingInit 为 true 时表示端口预检发现冲突，Initialize() 尚未调用。
 	pendingInit bool
 
 	// isFirstRun 标记本次启动是否为首次运行（创建了默认配置）
-	isFirstRun bool
-
-	// inWebUI 为 true 表示窗口已切换到外部 WebUI 页面。
-	// 此时 Wails JS runtime 不可用，关闭事件须走 Go 原生对话框。
-	inWebUI atomic.Bool
-
-	// aboutWin 「关于」独立窗口，单例引用。
-	// nil 表示窗口已关闭或尚未创建；OpenAboutWindow 负责创建和复用。
-	aboutWin *application.WebviewWindow
-
-	// subLinksWin 「订阅链接」独立窗口，单例引用。
-	// nil 表示窗口已关闭或尚未创建；OpenSubLinksWindow 负责创建和复用。
+	isFirstRun  bool
+	inWebUI     atomic.Bool
+	aboutWin    *application.WebviewWindow
 	subLinksWin *application.WebviewWindow
 
-	// autostart Wails 跨平台开机自启管理器，由 main.go 在初始化后注入。
+	// autostart Wails 跨平台开机自启管理器
 	autostart *application.AutostartManager
 
 	// updaterApp 持有 wails App 引用，供 CheckForUpdates 调用 Updater。
-	// 由 main.go 在初始化 updater 后注入。
 	updaterApp *application.App
 }
 
@@ -172,10 +153,9 @@ func (g *GuiApp) OpenBrandURL(url string, windowSize string) {
 
 		// 等待 loading.html 渲染完成后，由 Go 端发起外部 URL 导航。
 		// 300 ms 对于本地静态页足够，且不会出现 JS 导航被 WebView 拦截的问题。
-		finalURL := capturedURL
 		time.AfterFunc(300*time.Millisecond, func() {
 			application.InvokeAsync(func() {
-				popup.SetURL(finalURL)
+				popup.SetURL(capturedURL)
 			})
 		})
 	})
@@ -239,16 +219,13 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 	port := defaultListenPort()
 	subStorePort := strings.TrimPrefix(config.GlobalConfig.SubStorePort, ":")
 
-	conflictHTTP := false
-	conflictSubStore := false
-
-	// GUI 模式下，Initialize() 只在端口预检通过后才调用，因此 backend 层面不会出现运行态端口冲突。
-	// 冲突状态仅在 pendingInit 阶段有意义，此时动态通过同一接口查询占用。
+	// 冲突状态仅在 pendingInit 阶段有意义，动态查询当前占用情况。
+	var conflictHTTP, conflictSubStore bool
 	if g.pendingInit && g.backend != nil {
 		httpAvail, subAvail := g.backend.CheckPortConflict()
-		conflictHTTP = !httpAvail
-		conflictSubStore = !subAvail
+		conflictHTTP, conflictSubStore = !httpAvail, !subAvail
 	}
+
 	autostartEnabled, _ := g.autostart.IsEnabled()
 
 	coreVer := Version
@@ -256,7 +233,6 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 		coreVer = Version + "-" + CurrentCommit
 	}
 
-	// Sub-Store 后端路径：去掉可能存在的前导 "/" 后规范化，保持与 JS 侧一致
 	subStorePath := strings.TrimPrefix(
 		strings.TrimSpace(config.GlobalConfig.SubStorePath), "/",
 	)
@@ -267,7 +243,7 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 		SubStorePort:         subStorePort,
 		SubStorePath:         subStorePath,
 		KeyIsRandom:          os.Getenv("GUI_KEY_IS_RANDOM") == "1",
-		IsFirstRun:           g.isFirstRun, 
+		IsFirstRun:           g.isFirstRun,
 		ConfigPath:           g.configPath,
 		PortConflictHTTP:     conflictHTTP,
 		PortConflictSubStore: conflictSubStore,
@@ -364,43 +340,36 @@ func (g *GuiApp) SetPorts(httpPort, subStorePort string) error {
 // 前端在此函数返回后立即执行 window.location.replace()，
 // 定时器在导航和页面渲染完成后触发 Show()，实现无感切换。
 func (g *GuiApp) ResizeToMain() {
-	if g.window == nil {
+	if g.loginWin == nil {
 		return
 	}
-
-	// 标记已进入 WebUI；关闭钩子将改用 Go 原生对话框
 	g.inWebUI.Store(true)
-
-	// 隐藏窗口——从此刻起用户看不到任何 resize / 页面切换的闪烁
-	g.window.Hide()
-	g.window.SetSize(1024, 768)
-	g.window.Center()
-
-	// 600 ms 后显示：给 window.location.replace 和本地页面加载足够时间
-	// localhost 页面通常 <100 ms 加载完毕，600 ms 有充足余量
+	g.loginWin.Hide()
+	g.loginWin.SetSize(1024, 768)
+	g.loginWin.Center()
 	time.AfterFunc(600*time.Millisecond, func() {
-		g.window.Show()
-		g.window.Focus()
+		g.loginWin.Show()
+		g.loginWin.Focus()
 		windowVisible.Store(true)
 	})
 }
 
 // ShowWindow 供前端主动调用，显示并聚焦主窗口。
 func (g *GuiApp) ShowWindow() {
-	if g.window == nil {
+	if g.loginWin == nil {
 		return
 	}
-	g.window.Show()
-	g.window.Focus()
+	g.loginWin.Show()
+	g.loginWin.Focus()
 	windowVisible.Store(true)
 }
 
 // HideToTray 供前端"关闭按钮对话框"选择最小化时调用。
 func (g *GuiApp) HideToTray() {
-	if g.window == nil {
+	if g.loginWin == nil {
 		return
 	}
-	hideWindow(g.window)
+	hideWindow(g.loginWin)
 	sendOSNotification("主程序", "已最小化到系统托盘")
 }
 
@@ -729,7 +698,7 @@ func (g *GuiApp) CheckForUpdates() {
 		return
 	}
 	go func() {
-ctx := contextBackground()
+		ctx := contextBackground()
 		if err := g.updaterApp.Updater.CheckAndInstall(ctx); err != nil {
 			slog.Warn("CheckForUpdates: 检查更新失败", "error", err)
 			sendOSNotification("更新失败", err.Error())
