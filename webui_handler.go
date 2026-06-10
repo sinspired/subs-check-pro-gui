@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/sinspired/subs-check-pro-gui/webui"
+	"github.com/sinspired/subs-check-pro-webui/webui"
 	"github.com/sinspired/subs-check-pro/v2/config"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )

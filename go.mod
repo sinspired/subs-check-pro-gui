@@ -1,6 +1,6 @@
 module github.com/sinspired/subs-check-pro-gui
 
-go 1.26.0
+go 1.26.4
 
 replace gopkg.in/ini.v1 => github.com/go-ini/ini v1.67.2
 
@@ -8,6 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/lmittmann/tint v1.1.3
 	github.com/metacubex/mihomo v1.19.27
+	github.com/sinspired/subs-check-pro-webui v0.0.0-20260610032632-e08af4eb2759
 	github.com/sinspired/subs-check-pro/v2 v2.5.8
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.98
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
