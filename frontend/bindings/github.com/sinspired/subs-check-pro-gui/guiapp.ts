@@ -44,13 +44,13 @@ export function EnterWebUI(): $CancellablePromise<void> {
 }
 
 /**
- * GetApiKey 返回当前配置的 API Key，供本地 WebUI 页面通过 Wails binding 调用。
+ * GetAPIKey 返回当前配置的 API Key，供本地 WebUI 页面通过 Wails binding 调用。
  * 
  * 安全边界：该 binding 仅对 Wails 资产服务器提供的页面可见（/webui/admin.html），
  * 外部网络无法调用。APIKey 本身已明文保存在 config.yaml，此处不增加额外泄露面。
  */
-export function GetApiKey(): $CancellablePromise<string> {
-    return $Call.ByID(242902589);
+export function GetAPIKey(): $CancellablePromise<string> {
+    return $Call.ByID(873040829);
 }
 
 /**
