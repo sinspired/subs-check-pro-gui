@@ -45,9 +45,6 @@ export function EnterWebUI(): $CancellablePromise<void> {
 
 /**
  * GetAPIKey 返回当前配置的 API Key，供本地 WebUI 页面通过 Wails binding 调用。
- * 
- * 安全边界：该 binding 仅对 Wails 资产服务器提供的页面可见（/webui/admin.html），
- * 外部网络无法调用。APIKey 本身已明文保存在 config.yaml，此处不增加额外泄露面。
  */
 export function GetAPIKey(): $CancellablePromise<string> {
     return $Call.ByID(873040829);
@@ -86,12 +83,6 @@ export function GetListenPort(): $CancellablePromise<string> {
 
 /**
  * GetUpdateInfo 向 GitHub API 查询最新 Release，返回更新状态给前端。
- * 
- * 使用场景：
- *   - AboutApp.tsx「检查更新」按钮 → 在「关于」窗口内内联展示更新结果，风格与整体 UI 一致
- *   - 不依赖 Wails 内置 updater 窗口，可完全自定义展示样式
- * 
- * 下载 URL 自动附加 https://ghproxy.net/ 前缀，改善中国大陆下载速度。
  */
 export function GetUpdateInfo(): $CancellablePromise<$models.UpdateInfo> {
     return $Call.ByID(1712625151).then(($result: any) => {
@@ -108,10 +99,6 @@ export function HideToTray(): $CancellablePromise<void> {
 
 /**
  * IsBackendReady 动态查询后端是否已成功初始化并正在运行。
- * 
- * 与启动时快照的静态布尔值 appInitOK 不同，此方法读取 pendingInit 字段：
- * 端口冲突场景下 appInitOK==false，CompleteInit() 成功后 pendingInit 置 false，
- * 此方法立即返回 true，供 OnShutdown 和托盘状态轮询使用。
  */
 export function IsBackendReady(): $CancellablePromise<boolean> {
     return $Call.ByID(4055968029);
@@ -119,13 +106,6 @@ export function IsBackendReady(): $CancellablePromise<boolean> {
 
 /**
  * OpenAboutWindow 打开或聚焦「关于」独立窗口（单例模式）。
- * 
- * 调用来源：
- *   - 系统托盘「关于」菜单项（tray.go）
- *   - 主窗口前端「关于」按钮（about-info-btn）
- * 
- * 使用 application.InvokeAsync 确保所有窗口操作在 Wails 主线程执行，
- * 避免从 Go binding 调用线程直接操作 UI 导致的竞态问题。
  */
 export function OpenAboutWindow(): $CancellablePromise<void> {
     return $Call.ByID(3115421951);
@@ -133,8 +113,6 @@ export function OpenAboutWindow(): $CancellablePromise<void> {
 
 /**
  * OpenBrandURL 在 Wails 无地址栏窗口中打开品牌 / 社交链接。
- * 前端品牌面板（GitHub、Telegram、Docker Hub）及版本标签点击时调用，
- * 替代 window.open，避免打开系统默认浏览器，保持应用内体验一致。
  */
 export function OpenBrandURL(url: string, windowSize: string): $CancellablePromise<void> {
     return $Call.ByID(541730476, url, windowSize);
@@ -150,12 +128,7 @@ export function OpenConfigFile(): $CancellablePromise<string> {
 
 /**
  * OpenInternalPage 在新窗口中打开内置 Web 页面（如 /files、/analysis）。
- * 
- * 设计要点：
- *   - 所有内置页面均通过 /gui/enter?n=<nonce>&redirect=<path> 中转，
- *     确保新弹出窗口的 sessionStorage 写入正确的 API Key，与打开 admin 一致。
- *   - 窗口先加载本地 loading.html（立即显示，无白屏），300 ms 后由 Go 端通过
- *     SetURL 发起外部导航——规避 JS 跨 origin 导航拦截。
+ * 通过 /gui/enter?n=<nonce>&redirect=<path> 中转，确保弹出窗口自动写入 API Key。
  */
 export function OpenInternalPage(path: string, title: string, windowSize: string): $CancellablePromise<void> {
     return $Call.ByID(1633695184, path, title, windowSize);
@@ -163,12 +136,6 @@ export function OpenInternalPage(path: string, title: string, windowSize: string
 
 /**
  * OpenSubLinksWindow 打开或聚焦「订阅链接」独立窗口（单例模式）。
- * 
- * 调用来源：
- *   - 主窗口前端快捷按钮区「订阅链接」按钮（KeySection）
- * 
- * 窗口加载 Vite MPA 入口 /sub-links.html，前端自行通过
- * Wails 资产代理（/api/...）拉取订阅数据并展示。
  */
 export function OpenSubLinksWindow(): $CancellablePromise<void> {
     return $Call.ByID(4239119837);
@@ -176,14 +143,6 @@ export function OpenSubLinksWindow(): $CancellablePromise<void> {
 
 /**
  * OpenSubStoreUI 在弹出窗口中打开 Sub-Store 订阅管理页面。
- * 
- * 设计要点：
- *   - 若 config.yaml 配置了 sub-store-path，自动拼接 ?api=<path>，
- *     让 Sub-Store 前端直接完成后端绑定，无需用户手动输入。
- *   - 窗口先加载本地 loading.html（立即显示，无白屏），300 ms 后由 Go 端通过
- *     SetURL 发起外部导航——规避 Wails3 WKWebView/WebView2 对 JS 跨 origin
- *     导航的拦截，确保最终页面能正确加载。
- *   - 不依赖 JS window.location / window.open，无 WebKit 弹窗拦截问题。
  */
 export function OpenSubStoreUI(): $CancellablePromise<void> {
     return $Call.ByID(3080875275);
@@ -206,6 +165,7 @@ export function SetAutoStart(enabled: boolean): $CancellablePromise<void> {
 
 /**
  * SetAutoStartEnabled 设置开机自启状态（供托盘菜单内部调用，不重复更新托盘 checkbox）。
+ * 修复：原实现忽略了 enable 参数，总是调用 Enable()。
  */
 export function SetAutoStartEnabled(enable: boolean): $CancellablePromise<void> {
     return $Call.ByID(197427528, enable);

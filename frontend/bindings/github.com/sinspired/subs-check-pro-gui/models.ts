@@ -15,7 +15,6 @@ export class AppInfo {
 
     /**
      * SubStorePath Sub-Store 后端 API 路径（config.yaml 中的 sub-store-path）。
-     * 前端拼接 ?api=<path> 时使用；若未配置则为空字符串。
      */
     "subStorePath": string;
 
@@ -122,34 +121,11 @@ export class AppInfo {
  * UpdateInfo 前端展示更新状态所需的结构体。
  */
 export class UpdateInfo {
-    /**
-     * HasUpdate 为 true 表示检测到新版本
-     */
     "hasUpdate": boolean;
-
-    /**
-     * LatestVersion 最新版本号（如 "v2.6.0"）
-     */
     "latestVersion": string;
-
-    /**
-     * CurrentVersion 当前版本号
-     */
     "currentVersion": string;
-
-    /**
-     * ReleaseNotes 发布说明（Markdown）
-     */
     "releaseNotes": string;
-
-    /**
-     * DownloadURL 下载页面 URL（通过 ghproxy.net 加速）
-     */
     "downloadURL": string;
-
-    /**
-     * Error 检查失败时的错误描述（前端可展示）
-     */
     "error": string;
 
     /** Creates a new UpdateInfo instance. */

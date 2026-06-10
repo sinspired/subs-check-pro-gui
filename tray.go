@@ -3,6 +3,7 @@ package main
 
 import (
 	_ "embed"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -19,7 +20,6 @@ import (
 )
 
 // trayIcon 嵌入托盘图标文件（ICO 格式，Windows/Linux 通用）。
-// macOS 建议改用透明背景 PNG 并调用 SetTemplateIcon。
 //
 //go:embed frontend/public/logo.png
 var trayIcon []byte
@@ -36,40 +36,29 @@ func init() {
 
 // 退出状态机
 var (
-	gracefulQuitPending atomic.Bool // 首次“结束检测后退出”已触发
+	gracefulQuitPending atomic.Bool // 首次"结束检测后退出"已触发
 	gracefulQuitOnce    sync.Once   // 保证后台等待 goroutine 只启动一次
 )
 
 // startSysTray 初始化 Wails v3 原生系统托盘。
-// 参数：
-//   - wailsApp : Wails 应用实例
-//   - guiApp   : GUI 业务层（提供 showActiveWindow / hideActiveWindow）
-//   - coreApp  : 核心业务实例（用于发送终止检测信号）
-//   - notifier : 通知服务
-//   - onQuit   : 退出回调（先关闭 coreApp 再退出进程）
 func startSysTray(
 	wailsApp *application.App,
 	guiApp *GuiApp,
 	coreApp *app.App,
 	onQuit func(),
 ) {
-	// 创建托盘实例
 	tray := wailsApp.SystemTray.New()
 
-	// 设置图标与悬浮提示（tooltip 仅 Windows/Linux 有效）
 	tray.SetIcon(trayIcon)
 	tray.SetTooltip(formatSysTrayTooltip(coreApp, guiApp))
 
-	// 提供更新 Tooltip 的回调，传递给 buildTrayMenu 以便定时同步刷新
 	updateTooltip := func() {
 		tray.SetTooltip(formatSysTrayTooltip(coreApp, guiApp))
 	}
 
-	// 构建右键菜单
 	menu := buildTrayMenu(wailsApp, guiApp, coreApp, onQuit, updateTooltip)
 	tray.SetMenu(menu)
 
-	// 左键单击：切换当前活跃窗口的显示/隐藏
 	tray.OnClick(func() {
 		if windowVisible.Load() {
 			guiApp.hideActiveWindow()
@@ -78,12 +67,10 @@ func startSysTray(
 		}
 	})
 
-	// 左键双击：强制显示当前活跃窗口
 	tray.OnDoubleClick(func() {
 		guiApp.showActiveWindow()
 	})
 
-	// 右键单击：弹出菜单
 	tray.OnRightClick(func() {
 		tray.OpenMenu()
 	})
@@ -102,9 +89,8 @@ func buildTrayMenu(
 
 	menu.Add("Subs Check Pro 桌面端").SetBitmap(logo32).SetEnabled(false)
 
-	// 状态显示菜单项
 	statusItem := menu.Add("...")
-	statusItem.SetEnabled(false) // 设为不可点击，纯展示用途
+	statusItem.SetEnabled(false)
 
 	menu.AddSeparator()
 
@@ -172,9 +158,10 @@ func buildTrayMenu(
 	})
 
 	menu.AddSeparator()
+
 	// ── 开机自启（Checkbox 菜单项）────────────────────────────────────────
 	autostartItem := menu.Add("开机自启")
-	autostartItem.SetChecked(false) // 默认未勾选，启动后异步更新
+	autostartItem.SetChecked(false)
 
 	guiApp.autostartMenuItem = autostartItem
 
@@ -187,7 +174,6 @@ func buildTrayMenu(
 		}
 
 		next := !enabled
-
 		autostartItem.SetChecked(next)
 
 		if next {
@@ -203,13 +189,11 @@ func buildTrayMenu(
 		if err != nil {
 			slog.Warn("设置开机自启失败", "error", err)
 			sendOSNotification("Subs Check Pro", "设置开机自启失败："+err.Error())
-			return
 		}
 	})
 
 	menu.AddSeparator()
 
-	// About menu
 	menu.Add("检查更新").OnClick(func(_ *application.Context) {
 		guiApp.CheckForUpdates()
 	})
@@ -226,7 +210,7 @@ func buildTrayMenu(
 		onQuit()
 	})
 
-	// 启动后台协程，定时（如 1.5 秒）更新状态文本
+	// 启动后台协程，定时更新托盘状态
 	go func() {
 		enabled, err := guiApp.GetAutoStartEnabled()
 		if err != nil {
@@ -239,35 +223,24 @@ func buildTrayMenu(
 		defer ticker.Stop()
 
 		for range ticker.C {
-			// 同步刷新托盘的 Tooltip 悬浮提示
 			if updateTooltip != nil {
 				updateTooltip()
 			}
 
-			// 动态读取：CompleteInit() 成功后 IsBackendReady() 立即返回 true
 			if !guiApp.IsBackendReady() {
 				statusItem.SetLabel("后端未启动")
 				continue
 			}
 
-			// 1. 如果正在检测中
 			if coreApp.IsChecking() {
 				stopCheckMenu.SetEnabled(true)
 				stopCheckAndExitMenu.SetEnabled(true)
 				statusItem.SetHidden(false)
-
-				// 生成进度信息
-				progressStr := renderProgressString(coreApp)
-
-				// 在托盘显示检测进度
-				statusItem.SetLabel(progressStr)
-
+				statusItem.SetLabel(renderProgressString(coreApp))
 				triggerCheckMenu.SetEnabled(false)
-
 				continue
 			}
 
-			// 2. 如果检测已完成（或空闲中）
 			lastResult := coreApp.GetLastCheckResult()
 			if lastResult != "" {
 				statusItem.SetHidden(false)
@@ -285,7 +258,7 @@ func buildTrayMenu(
 	return menu
 }
 
-// 后端 HTTP API 辅助函数
+// ── 后端 HTTP API 辅助函数 ────────────────────────────────────────────────────
 
 func backendBase() string {
 	return "http://127.0.0.1:" + defaultListenPort()
@@ -293,7 +266,7 @@ func backendBase() string {
 
 func callBackendForceClose() error {
 	url := backendBase() + "/api/force-close"
-	req, err := http.NewRequest(http.MethodPost, url, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, nil)
 	if err != nil {
 		return err
 	}
@@ -309,7 +282,7 @@ func callBackendForceClose() error {
 
 func isBackendChecking() bool {
 	url := backendBase() + "/api/status"
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
 	if err != nil {
 		return true
 	}
@@ -346,7 +319,8 @@ func waitForBackendIdle(timeout time.Duration) {
 	slog.Warn("等待后端空闲超时，继续退出流程")
 }
 
-// showWindow 窗口显示/隐藏
+// ── 窗口显示/隐藏辅助 ─────────────────────────────────────────────────────────
+
 func showWindow(win *application.WebviewWindow) {
 	win.Show()
 	win.Focus()
@@ -354,7 +328,6 @@ func showWindow(win *application.WebviewWindow) {
 	slog.Debug("窗口已显示")
 }
 
-// hideWindow 隐藏窗口，同步可见状态标志。
 func hideWindow(win *application.WebviewWindow) {
 	win.Hide()
 	windowVisible.Store(false)
@@ -368,27 +341,25 @@ func NotifyHideToTray() {
 	slog.Debug("已最小化到系统托盘，单击托盘图标可恢复窗口")
 }
 
-// renderProgressString 根据当前状态生成进度字符串
+// ── 进度/Tooltip 格式化 ───────────────────────────────────────────────────────
+
 func renderProgressString(coreApp *app.App) string {
-	var percent float64
 	state := coreApp.GetCurrentState()
 	stepName := state.StepName
 
+	var percent float64
 	if state.ProxyCount == 0 {
 		if stepName == "保存中" {
 			percent = 100.0
-		} else {
-			percent = 0.0
 		}
 	} else {
 		percent = float64(state.Progress) / float64(state.ProxyCount) * 100.0
-	}
-
-	if percent < 0 {
-		percent = 0
-	}
-	if percent > 100 {
-		percent = 100
+		if percent < 0 {
+			percent = 0
+		}
+		if percent > 100 {
+			percent = 100
+		}
 	}
 
 	if stepName == "" {
@@ -398,7 +369,6 @@ func renderProgressString(coreApp *app.App) string {
 	return fmt.Sprintf("%s %.1f%% %s", stepName, percent, state.ETASuffix)
 }
 
-// formatSysTrayTooltip 构建托盘悬浮提示文本，包含应用名称、当前监听端口以及检测进度。
 func formatSysTrayTooltip(coreApp *app.App, guiApp *GuiApp) string {
 	base := "Subs Check Pro GUI" + " - 端口 " + strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
 
@@ -407,16 +377,12 @@ func formatSysTrayTooltip(coreApp *app.App, guiApp *GuiApp) string {
 	}
 
 	if coreApp.IsChecking() {
-		progressStr := renderProgressString(coreApp)
-
-		// 检测中：下一行显示当前进度格式化字符串
-		return base + "\n" + progressStr
+		return base + "\n" + renderProgressString(coreApp)
 	}
 
 	lastResult := coreApp.GetLastCheckResult()
 	if lastResult != "" {
 		return base + "\n" + lastResult + "\n空闲 √"
-	} else {
-		return base + "\n空闲 √"
 	}
+	return base + "\n空闲 √"
 }
