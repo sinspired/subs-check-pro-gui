@@ -129,45 +129,47 @@ tasks:
     dir: build
     cmds:
       # Step 1: 生成注入版本的临时 info json 和 manifest
-      - |
-        python3 - << 'PYEOF'
-        import json, re
-        ver = '{{.GUI_VERSION}}'.lstrip('v')
-        if not ver or ver == 'dev':
-            ver = '0.0.0'
-        m = re.match(r'^(\d+)\.(\d+)\.(\d+)(?:[^0-9]*(\d+))?', ver)
-        if m:
-            numeric = '{}.{}.{}.{}'.format(m.group(1), m.group(2), m.group(3), m.group(4) or '0')
-        else:
-            numeric = '1.0.0.0'
+      # silent: true 仅压制 task 对命令体的 echo，Python 自身输出不受影响
+      - silent: true
+        cmd: |
+          python3 - << 'PYEOF'
+          import json, re
+          ver = '{{.GUI_VERSION}}'.lstrip('v')
+          if not ver or ver == 'dev':
+              ver = '0.0.0'
+          m = re.match(r'^(\d+)\.(\d+)\.(\d+)(?:[^0-9]*(\d+))?', ver)
+          if m:
+              numeric = '{}.{}.{}.{}'.format(m.group(1), m.group(2), m.group(3), m.group(4) or '0')
+          else:
+              numeric = '1.0.0.0'
 
-        # --- info_gen_<ARCH>.json ---
-        with open('windows/info.json', encoding='utf-8') as f:
-            data = json.load(f)
-        data['fixed']['file_version'] = numeric
-        for lang_data in data.get('info', {}).values():
-            if 'ProductVersion' in lang_data:
-                lang_data['ProductVersion'] = ver
-        # 确保 0000 / 0409 两个常用 LCID 都有 ProductVersion
-        for lcid in ('0000', '0409'):
-            data['info'].setdefault(lcid, {})['ProductVersion'] = ver
-        with open('windows/info_gen_{{.ARCH}}.json', 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=chr(9))
+          # --- info_gen_<ARCH>.json ---
+          with open('windows/info.json', encoding='utf-8') as f:
+              data = json.load(f)
+          data['fixed']['file_version'] = numeric
+          for lang_data in data.get('info', {}).values():
+              if 'ProductVersion' in lang_data:
+                  lang_data['ProductVersion'] = ver
+          # 确保 0000 / 0409 两个常用 LCID 都有 ProductVersion
+          for lcid in ('0000', '0409'):
+              data['info'].setdefault(lcid, {})['ProductVersion'] = ver
+          with open('windows/info_gen_{{.ARCH}}.json', 'w', encoding='utf-8') as f:
+              json.dump(data, f, ensure_ascii=False, indent=chr(9))
 
-        # --- wails_gen_<ARCH>.exe.manifest ---
-        with open('windows/wails.exe.manifest', encoding='utf-8') as f:
-            mf = f.read()
-        # 只替换 assemblyIdentity 的 version 属性（第一处，避免误替换）
-        mf = re.sub(
-            r'(name="com\.sinspired\.subs-check-pro-gui"\s+version=")[^"]*"',
-            r'\g<1>' + numeric + '"',
-            mf, count=1
-        )
-        with open('windows/wails_gen_{{.ARCH}}.exe.manifest', 'w', encoding='utf-8') as f:
-            f.write(mf)
+          # --- wails_gen_<ARCH>.exe.manifest ---
+          with open('windows/wails.exe.manifest', encoding='utf-8') as f:
+              mf = f.read()
+          # 只替换 assemblyIdentity 的 version 属性（第一处，避免误替换）
+          mf = re.sub(
+              r'(name="com\.sinspired\.subs-check-pro-gui"\s+version=")[^"]*"',
+              r'\g<1>' + numeric + '"',
+              mf, count=1
+          )
+          with open('windows/wails_gen_{{.ARCH}}.exe.manifest', 'w', encoding='utf-8') as f:
+              f.write(mf)
 
-        print('generate:syso  display={} numeric={}'.format(ver, numeric))
-        PYEOF
+          print('generate:syso  display={} numeric={}'.format(ver, numeric))
+          PYEOF
       # Step 2: 用临时文件生成 .syso
       - wails3 generate syso -arch {{.ARCH}} -icon windows/icon.ico -manifest windows/wails_gen_{{.ARCH}}.exe.manifest -info windows/info_gen_{{.ARCH}}.json -out ../wails_windows_{{.ARCH}}.syso
       # Step 3: 清理临时文件

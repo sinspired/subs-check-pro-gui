@@ -9,10 +9,13 @@ on:
 permissions:
   contents: write
 
-  # 产物命名规范：
-#   subs-check-pro-gui_<tag>_<goos>_<arch>[.ext]
+# 产物命名规范（用户可见架构名统一用 x64/arm64/x86）：
+#   subs-check-pro-gui_<goos>_<arch>[_variant][.ext]
 # 示例：
-#   subs-check-pro-gui_v2.5.6_windows_amd64.exe    
+#   subs-check-pro-gui_windows_x64.exe
+#   subs-check-pro-gui_windows_x64_setup.exe
+#   subs-check-pro-gui_darwin_arm64.app.tar.gz
+#   subs-check-pro-gui_linux_x64.deb
 jobs:
   # 1. 生成 Changelog
   changelog:
@@ -20,6 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       content: ${{ steps.cliff.outputs.content }}
+      core_version: ${{ steps.core.outputs.version }}
+      core_commit: ${{ steps.core.outputs.commit }}
 
     steps:
       - name: Checkout
@@ -37,10 +42,20 @@ jobs:
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve subs-check-pro core version
+        id: core
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VER=$(gh release view --repo sinspired/subs-check-pro --json tagName -q .tagName 2>/dev/null || echo "dev")
+          SHA=$(gh api repos/sinspired/subs-check-pro/commits?per_page=1 -q '.[0].sha[0:7]' 2>/dev/null || echo "unknown")
+          echo "version=${VER}" >> "$GITHUB_OUTPUT"
+          echo "commit=${SHA}"  >> "$GITHUB_OUTPUT"
+          echo "core_version=${VER}  core_commit=${SHA}"
   # 2. 矩阵构建各平台产物并按照规范重命名
   build:
     name: Build (${{ matrix.goos }}/${{ matrix.arch }})
-    needs: changelog # 等 changelog 生成完再开始（可选，避免冗余）
+    needs: changelog # 等 changelog 生成完再开始
     strategy:
       fail-fast: false
       matrix:
@@ -74,7 +89,13 @@ jobs:
 
     env:
       APP_NAME: subs-check-pro-gui
+      # github.ref_name = tag name on tag push, branch name on workflow_dispatch
       VERSION: ${{ github.ref_name }}
+      # 从 changelog job 获取已解析好的内核版本，避免 Taskfile 重复网络拉取
+      CORE_VERSION: ${{ needs.changelog.outputs.core_version }}
+      CORE_COMMIT: ${{ needs.changelog.outputs.core_commit }}
+      # GUI 自身版本；tag push 时即 tag name，workflow_dispatch 时 Taskfile 会 fallback 到 git describe
+      GUI_VERSION: ${{ github.ref_name }}
 
     steps:
       - name: Checkout
@@ -179,8 +200,17 @@ jobs:
           GOARCH: ${{ matrix.arch }}
         run: |
           mkdir -p dist
+
           # 命名前缀：APP_NAME_GOOS_ARCH
-          PREFIX="${APP_NAME}_${GOOS}_${GOARCH}"
+          # 用户可见架构名统一为 x64/arm64/x86，
+          # Go 内部 GOARCH（amd64 等）保持不变，仅在此处做"展示名"映射
+          case "${GOARCH}" in
+            amd64) ARCH_NAME="x64" ;;
+            arm64) ARCH_NAME="arm64" ;;
+            386)   ARCH_NAME="x86" ;;
+            *)     ARCH_NAME="${GOARCH}" ;;
+          esac
+          PREFIX="${APP_NAME}_${GOOS}_${ARCH_NAME}"
 
           case "${GOOS}" in
 
@@ -206,7 +236,7 @@ jobs:
               # 1. 裸二进制（便携版）
               cp "bin/${APP_NAME}" "dist/${PREFIX}"
 
-              # 2. .deb 包（nfpm 生成的默认名如 subs-check-pro-gui_2.5.6_amd64.deb）
+              # 2. .deb 包
               DEB_SRC=$(ls bin/*.deb 2>/dev/null | head -1)
               if [ -n "${DEB_SRC}" ]; then
                 cp "${DEB_SRC}" "dist/${PREFIX}.deb"
