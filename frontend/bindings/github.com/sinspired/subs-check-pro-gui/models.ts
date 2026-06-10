@@ -63,6 +63,11 @@ export class AppInfo {
      */
     "coreVersion": string;
 
+    /**
+     * OriginVersion 内核版本
+     */
+    "originVersion": string;
+
     /** Creates a new AppInfo instance. */
     constructor($$source: Partial<AppInfo> = {}) {
         if (!("apiKey" in $$source)) {
@@ -103,6 +108,9 @@ export class AppInfo {
         }
         if (!("coreVersion" in $$source)) {
             this["coreVersion"] = "";
+        }
+        if (!("originVersion" in $$source)) {
+            this["originVersion"] = "";
         }
 
         Object.assign(this, $$source);
