@@ -117,6 +117,7 @@ func renderWebuiAdmin(w http.ResponseWriter, templatesFS fs.FS, configPath strin
 		"configPath": configPath,
 		"apiKey":     config.GlobalConfig.APIKey,
 		"listenPort": port,
+		"wailsGUI":   true,
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
