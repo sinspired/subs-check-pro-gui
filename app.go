@@ -534,6 +534,7 @@ func (g *GuiApp) CheckForUpdates() {
 		return
 	}
 	go func() {
+		// TODO: 使用 Check 让用户选择是否下载更新
 		if err := g.updaterApp.Updater.CheckAndInstall(context.Background()); err != nil {
 			slog.Warn("检查更新失败", "error", err)
 			sendOSNotification("更新失败", err.Error())

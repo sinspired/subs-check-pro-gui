@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <title>检查更新 — Subs Check Pro</title>
     <style>
-        /* ── reset ── */
         *,
         *::before,
         *::after {
@@ -15,7 +15,7 @@
             padding: 0;
         }
 
-        /* ── design tokens — 与主窗口 style.css 保持一致 ── */
+        /* ── design tokens ── */
         :root {
             --bg: #f2f4f6;
             --fg: #111827;
@@ -40,7 +40,12 @@
             }
         }
 
-        html,
+        html {
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+        }
+
         body {
             width: 100%;
             height: 100%;
@@ -53,7 +58,14 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            opacity: 0;
+            animation: upd-fadein 0.15s ease 0.04s forwards;
+        }
+
+        @keyframes upd-fadein {
+            to {
+                opacity: 1;
+            }
         }
 
         /* ── layout ── */
@@ -72,7 +84,7 @@
             overflow: hidden;
         }
 
-        /* ── hero block ── */
+        /* ── hero ── */
         .upd-hero {
             display: flex;
             flex-direction: column;
@@ -82,14 +94,14 @@
         }
 
         .upd-icon-wrap {
-            width: 52px;
-            height: 52px;
+            width: 54px;
+            height: 54px;
             border-radius: 14px;
             background: color-mix(in srgb, var(--accent) 12%, transparent);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.35s ease;
+            transition: background 0.3s ease;
         }
 
         .upd-icon-wrap.is-success {
@@ -364,7 +376,6 @@
             vertical-align: middle;
         }
 
-        /* ── utility ── */
         .upd-hidden {
             display: none !important;
         }
@@ -373,24 +384,20 @@
 
 <body>
     <div class="upd-root">
-        <!-- drag titlebar -->
         <div class="upd-titlebar"></div>
 
         <!-- hero -->
         <div class="upd-hero">
             <div class="upd-icon-wrap" id="iconWrap">
-                <!-- default: refresh -->
                 <svg id="icoRefresh" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="23 4 23 10 17 10" />
                     <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                 </svg>
-                <!-- success: check -->
                 <svg id="icoCheck" class="upd-hidden" width="26" height="26" viewBox="0 0 24 24" fill="none"
                     stroke="var(--success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                 </svg>
-                <!-- error: alert -->
                 <svg id="icoError" class="upd-hidden" width="26" height="26" viewBox="0 0 24 24" fill="none"
                     stroke="var(--error)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -398,19 +405,16 @@
                     <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
             </div>
-
             <div class="upd-hero-title" id="heroTitle">正在检查更新…</div>
-
             <div class="upd-ver-pill upd-hidden" id="verPill">
                 <span class="cur" id="verCur"></span>
                 <span class="arr">→</span>
                 <span class="next" id="verNext"></span>
             </div>
-
             <div class="upd-hero-sub" id="heroSub">请稍候</div>
         </div>
 
-        <!-- progress (Flex 排版同一行) -->
+        <!-- progress -->
         <div class="upd-progress-container" id="progressContainer">
             <div class="upd-progress-wrap">
                 <div class="upd-progress-bar indeterminate" id="progressBar"></div>
@@ -455,11 +459,44 @@
 
     <script>
         (function () {
-            /* ── runtime API (injected by Wails before this script runs) ── */
-            var Events = window.wails && window.wails.Events;
-            if (!Events) { console.error('[updater-win] wails.Events not available'); return; }
-            var On = Events.On.bind(Events);
-            var Emit = Events.Emit.bind(Events);
+            'use strict';
+
+            /* ──────────────────────────────────────────────────────────────
+               核心修复：emit() 使用 window._wails.invoke 直接路由，
+               这是 Wails v3 BuiltinWindow 简化 shim 的正确调用方式。
+               Events.Emit({ name, data }) 形式在 shim 中对 user:* 事件
+               无效，因为 shim 只转发"裸名"——不携带 payload 的事件。
+               ────────────────────────────────────────────────────────────── */
+
+            /**
+             * emit — 向 Go 宿主发送 Wails 事件。
+             *
+             * 优先通过 window._wails.invoke("wails:event:emit:<name>") 直接
+             * 触发，这是官方文档为自定义模板推荐的方式（bare-name only）。
+             * 回退到 wails.Events.Emit(name)（字符串形式）。
+             *
+             * 关键：不要传入 { name, data } 对象——shim 只识别裸字符串路由。
+             */
+            function emit(name) {
+                // 方式一：直接 invoke（文档推荐，shim 保证可用）
+                if (window._wails && typeof window._wails.invoke === 'function') {
+                    window._wails.invoke('wails:event:emit:' + name);
+                    return;
+                }
+                // 方式二：wails.Events 字符串形式
+                var E = window.wails && window.wails.Events;
+                if (E && typeof E.Emit === 'function') {
+                    E.Emit(name);
+                }
+            }
+
+            /* ── On 订阅包装 ── */
+            function on(name, fn) {
+                var E = window.wails && window.wails.Events;
+                if (E && typeof E.On === 'function') {
+                    E.On(name, fn);
+                }
+            }
 
             /* ── DOM refs ── */
             var iconWrap = document.getElementById('iconWrap');
@@ -471,12 +508,9 @@
             var verPill = document.getElementById('verPill');
             var verCur = document.getElementById('verCur');
             var verNext = document.getElementById('verNext');
-
-            // 已更新为进度条 Flex 容器
             var progressContainer = document.getElementById('progressContainer');
             var progressBar = document.getElementById('progressBar');
             var progressLabel = document.getElementById('progressLabel');
-
             var notesPlaceholder = document.getElementById('notesPlaceholder');
             var notesContent = document.getElementById('notesContent');
             var btnInstall = document.getElementById('btnInstall');
@@ -486,30 +520,6 @@
             var btnLater = document.getElementById('btnLater');
             var btnClose = document.getElementById('btnClose');
 
-            /* 提取 Wails3 事件数据包装（兼容不同版本） */
-            function extractData(e) {
-                var d = (e && e.data !== undefined) ? e.data : (e || {});
-                // Wails 3 通常将事件参数包裹在数组中
-                if (Array.isArray(d) && d.length > 0) {
-                    d = d[0];
-                }
-                if (typeof d === 'string') {
-                    try { d = JSON.parse(d); } catch (ex) { }
-                }
-                return d || {};
-            }
-
-            /* 原生关闭窗口方法 */
-            function closeWindow() {
-                Emit('wails:updater:window:close');
-                // Wails v3 提供了统一的原生窗口关闭方法，兜底使用标准 window.close()
-                if (window.wails && window.wails.Window && typeof window.wails.Window.Close === 'function') {
-                    window.wails.Window.Close();
-                } else {
-                    window.close();
-                }
-            }
-
             /* ── helpers ── */
             function show(el) { el.classList.remove('upd-hidden'); }
             function hide(el) { el.classList.add('upd-hidden'); }
@@ -517,36 +527,35 @@
             function fmtBytes(n) {
                 if (!n) return '';
                 if (n < 1024) return n + ' B';
-                if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
-                return (n / 1024 / 1024).toFixed(1) + ' MB';
+                if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+                return (n / 1048576).toFixed(1) + ' MB';
             }
 
-            /* minimal Markdown → safe HTML renderer (已修复 \r\n 换行符影响) */
+            /* 从 Wails3 事件回调中提取 data */
+            function extractData(e) {
+                var d = (e && e.data !== undefined) ? e.data : (e || {});
+                if (Array.isArray(d) && d.length > 0) d = d[0];
+                if (typeof d === 'string') {
+                    try { d = JSON.parse(d); } catch (_) { }
+                }
+                return d || {};
+            }
+
+            /* minimal Markdown → safe HTML */
             function md2html(src) {
                 if (!src) return '';
                 var s = src
-                    .replace(/\r\n/g, '\n') /* 标准化所有换行符 */
+                    .replace(/\r\n/g, '\n')
                     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                    /* fenced code blocks */
-                    .replace(/```[\w]*\n([\s\S]*?)```/gm, function (_, code) {
-                        return '<pre><code>' + code.trimEnd() + '</code></pre>';
-                    })
-                    /* inline code */
+                    .replace(/```[\w]*\n([\s\S]*?)```/gm, function (_, c) { return '<pre><code>' + c.trimEnd() + '</code></pre>'; })
                     .replace(/`([^`]+)`/g, '<code>$1</code>')
-                    /* headings */
                     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
                     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
                     .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-                    /* bold / italic */
                     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
                     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                    /* unordered list items → wrap in <ul> */
                     .replace(/^[-*] (.+)$/gm, '<li>$1</li>');
-                /* group consecutive <li> into <ul> */
-                s = s.replace(/(<li>[^]*?<\/li>\n?)+/g, function (m) {
-                    return '<ul>' + m + '</ul>';
-                });
-                /* paragraphs for plain lines */
+                s = s.replace(/(<li>[^]*?<\/li>\n?)+/g, function (m) { return '<ul>' + m + '</ul>'; });
                 s = s.split('\n').map(function (line) {
                     var t = line.trim();
                     if (!t) return '';
@@ -559,30 +568,21 @@
             function setNotes(html) {
                 if (html) {
                     notesContent.innerHTML = html;
-                    show(notesContent);
-                    hide(notesPlaceholder);
+                    show(notesContent); hide(notesPlaceholder);
                 } else {
                     notesContent.innerHTML = '';
-                    hide(notesContent);
-                    show(notesPlaceholder);
+                    hide(notesContent); show(notesPlaceholder);
                 }
             }
 
-            /* ── icon mode ── */
-            function iconNeutral() {
-                iconWrap.className = 'upd-icon-wrap';
-                show(icoRefresh); hide(icoCheck); hide(icoError);
-            }
-            function iconSuccess() {
-                iconWrap.className = 'upd-icon-wrap is-success';
-                hide(icoRefresh); show(icoCheck); hide(icoError);
-            }
-            function iconFail() {
-                iconWrap.className = 'upd-icon-wrap is-error';
-                hide(icoRefresh); hide(icoCheck); show(icoError);
-            }
+            /* ── icon helpers ── */
+            function iconNeutral() { iconWrap.className = 'upd-icon-wrap'; show(icoRefresh); hide(icoCheck); hide(icoError); }
+            function iconSuccess() { iconWrap.className = 'upd-icon-wrap is-success'; hide(icoRefresh); show(icoCheck); hide(icoError); }
+            function iconFail() { iconWrap.className = 'upd-icon-wrap is-error'; hide(icoRefresh); hide(icoCheck); show(icoError); }
 
-            /* ── state renderers ── */
+            /* ──────────────────────────────────────────────────────────────
+               状态渲染器
+               ────────────────────────────────────────────────────────────── */
             function stateChecking() {
                 heroTitle.textContent = '正在检查更新…';
                 heroSub.textContent = '请稍候';
@@ -596,14 +596,19 @@
                 hide(btnSkip); show(btnLater); show(btnClose);
                 btnInstall.disabled = false;
                 btnRestart.disabled = false;
-                btnInstall.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>下载并安装';
+                btnInstall.innerHTML =
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                    '<polyline points="8 17 12 21 16 17"/>' +
+                    '<line x1="12" y1="12" x2="12" y2="21"/>' +
+                    '<path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/>' +
+                    '</svg>下载并安装';
             }
 
             function stateAvailable(rel) {
+                /* ── Bug 1 修复：移除自动下载倒计时，改为纯手动触发 ── */
                 heroTitle.textContent = '发现新版本';
-                // 兼容 Wails V3 属性大小写传递
                 var ver = rel.version || rel.Version || '';
-                var size = rel.size || rel.Size || 0;
+                var size = rel.artifact && (rel.artifact.size || rel.artifact.Size) || 0;
                 var sub = ver;
                 if (size) sub += '  ·  ' + fmtBytes(size);
                 heroSub.textContent = sub;
@@ -611,26 +616,31 @@
 
                 var currVer = rel.currentVersion || rel.CurrentVersion || '';
                 if (currVer && ver) {
-                    verCur.textContent = currVer;
-                    verNext.textContent = ver;
+                    verCur.textContent = 'v' + currVer.replace(/^v/, '');
+                    verNext.textContent = 'v' + ver.replace(/^v/, '');
                     show(verPill);
-                } else { hide(verPill); }
+                } else {
+                    hide(verPill);
+                }
 
                 progressContainer.classList.remove('visible');
                 progressLabel.textContent = '';
 
-                // 兼容 ReleaseNotes 字段不同的大小写或取值名称
-                var releaseNotes = rel.releaseNotes || rel.ReleaseNotes || rel.body || rel.Body || rel.notes || rel.Notes || '';
+                var releaseNotes = rel.notes || rel.Notes ||
+                    rel.body || rel.Body ||
+                    rel.releaseNotes || rel.ReleaseNotes || '';
                 setNotes(md2html(releaseNotes));
 
                 show(btnInstall); hide(btnRestart); hide(btnRetry);
                 show(btnSkip); show(btnLater); show(btnClose);
+                btnInstall.disabled = false;
+                // 【注意】此处不再调用 startCountdown() — 完全由用户手动决定
             }
 
-            function stateUpToDate(rel) {
-                var ver = rel ? (rel.currentVersion || rel.CurrentVersion) : '';
+            function stateUpToDate(meta) {
+                var ver = meta ? (meta.currentVersion || meta.CurrentVersion) : '';
                 heroTitle.textContent = '已是最新版本';
-                heroSub.textContent = ver ? '当前版本  ' + ver : '无需更新';
+                heroSub.textContent = ver ? '当前版本  v' + ver.replace(/^v/, '') : '无需更新';
                 iconSuccess();
                 hide(verPill);
                 progressContainer.classList.remove('visible');
@@ -640,42 +650,55 @@
                 hide(btnSkip); hide(btnLater); show(btnClose);
             }
 
-            var downloadTotalSize = 0; // 收拢到内部作用域
+            var dlTotalSize = 0;
 
             function stateDownloading(p) {
                 heroTitle.textContent = '正在下载更新…';
                 iconNeutral();
 
-                // 兼容不同平台的结构体差异与大小写差异
-                var total = p.total || p.Total || p.totalBytes || p.TotalBytes || downloadTotalSize || 0;
-                if (total > 0) downloadTotalSize = total; // 缓存有效 totalSize 避免闪退为 0
+                var total = p.total || p.Total || dlTotalSize || 0;
+                var written = p.written || p.Written || 0;
+                var rate = p.rate || p.Rate || 0;
+                if (total > 0) dlTotalSize = total;
 
-                var written = p.written || p.Written || p.bytesWritten || p.BytesWritten || 0;
-                var rate = p.rate || p.Rate || p.bytesPerSecond || p.BytesPerSecond || 0;
+                var rateStr = rate > 0 ? fmtBytes(rate) + '/s' : '';
 
-                // 原生速率解析
-                var rateStr = rate > 0 ? (fmtBytes(rate) + '/s') : '';
-
-                if (downloadTotalSize > 0) {
-                    var pct = Math.min(100, (written / downloadTotalSize * 100));
+                if (dlTotalSize > 0) {
+                    var pct = Math.min(100, written / dlTotalSize * 100);
                     progressBar.className = 'upd-progress-bar';
                     progressBar.style.width = pct.toFixed(1) + '%';
                     progressLabel.textContent = pct.toFixed(0) + '%';
-
-                    var subStr = fmtBytes(written) + ' / ' + fmtBytes(downloadTotalSize);
-                    if (rateStr) subStr += '  ·  ' + rateStr;
-                    heroSub.textContent = subStr;
+                    var sub = fmtBytes(written) + ' / ' + fmtBytes(dlTotalSize);
+                    if (rateStr) sub += '  ·  ' + rateStr;
+                    heroSub.textContent = sub;
                 } else {
                     progressBar.className = 'upd-progress-bar indeterminate';
                     progressLabel.textContent = '';
-                    var subStr = fmtBytes(written);
-                    if (rateStr) subStr += '  ·  ' + rateStr;
-                    heroSub.textContent = subStr;
+                    heroSub.textContent = fmtBytes(written) + (rateStr ? '  ·  ' + rateStr : '');
                 }
-
                 progressContainer.classList.add('visible');
                 hide(btnInstall); hide(btnRestart); hide(btnRetry);
                 hide(btnSkip); show(btnLater); show(btnClose);
+            }
+
+            function stateVerifying() {
+                heroTitle.textContent = '正在验证…';
+                heroSub.textContent = '校验文件完整性';
+                iconNeutral();
+                progressBar.className = 'upd-progress-bar indeterminate';
+                progressContainer.classList.add('visible');
+                hide(btnInstall); hide(btnRestart); hide(btnRetry);
+                hide(btnSkip); hide(btnLater); hide(btnClose);
+            }
+
+            function stateInstalling() {
+                heroTitle.textContent = '正在安装…';
+                heroSub.textContent = '准备替换旧版本';
+                iconNeutral();
+                progressBar.className = 'upd-progress-bar indeterminate';
+                progressContainer.classList.add('visible');
+                hide(btnInstall); hide(btnRestart); hide(btnRetry);
+                hide(btnSkip); hide(btnLater); hide(btnClose);
             }
 
             function stateReady() {
@@ -686,6 +709,12 @@
                 progressLabel.textContent = '';
                 hide(btnInstall); show(btnRestart); hide(btnRetry);
                 hide(btnSkip); hide(btnLater); show(btnClose);
+                btnRestart.disabled = false;
+                btnRestart.innerHTML =
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                    '<polyline points="23 4 23 10 17 10"/>' +
+                    '<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>' +
+                    '</svg>重启并应用更新';
             }
 
             function stateError(msg) {
@@ -699,77 +728,124 @@
                 hide(btnSkip); hide(btnLater); show(btnClose);
             }
 
-            /* ── Wails event subscriptions ── */
-            On('wails:updater:check-started', function () {
+            /* ──────────────────────────────────────────────────────────────
+               Wails 事件订阅（宿主 → 页面）
+               ────────────────────────────────────────────────────────────── */
+            on('wails:updater:check-started', function () {
                 stateChecking();
             });
 
-            On('wails:updater:update-available', function (e) {
+            on('wails:updater:update-available', function (e) {
                 stateAvailable(extractData(e));
             });
 
-            // 兼听 Wails 新旧事件名
-            On('wails:updater:no-update-available', function (e) {
+            on('wails:updater:no-update', function (e) {
                 stateUpToDate(extractData(e));
             });
-            On('wails:updater:no-update', function (e) {
+            on('wails:updater:no-update-available', function (e) {
                 stateUpToDate(extractData(e));
             });
 
-            On('wails:updater:download-progress', function (e) {
+            // EventMeta：携带 currentVersion / skippedVersion
+            on('wails:updater:meta', function (e) {
+                var m = extractData(e);
+                // 如果处于 up-to-date 状态，用 meta 中的版本更新副标题
+                if (heroTitle.textContent === '已是最新版本' && m.currentVersion) {
+                    heroSub.textContent = '当前版本  v' + m.currentVersion.replace(/^v/, '');
+                }
+            });
+
+            on('wails:updater:download-started', function () {
+                // 下载开始时重置进度
+                dlTotalSize = 0;
+                progressBar.className = 'upd-progress-bar indeterminate';
+                progressBar.style.width = '0%';
+                progressContainer.classList.add('visible');
+            });
+
+            on('wails:updater:download-progress', function (e) {
                 stateDownloading(extractData(e));
             });
 
-            // 兼听 Wails 新旧事件名
-            On('wails:updater:ready-to-install', function () {
+            on('wails:updater:verifying', function () {
+                stateVerifying();
+            });
+
+            on('wails:updater:installing', function () {
+                stateInstalling();
+            });
+
+            on('wails:updater:update-ready', function () {
                 stateReady();
             });
-            On('wails:updater:update-ready', function () {
+            on('wails:updater:ready-to-install', function () {
                 stateReady();
             });
 
-            On('wails:updater:error', function (e) {
+            on('wails:updater:error', function (e) {
                 var d = extractData(e);
-                var msg = typeof d === 'string' ? d : (d ? JSON.stringify(d) : '');
+                var msg = '';
+                if (typeof d === 'string') {
+                    msg = d;
+                } else if (d && d.message) {
+                    msg = d.message;
+                    if (d.stage) msg = '[' + d.stage + '] ' + msg;
+                }
                 stateError(msg);
             });
 
-            /* ── button handlers ── */
+            /* ──────────────────────────────────────────────────────────────
+               按钮事件（页面 → 宿主）
+    
+               Bug 2 & 3 修复：
+               ① 只通过 emit() 向 Go 端发送正确的 wails:updater:user:* 事件
+               ② 绝不在 JS 端调用 window.close() / Window.Close() 自行关闭
+                  — Wails updater Go 端在收到 user:cancel / user:skip / user:remind
+                    后会自行调用 windowHandle.Close()，由宿主关闭窗口。
+               ────────────────────────────────────────────────────────────── */
+
+            // 下载并安装：用户主动点击
             btnInstall.addEventListener('click', function () {
                 btnInstall.disabled = true;
                 btnInstall.innerHTML = '<span class="upd-spinner"></span>&nbsp;下载中…';
-                Emit('wails:updater:user:install');
+                emit('wails:updater:user:install');
             });
 
+            // 重启并应用
             btnRestart.addEventListener('click', function () {
                 btnRestart.disabled = true;
                 btnRestart.innerHTML = '<span class="upd-spinner"></span>&nbsp;重启中…';
-                Emit('wails:updater:user:restart');
+                emit('wails:updater:user:restart');
             });
 
+            // 重试：重新检查
             btnRetry.addEventListener('click', function () {
                 stateChecking();
-                Emit('wails:updater:window:ready'); /* ask host to re-check */
+                emit('wails:updater:window:ready');
             });
 
+            // 跳过此版本 → wails:updater:user:skip（Go 端调用 SkipVersion 并关窗）
             btnSkip.addEventListener('click', function () {
-                Emit('wails:updater:user:skip');
-                closeWindow();
+                btnSkip.disabled = true;
+                emit('wails:updater:user:skip');
+                // 不调用 window.close()，由 Go 端关闭
             });
 
+            // 稍后提醒 → wails:updater:user:remind（Go 端仅关窗，不记录跳过）
             btnLater.addEventListener('click', function () {
-                Emit('wails:updater:user:remind-later');
-                closeWindow();
+                emit('wails:updater:user:remind');
+                // 不调用 window.close()
             });
 
+            // 关闭 → wails:updater:user:cancel（Go 端关窗）
             btnClose.addEventListener('click', function () {
-                Emit('wails:updater:user:remind-later');
-                closeWindow();
+                emit('wails:updater:user:cancel');
+                // 不调用 window.close()
             });
 
-            /* ── handshake: ask host to replay current state ── */
-            stateChecking(); /* initial paint before host replies */
-            Emit('wails:updater:window:ready');
+            /* ── 握手：通知 Go 端窗口已就绪，请求回放当前状态 ── */
+            stateChecking();                      // 初始绘制
+            emit('wails:updater:window:ready');   // 触发宿主状态回放
         })();
     </script>
 </body>
