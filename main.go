@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	guiupdater "github.com/sinspired/subs-check-pro-gui/updater"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 	"github.com/wailsapp/wails/v3/pkg/services/notifications"
@@ -71,61 +72,10 @@ func main() {
 	ghProvider, ghErr := github.New(github.Config{
 		Repository:    "sinspired/subs-check-pro-gui",
 		ChecksumAsset: "SHA256SUMS",
-		HTTPClient:    buildUpdaterHTTPClient(),
-		// 自定义资产匹配器：Windows 优先选择纯二进制 .exe，跳过 setup 安装包
-		AssetMatcher: func(req updater.CheckRequest, assets []github.ReleaseAsset) int {
-			platform := strings.ToLower(req.Platform)
-			arch := strings.ToLower(req.Arch)
-
-			archAliases := []string{arch}
-			switch arch {
-			case "amd64":
-				archAliases = append(archAliases, "x86_64", "x64")
-			case "x64":
-				archAliases = append(archAliases, "amd64", "x86_64")
-			case "arm64":
-				archAliases = append(archAliases, "aarch64")
-			case "386":
-				archAliases = append(archAliases, "i386", "x86", "ia32")
-			}
-
-			matchesPlatformArch := func(name string) bool {
-				lower := strings.ToLower(name)
-				if !strings.Contains(lower, platform) {
-					return false
-				}
-				for _, a := range archAliases {
-					if strings.Contains(lower, a) {
-						return true
-					}
-				}
-				return false
-			}
-
-			if platform == "windows" {
-				for i, a := range assets {
-					lower := strings.ToLower(a.Name)
-					if matchesPlatformArch(a.Name) && strings.HasSuffix(lower, ".exe") && !strings.Contains(lower, "setup") {
-						return i
-					}
-				}
-				for i, a := range assets {
-					lower := strings.ToLower(a.Name)
-					if matchesPlatformArch(a.Name) && strings.HasSuffix(lower, ".exe") {
-						return i
-					}
-				}
-				return -1
-			}
-
-			for i, a := range assets {
-				if matchesPlatformArch(a.Name) {
-					return i
-				}
-			}
-			return -1
-		},
+		HTTPClient:    guiupdater.NewHTTPClient(),
+		AssetMatcher:  guiupdater.AssetMatcher,
 	})
+
 	if ghErr != nil {
 		slog.Warn("Updater: 初始化 GitHub provider 失败", "error", ghErr)
 	} else {
@@ -136,12 +86,13 @@ func main() {
 			slog.Warn("Updater: Init 失败", "error", err)
 		} else {
 			slog.Debug("Updater: 已初始化", "currentVersion", currentVer)
-			initUpdaterDebugLog(wailsApp)
+			// 将 GuiVersion 显式传入，修复原先 updater 包访问不到 main 包变量的编译错误
+			guiupdater.InitDebugLog(wailsApp, GuiVersion)
 		}
 	}
 	guiApp.updaterApp = wailsApp
 
-	// 登录窗，加载wails3前端资产
+	// 登录窗，加载 wails3 前端资产
 	loginWin := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:          "login",
 		Title:         "Subs Check Pro",
@@ -160,11 +111,7 @@ func main() {
 				guiApp.OpenAboutWindow()
 			},
 		},
-		Mac: application.MacWindow{
-			InvisibleTitleBarHeight: 30,
-			Backdrop:                application.MacBackdropTranslucent,
-			TitleBar:                application.MacTitleBarHiddenInset,
-		},
+		Mac: macWindowOpts(30),
 		Windows: application.WindowsWindow{
 			DisableIcon:             false,
 			HiddenOnTaskbar:         false,
@@ -191,11 +138,7 @@ func main() {
 				guiApp.OpenAboutWindow()
 			},
 		},
-		Mac: application.MacWindow{
-			InvisibleTitleBarHeight: 50,
-			Backdrop:                application.MacBackdropTranslucent,
-			TitleBar:                application.MacTitleBarHiddenInset,
-		},
+		Mac: macWindowOpts(50),
 		Windows: application.WindowsWindow{
 			DisableIcon:             false,
 			HiddenOnTaskbar:         false,
@@ -210,7 +153,7 @@ func main() {
 	guiApp.webUIWin = webUIWin
 	guiApp.autostart = wailsApp.Autostart
 
-	// 窗口关闭/最小化拦截（窗口级别使用 RegisterHook）
+	// 窗口关闭/最小化拦截
 	loginWin.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
 		e.Cancel()
 		loginWin.EmitEvent("window:close-requested", nil)

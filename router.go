@@ -24,7 +24,7 @@ var wailsOrigins = map[string]bool{
 }
 
 // guiCORSMiddleware 为 Wails webview 的跨域请求添加必要的 CORS 响应头。
-// 仅允许已知的 Wails origin，不对外开放，安全性不受影响。
+// 仅允许已知的 Wails origin，不对外开放。
 func guiCORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
@@ -49,18 +49,16 @@ func registerGuiRoutes(router *gin.Engine) {
 		slog.Warn("HTTP 服务未启动（端口冲突），跳过 /gui/* 路由注册")
 		return
 	}
-	// 补全 CORS 中间件注册（之前定义了但从未 Use，导致 Wails webview 跨域请求失败）
 	router.Use(guiCORSMiddleware())
 	router.GET("/gui/enter", handleGuiEnter)
 	router.GET("/gui/popup", handleGuiPopup)
 	router.GET("/gui/back-to-login", handleGuiBackToLogin)
-	router.GET("/gui/open-about", handleGuiOpenAbout)     // 打开「关于」窗口
-	router.GET("/gui/check-update", handleGuiCheckUpdate) // 触发更新检查
+	router.GET("/gui/open-about", handleGuiOpenAbout)
+	router.GET("/gui/check-update", handleGuiCheckUpdate)
 }
 
 // handleGuiEnter 一次性自动登录中转路由：验证 nonce → 写 session → 跳转 /admin。
 func handleGuiEnter(c *gin.Context) {
-	// 仅限 localhost 访问
 	if !isLoopback(c) {
 		c.String(http.StatusForbidden, "forbidden")
 		return
@@ -82,7 +80,7 @@ func handleGuiEnter(c *gin.Context) {
 		return
 	}
 
-	// 解析跳转目标：只允许以 "/" 开头的站内路径，防止开放重定向。
+	// 只允许以 "/" 开头的站内路径，防止开放重定向。
 	redirect := c.Query("redirect")
 	if redirect == "" || !strings.HasPrefix(redirect, "/") {
 		redirect = "/admin"
@@ -99,8 +97,7 @@ func handleGuiEnter(c *gin.Context) {
 		)
 	}
 
-	// 写入两个 storage key，兼容 admin.js（读 subscheck_session_key）
-	// 和 analysis.js（读 subscheck_api_key）。
+	// 写入两个 storage key，兼容 admin.js 和 analysis.js。
 	c.String(http.StatusOK, fmt.Sprintf(`<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <script>
@@ -114,10 +111,8 @@ func handleGuiEnter(c *gin.Context) {
 </head><body></body></html>`, apiKey, apiKey, extraLS, redirect))
 }
 
-// handleGuiPopup 接收来自 WebUI 注入脚本的"新窗口"请求，
-//
+// handleGuiPopup 接收来自 WebUI 注入脚本的"新窗口"请求。
 // 调用方：webUIWin 内注入的 JS 通过 fetch('/gui/popup?url=...&size=small') 触发。
-// 安全策略：仅允许 localhost 访问，URL 只接受 http/https 协议。
 func handleGuiPopup(c *gin.Context) {
 	if !isLoopback(c) {
 		c.String(http.StatusForbidden, "forbidden")
@@ -134,12 +129,10 @@ func handleGuiPopup(c *gin.Context) {
 		return
 	}
 
-	// 若目标是本机 Gin 服务的内部页面，通过 /gui/enter 中转自动写入
-	// sessionStorage，使弹出窗口无需手动登录（与 OpenInternalPage 行为一致）。
+	// 内部页面：通过 /gui/enter 中转自动写入 sessionStorage。
 	listenPort := defaultListenPort()
 	internalBase := "http://127.0.0.1:" + listenPort
 	if strings.HasPrefix(rawURL, internalBase+"/") || rawURL == internalBase {
-		// 提取路径 + query（保留 theme= 等参数）
 		internalPath := strings.TrimPrefix(rawURL, internalBase)
 		if internalPath == "" {
 			internalPath = "/"
@@ -148,12 +141,11 @@ func handleGuiPopup(c *gin.Context) {
 		rawURL = internalBase + "/gui/enter?n=" + nonce + "&redirect=" + url.QueryEscape(internalPath)
 	}
 
-	width, height := popupSize(c.Query("size"))
+	size := c.Query("size")
 
 	// 先返回 200，让 JS fetch 立即结束，不阻塞页面
 	c.String(http.StatusOK, "ok")
 
-	// 在 Wails 主线程创建弹出窗口
 	wailsApp := application.Get()
 	if wailsApp == nil {
 		slog.Error("/gui/popup: application.Get() returned nil")
@@ -163,23 +155,9 @@ func handleGuiPopup(c *gin.Context) {
 	capturedURL := rawURL
 	slog.Debug("/gui/popup: invoking popup", "url", capturedURL)
 	application.InvokeAsync(func() {
-		// loading.html 中 hash 仅用于显示域名提示。
-		// 实际导航由 Go 端 SetURL 完成，避免 JS 跨 origin 导航被 WebView 拦截。
-		loadingURL := "/loading.html#" + capturedURL
+		opts := newPopupOptions("Subs Check Pro", "/loading.html#"+capturedURL, size)
 		slog.Info("/gui/popup: inside InvokeAsync, creating window")
-		popup := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-			Title:     "Subs Check Pro",
-			Width:     width,
-			Height:    height,
-			MinWidth:  600,
-			MinHeight: 400,
-			URL:       loadingURL,
-			Mac: application.MacWindow{
-				InvisibleTitleBarHeight: 50,
-				Backdrop:                application.MacBackdropTranslucent,
-				TitleBar:                application.MacTitleBarHiddenInset,
-			},
-		})
+		popup := wailsApp.Window.NewWithOptions(opts)
 		popup.Show()
 		popup.Center()
 		popup.Focus()
@@ -193,28 +171,7 @@ func handleGuiPopup(c *gin.Context) {
 	})
 }
 
-// popupSize 将尺寸名称映射为窗口宽高，与 OpenBrandURL 的规格保持一致。
-func popupSize(size string) (width, height int) {
-	switch size {
-	case "extraLarge":
-		return 1920, 1440
-	case "large":
-		return 1600, 1200
-	case "medium":
-		return 1200, 800
-	case "small":
-		return 720, 720
-	case "tiny":
-		return 600, 600
-	case "wide":
-		return 1600, 900
-	default:
-		return 1100, 750
-	}
-}
-
 // handleGuiBackToLogin 接收来自 WebUI 的"返回登录窗口"请求。
-// 仅限 localhost 访问，调用 globalGuiApp.BackToLogin() 切回登录小窗。
 func handleGuiBackToLogin(c *gin.Context) {
 	if !isLoopback(c) {
 		c.String(http.StatusForbidden, "forbidden")
@@ -239,9 +196,6 @@ func isLoopback(c *gin.Context) bool {
 }
 
 // handleGuiOpenAbout 在 Go 侧调用 OpenAboutWindow()，在 Wails 主线程打开「关于」窗口。
-//
-// 调用方：admin.html 内的 JS 通过 fetch('/gui/open-about') 触发，
-// 替换原先打开 projectMenu 弹出菜单的行为，实现「项目信息」按钮直接跳转到关于页。
 func handleGuiOpenAbout(c *gin.Context) {
 	if !isLoopback(c) {
 		c.String(http.StatusForbidden, "forbidden")
@@ -256,9 +210,6 @@ func handleGuiOpenAbout(c *gin.Context) {
 }
 
 // handleGuiCheckUpdate 在 Go 侧调用 CheckForUpdates()，触发 Wails 更新流程。
-//
-// 调用方：admin.html 内的 JS（如项目菜单「检查更新」按钮）通过
-// fetch('/gui/check-update') 触发，无需 Wails JS 绑定即可发起更新检查。
 func handleGuiCheckUpdate(c *gin.Context) {
 	if !isLoopback(c) {
 		c.String(http.StatusForbidden, "forbidden")
