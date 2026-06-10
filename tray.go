@@ -135,7 +135,7 @@ func buildTrayMenu(
 	stopCheckAndExitMenu.OnClick(func(_ *application.Context) {
 		if gracefulQuitPending.CompareAndSwap(false, true) {
 			sendOSNotification("Subs Check Pro", "正在等待检测完成后退出\n再次点击将立即强制退出")
-			slog.Debug("托盘：已发送停止检测信号，等待检测完成后退出")
+			slog.Debug("GUI：已发送停止检测信号，等待检测完成后退出")
 
 			gracefulQuitOnce.Do(func() {
 				go func() {
@@ -145,7 +145,7 @@ func buildTrayMenu(
 
 					waitForBackendIdle(5 * time.Minute)
 
-					slog.Info("后端检测已完成，开始优雅退出")
+					slog.Info("GUI：后端检测已完成，开始优雅退出")
 					sendOSNotification("Subs Check Pro", "检测已完成，正在退出…")
 					onQuit()
 				}()

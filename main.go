@@ -182,12 +182,13 @@ func main() {
 
 	// 退出生命周期清理
 	wailsApp.OnShutdown(func() {
-		slog.Info("GUI 程序正在退出，执行清理工作…")
+		slog.Debug("GUI 程序正在退出，执行清理工作…")
 		if guiApp.IsBackendReady() {
 			if err := coreApp.Shutdown(); err != nil {
 				slog.Error("关闭应用失败", "error", err)
 			}
 		}
+		slog.Info("GUI 程序已退出")
 		sendOSNotification("Subs Check Pro", "已关闭")
 	})
 
