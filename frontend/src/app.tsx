@@ -300,7 +300,7 @@ export function App() {
           onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro')}
           title={`内核 版本：${info.coreVersion || 'dev'}  →  sinspired/subs-check-pro`}
         >
-          内核&nbsp;{info.coreVersion || 'dev'}
+          内核&nbsp;{info.originVersion || 'dev'}
         </a>
       </div>
     );

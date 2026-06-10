@@ -79,7 +79,9 @@ type AppInfo struct {
 	// GuiVersion 桌面客户端版本（ldflags 注入，如 "v1.2.0"）
 	GuiVersion string `json:"guiVersion"`
 	// CoreVersion 内核版本+短提交哈希（如 "v2.5.4@7c23868"）
-	CoreVersion string `json:"coreVersion"`
+	CoreVersion   string `json:"coreVersion"`
+	// OriginVersion 内核版本
+	OriginVersion string `json:"originVersion"`
 }
 
 // OpenBrandURL 在 Wails 无地址栏窗口中打开品牌 / 社交链接。
@@ -198,6 +200,7 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 		AutostartEnabled:     autostartEnabled,
 		GuiVersion:           GuiVersion,
 		CoreVersion:          coreVer,
+		OriginVersion:        Version,
 	}
 }
 
