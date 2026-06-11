@@ -365,7 +365,7 @@ button:focus-visible {
 /* 进入按钮区：固定间距贴近底部版本栏，不参与 flex 拉伸 */
 .enter-spacer {
   flex-shrink: 0;
-  padding-bottom: 20px;
+  padding-bottom: 10px;
 }
 
 /* ── 进入按钮 ── */
