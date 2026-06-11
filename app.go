@@ -11,6 +11,7 @@ import (
 	"github.com/sinspired/subs-check-pro/v2/utils"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
+	wupdater "github.com/wailsapp/wails/v3/pkg/updater"
 
 	"github.com/sinspired/subs-check-pro-gui/updater"
 	"log/slog"
@@ -47,6 +48,11 @@ type GuiApp struct {
 	inWebUI     atomic.Bool
 	aboutWin    *application.WebviewWindow
 	subLinksWin *application.WebviewWindow
+
+	// updateWin 自定义更新窗口（懒加载，复用）。
+	updateWin *application.WebviewWindow
+	// updateWinUnsubs 当前更新窗口注册的事件取消函数，关闭窗口时统一清理。
+	updateWinUnsubs []func()
 
 	// autostart Wails 跨平台开机自启管理器
 	autostart *application.AutostartManager
@@ -526,7 +532,8 @@ func (g *GuiApp) OpenAboutWindow() {
 	})
 }
 
-// CheckForUpdates 触发更新检查，在 Wails 更新窗口中展示结果。
+// CheckForUpdates 触发更新检查，在自定义更新窗口中展示结果，
+// 并等待用户在窗口中点击"下载并安装"后才会真正下载、安装更新。
 // 供前端按钮和托盘菜单调用。
 func (g *GuiApp) CheckForUpdates() {
 	if g.updaterApp == nil {
@@ -534,32 +541,162 @@ func (g *GuiApp) CheckForUpdates() {
 		return
 	}
 
-	ctx := context.Background()
-
-	updateInfo, err := g.updaterApp.Updater.Check(ctx)
-	if err != nil {
-		slog.Warn("检查更新失败", "error", err)
-		sendOSNotification("更新失败", err.Error())
-		return
-	}
-
-	if updateInfo == nil {
-		// 已经是最新版
-		slog.Info("当前已是最新版")
-		sendOSNotification("Subs Check Pro GUI", "已经是最新版")
-		return
-	}
-
 	go func() {
-		// TODO: 使用 Check 让用户选择是否下载更新
-		if err := g.updaterApp.Updater.CheckAndInstall(context.Background()); err != nil {
+		ctx := context.Background()
+
+		updateInfo, err := g.updaterApp.Updater.Check(ctx)
+		if err != nil {
 			slog.Warn("检查更新失败", "error", err)
 			sendOSNotification("更新失败", err.Error())
-		} else {
-			// FIXME: 如果本身已经是最新版，不应发送通知
-			sendOSNotification("更新完成", "新版本已安装，请彻底退出并在重新启动软件后生效。")
+			return
 		}
+
+		if updateInfo == nil {
+			// 已经是最新版
+			slog.Info("当前已是最新版")
+			sendOSNotification("Subs Check Pro GUI", "已经是最新版")
+			return
+		}
+
+		// 发现新版本：打开更新窗口，展示版本信息和发布说明，
+		// 由用户点击"下载并安装"按钮后才继续 DownloadAndInstall。
+		g.showUpdateWindow(updateInfo)
 	}()
+}
+
+// showUpdateWindow 打开（或复用）自定义更新窗口，回放当前更新状态，
+// 并订阅窗口的用户操作事件（user:install / user:restart / user:skip /
+// user:remind / user:cancel），驱动后续 DownloadAndInstall / Restart /
+// SkipVersion 流程。
+//
+// 必须在主线程（InvokeAsync）中创建/操作窗口。
+func (g *GuiApp) showUpdateWindow(rel *wupdater.Release) {
+	wailsApp := application.Get()
+	if wailsApp == nil {
+		return
+	}
+
+	application.InvokeAsync(func() {
+		if g.updateWin != nil {
+			// 窗口已存在：仅回放最新状态并前置显示。
+			g.emitUpdateSnapshot(rel)
+			g.updateWin.Show()
+			g.updateWin.Focus()
+			return
+		}
+
+		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+			Name:          "updater",
+			Title:         "Subs Check Pro — 检查更新",
+			Width:         520,
+			Height:        540,
+			MinWidth:      348,
+			MinHeight:     161,
+			DisableResize: false,
+			Frameless:     false,
+			HTML:          updater.CustomWindowHTML,
+			// 自定义窗口的 HTML 通过简化的 postMessage 路径 emit
+			// wails:updater:user:* 事件，必须开启该选项按钮才生效。
+			AllowSimpleEventEmit: true,
+			Mac:                  macWindowOpts(30),
+		})
+		g.updateWin = win
+
+		// --- 订阅窗口发出的用户操作事件 ---
+		ctx := context.Background()
+
+		g.subscribeUpdateEvent(wupdater.EventWindowReady, func(_ *application.CustomEvent) {
+			// 自定义窗口加载完成后会主动请求一次状态回放。
+			g.emitUpdateSnapshot(rel)
+		})
+
+		g.subscribeUpdateEvent(wupdater.EventUserInstall, func(_ *application.CustomEvent) {
+			go func() {
+				if err := g.updaterApp.Updater.DownloadAndInstall(ctx); err != nil {
+					slog.Warn("下载/安装更新失败", "error", err)
+					// EventError 已由 Updater 自身通过 wupdater.EventError 广播，
+					// 自定义窗口会监听并展示错误状态，这里仅记录日志。
+				}
+			}()
+		})
+
+		g.subscribeUpdateEvent(wupdater.EventUserRestart, func(_ *application.CustomEvent) {
+			go func() {
+				if err := g.updaterApp.Updater.Restart(ctx); err != nil {
+					slog.Warn("重启应用更新失败", "error", err)
+					sendOSNotification("更新失败", err.Error())
+				}
+			}()
+		})
+
+		g.subscribeUpdateEvent(wupdater.EventUserSkip, func(_ *application.CustomEvent) {
+			g.updaterApp.Updater.SkipVersion(rel.Version)
+			g.closeUpdateWindow()
+		})
+
+		g.subscribeUpdateEvent(wupdater.EventUserRemind, func(_ *application.CustomEvent) {
+			g.closeUpdateWindow()
+		})
+
+		g.subscribeUpdateEvent(wupdater.EventUserCancel, func(_ *application.CustomEvent) {
+			g.closeUpdateWindow()
+		})
+
+		win.RegisterHook(events.Common.WindowClosing, func(_ *application.WindowEvent) {
+			g.teardownUpdateWindow()
+		})
+
+		// 首次打开时直接回放一次（部分 webview 在极快加载时可能错过
+		// window:ready 的首发事件）。
+		g.emitUpdateSnapshot(rel)
+		win.Show()
+	})
+}
+
+// subscribeUpdateEvent 注册一个全局 wails 事件监听，并将其取消函数记录到
+// g.updateWinUnsubs，随更新窗口关闭统一清理，避免重复打开窗口时监听器泄漏。
+func (g *GuiApp) subscribeUpdateEvent(name string, fn func(*application.CustomEvent)) {
+	wailsApp := application.Get()
+	if wailsApp == nil {
+		return
+	}
+	off := wailsApp.Event.On(name, fn)
+	g.updateWinUnsubs = append(g.updateWinUnsubs, off)
+}
+
+// emitUpdateSnapshot 向更新窗口回放"发现新版本"状态：先发送 EventMeta
+// （携带当前版本号），再发送 EventUpdateAvailable（携带新版本信息和发布说明）。
+// 自定义更新窗口（updater_window.html）据此渲染版本号、发布说明和操作按钮。
+func (g *GuiApp) emitUpdateSnapshot(rel *wupdater.Release) {
+	wailsApp := application.Get()
+	if wailsApp == nil {
+		return
+	}
+	wailsApp.Event.Emit(wupdater.EventMeta, wupdater.Meta{
+		CurrentVersion: GuiVersion,
+		SkippedVersion: g.updaterApp.Updater.SkippedVersion(),
+	})
+	wailsApp.Event.Emit(wupdater.EventUpdateAvailable, rel)
+}
+
+// closeUpdateWindow 关闭自定义更新窗口；实际的监听器清理由
+// WindowClosing 钩子中的 teardownUpdateWindow 完成。
+func (g *GuiApp) closeUpdateWindow() {
+	if g.updateWin != nil {
+		g.updateWin.Close()
+	}
+}
+
+// teardownUpdateWindow 取消所有为本次更新窗口注册的事件监听，并清空引用，
+// 以便下次 CheckForUpdates 重新打开一个干净的窗口。
+func (g *GuiApp) teardownUpdateWindow() {
+	for _, off := range g.updateWinUnsubs {
+		if off != nil {
+			off()
+		}
+	}
+	g.updateWinUnsubs = nil
+	g.updateWin = nil
 }
 
 // UpdateInfo 前端展示更新状态所需的结构体。
