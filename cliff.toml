@@ -105,7 +105,7 @@ commit_parsers = [
     { message = "^test", group = "✅ Tests" },
     { message = "^revert", group = "⏪ Reverts" },
     # 不符合以上规则的提交归入"其他"
-    { message = ".*", group = "📝 Changes" },
+    { message = ".*", group = "🔧 Chores" },
 ]
 # 过滤掉纯版本 bump 提交（如 "chore: bump v2.5.6"）
 filter_commits = false
