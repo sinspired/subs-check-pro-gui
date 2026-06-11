@@ -339,7 +339,7 @@ jobs:
         uses: sinspired/multi-release-notify@v1
         with:
           summary: >-
-            🎉 linux 和 mac 可能存在问题，请及时反馈
+            🎉 正式发布！
           release_notes: ${{ steps.release.outputs.notes }}
           email_url: ${{ secrets.EMAIL_APPRISE_URL }}
           telegram_url: ${{ secrets.TELEGRAM_APPRISE_URL }}
