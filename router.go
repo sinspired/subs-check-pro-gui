@@ -156,7 +156,7 @@ func handleGuiPopup(c *gin.Context) {
 	slog.Debug("/gui/popup: invoking popup", "url", capturedURL)
 	application.InvokeAsync(func() {
 		opts := newPopupOptions("Subs Check Pro", "/loading.html#"+capturedURL, size)
-		slog.Info("/gui/popup: inside InvokeAsync, creating window")
+		slog.Debug("/gui/popup: inside InvokeAsync, creating window")
 		popup := wailsApp.Window.NewWithOptions(opts)
 		popup.Show()
 		popup.Center()
