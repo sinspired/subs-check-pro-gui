@@ -84,17 +84,6 @@ func main() {
 			CurrentVersion: currentVer,
 			Providers:      []updater.Provider{ghProvider},
 			CheckInterval:  6 * time.Hour,
-			// 自定义更新窗口
-			Window: &updater.BuiltinWindow{
-				HTML: guiupdater.CustomWindowHTML,
-				Options: updater.WindowOptions{
-					Title:         "Subs Check Pro — 检查更新",
-					Width:         520,
-					Height:        560,
-					DisableResize: true,
-					AlwaysOnTop:   false,
-				},
-			},
 		}); err != nil {
 			slog.Warn("Updater: Init 失败", "error", err)
 		} else {
