@@ -303,6 +303,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
           # 使用 git-cliff 生成的 changelog 作为 release body
           body: ${{ needs.changelog.outputs.content }}
           # 不再使用 generate_release_notes: true（只会产生"Full Changelog"链接）
