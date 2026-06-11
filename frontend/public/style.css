@@ -506,6 +506,12 @@ button:focus-visible {
   padding: 0;
   font-size: 12px;
   outline: none;
+  /* dark mode: 明确设置文字颜色，否则 WebView 会回退到系统默认（深色背景下不可见） */
+  color: var(--fg);
+}
+.pw-input::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
 }
 .pw-input:focus {
   border-color: var(--accent);

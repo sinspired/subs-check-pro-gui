@@ -145,7 +145,12 @@ func main() {
 				guiApp.OpenAboutWindow()
 			},
 		},
-		Mac: macWindowOpts(50),
+		// WebUI 大窗不使用 MacTitleBarHiddenInset：
+		// 左上角有项目 Logo，保留标准 Mac 标题栏避免红绿灯遮挡页面内容。
+		// 仍保留半透明背景（MacBackdropTranslucent）保持视觉一致。
+		Mac: application.MacWindow{
+			Backdrop: application.MacBackdropTranslucent,
+		},
 		Windows: application.WindowsWindow{
 			DisableIcon:             false,
 			HiddenOnTaskbar:         false,
