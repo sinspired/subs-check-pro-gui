@@ -15,13 +15,17 @@
 
 ## 环境要求
 
-| 工具 | 版本 | 说明 |
-|---|---|---|
-| Go | ≥ 1.26 | |
-| Node.js | ≥ 20 | |
-| pnpm / npm / yarn | 任意 | 前端包管理器 |
-| Wails CLI v3 | alpha.96 | `go install github.com/wailsapp/wails/v3/cmd/wails3@latest` |
-| Docker | 可选 | 跨平台编译时需要 |
+| 工具              | 版本     | 说明                                                        |
+| ----------------- | -------- | ----------------------------------------------------------- |
+| Go                | ≥ 1.26   |                                                             |
+| Node.js           | ≥ 20     |                                                             |
+| pnpm / npm / yarn | 任意     | 前端包管理器                                                |
+| Wails CLI v3      | alpha.96 | `go install github.com/wailsapp/wails/v3/cmd/wails3@latest` |
+| Docker            | 可选     | 跨平台编译时需要                                            |
+
+### Windows 额外依赖
+
+正常 Windows10 或 Windows11 都已内置 Webview2，部分设备长期不更新，或所谓精简版，ghost版，被国内某些毒瘤所谓杀毒软件嚯嚯过的系统，请自行安装 [Microsoft Edge WebView2](https://developer.microsoft.com/zh-cn/microsoft-edge/webview2)
 
 ### Linux 额外依赖
 
@@ -128,10 +132,10 @@ wails3 task linux:build ARCH=arm64
 
 首次运行会自动在以下位置创建 `config.yaml`：
 
-| 平台 | 默认路径 |
-|---|---|
+| 平台          | 默认路径                               |
+| ------------- | -------------------------------------- |
 | Linux / macOS | `~/.config/subs-check-pro/config.yaml` |
-| Windows | `%APPDATA%\subs-check-pro\config.yaml` |
+| Windows       | `%APPDATA%\subs-check-pro\config.yaml` |
 
 关键配置项：
 
@@ -150,12 +154,12 @@ api-key: "your-fixed-key"
 
 ### 环境变量
 
-| 变量 | 说明 |
-|---|---|
-| `CONFIG_PATH` | 指定配置文件路径 |
-| `APP_VERSION` | 覆盖显示版本号 |
-| `LOG_LEVEL` | 日志级别：`debug` / `info` / `warn` / `error` |
-| `MIHOMO_DEBUG` | 设置任意值以启用 mihomo 调试日志 |
+| 变量           | 说明                                          |
+| -------------- | --------------------------------------------- |
+| `CONFIG_PATH`  | 指定配置文件路径                              |
+| `APP_VERSION`  | 覆盖显示版本号                                |
+| `LOG_LEVEL`    | 日志级别：`debug` / `info` / `warn` / `error` |
+| `MIHOMO_DEBUG` | 设置任意值以启用 mihomo 调试日志              |
 
 ---
 

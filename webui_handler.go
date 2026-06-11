@@ -28,7 +28,7 @@ import (
 // Wails 应用对象在 main() 中仅初始化一次，此时若端口冲突则后端尚未启动，
 // 真正的端口在 CompleteInit() 后才写入 config.GlobalConfig。
 // 传函数引用可确保每次请求动态读取最新端口。
-func newCombinedAssetHandler(configPath string, getListenPort func() string) http.Handler {
+func newCombinedAssetHandler(getConfigPath func() string, getPort func() string) http.Handler {
 	// React 登录前端（frontend/dist embed.FS，由 main.go 的 //go:embed 注入）
 	frontendHandler := application.AssetFileServerFS(assets)
 
@@ -63,7 +63,7 @@ func newCombinedAssetHandler(configPath string, getListenPort func() string) htt
 		// ── /webui/admin.html 或 /webui/admin ───────────────────────────────
 		// 作为 Go 模板渲染，注入 configPath 等动态数据
 		case p == "/webui/admin.html" || p == "/webui/admin":
-			renderWebuiAdmin(w, templatesSubFS, configPath)
+			renderWebuiAdmin(w, templatesSubFS, getConfigPath())
 
 		// ── /webui/… 其他路径（预留）───────────────────────────────────────
 		// 例如将来可能添加的 /webui/analysis.html（静态读取，无模板变量）
@@ -80,7 +80,7 @@ func newCombinedAssetHandler(configPath string, getListenPort func() string) htt
 		// 请求由 Go 服务器端发出，不存在 CORS 问题。
 		case strings.HasPrefix(p, "/api/") || strings.HasPrefix(p, "/admin/") || strings.HasPrefix(p, "/gui/"):
 			// 每次请求调用 getListenPort() 动态获取，确保端口修改后立即生效
-		reverseProxyToGin(w, r, getListenPort())
+		reverseProxyToGin(w, r, getPort())
 
 		// ── /static/… ──────────────────────────────────────────────────────
 		// admin.html 内所有资源引用均使用 /static/ 绝对路径（与 Gin 保持一致），

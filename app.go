@@ -17,11 +17,14 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 // globalGuiApp 包级指针，供 router handler（如 handleGuiBackToLogin）访问。
@@ -124,12 +127,16 @@ func (g *GuiApp) OpenBrandURL(url string, windowSize string) {
 }
 
 // EnterWebUI 由前端调用：切换到本地 WebUI 大窗，隐藏登录小窗。
+// 每次调用都会用 g.configPath 刷新 URL，确保切换配置后 admin 显示正确的配置路径。
 func (g *GuiApp) EnterWebUI() {
 	if g.webUIWin == nil || g.loginWin == nil {
 		return
 	}
 	g.inWebUI.Store(true)
-	g.webUIWin.SetURL("/webui/admin.html")
+	// 将当前 configPath 作为查询参数传入，保证切换配置后 admin 页面
+	// 读取到的是新配置文件的路径，而非启动时的旧路径。
+	adminURL := "/webui/admin.html?configPath=" + url.QueryEscape(g.configPath)
+	g.webUIWin.SetURL(adminURL)
 	g.webUIWin.Show()
 	g.webUIWin.Center()
 	g.webUIWin.Focus()
@@ -157,6 +164,11 @@ func (g *GuiApp) GetListenPort() string {
 	return defaultListenPort()
 }
 
+// GetConfigPath 返回当前生效配置文件的绝对路径。
+// 以函数引用形式传给 newCombinedAssetHandler，保证切换配置后注入值实时更新。
+func (g *GuiApp) GetConfigPath() string {
+	return g.configPath
+}
 // BackToLogin 从 WebUI 返回登录窗口（可选功能，供托盘菜单使用）
 func (g *GuiApp) BackToLogin() {
 	if g.loginWin == nil {
@@ -259,6 +271,109 @@ func (g *GuiApp) ValidateConfigKey(enteredKey string, remember bool) (string, er
 		return "", fmt.Errorf("密钥错误")
 	}
 	return generateNonce(actual, remember), nil
+}
+
+// peekConfigAPIKey 在不影响当前运行配置的前提下，直接读取并解析指定配置文件，
+// 返回其中的 api-key。仅用于"切换配置文件"流程中的密钥预校验。
+func peekConfigAPIKey(path string) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("读取配置文件失败: %w", err)
+	}
+	var target struct {
+		APIKey string `yaml:"api-key"`
+	}
+	if err := yaml.Unmarshal(data, &target); err != nil {
+		return "", fmt.Errorf("解析配置文件失败: %w", err)
+	}
+	if strings.TrimSpace(target.APIKey) == "" {
+		return "", fmt.Errorf("配置文件未设置 api-key")
+	}
+	return target.APIKey, nil
+}
+
+// SwitchConfigFile 切换到用户重新选择的配置文件：
+//  1. 直接读取目标配置文件中的 api-key 并与用户输入比对（不影响当前运行的内核）；
+//  2. 密钥匹配后，关闭（Shutdown）当前正在运行的内核实例；
+//  3. 等待旧内核占用的 HTTP 端口完全释放；
+//  4. 以新配置文件重新初始化并启动内核（Initialize 内部已包含 InitConfigLoad）；
+//  5. 返回切换后的 AppInfo，前端据此刷新界面状态并调用 EnterWebUI 进入管理界面。
+//
+// 密钥不匹配或步骤 1 失败时，当前内核保持不变。
+// 步骤 2–4 失败时旧内核已不可恢复，g.backend 置 nil，g.pendingInit 置 true，
+// 错误原样返回给前端展示，用户可重试或重启程序。
+func (g *GuiApp) SwitchConfigFile(path, enteredKey string) (AppInfo, error) {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return AppInfo{}, fmt.Errorf("配置文件路径为空")
+	}
+
+	// 步骤 1：仅读取目标配置的 api-key，不触碰当前运行中的内核。
+	actual, err := peekConfigAPIKey(path)
+	if err != nil {
+		return AppInfo{}, err
+	}
+	if strings.TrimSpace(enteredKey) != actual {
+		return AppInfo{}, fmt.Errorf("密钥错误")
+	}
+
+	// 步骤 2：记录旧 HTTP 端口（Shutdown 后 GlobalConfig 会被覆盖，提前保存）。
+	oldHTTPPort := normalizePort(config.GlobalConfig.ListenPort)
+
+	// 步骤 3：关闭旧内核，释放端口和所有后台任务。
+	if g.backend != nil {
+		if err := g.backend.Shutdown(); err != nil {
+			// Shutdown 失败通常是轻微错误（如 watcher 已关闭），继续切换。
+			slog.Warn("SwitchConfigFile：关闭旧内核时发生非致命错误", "error", err)
+		}
+		// 清除引用，防止 OnShutdown 对已关闭的内核执行二次 Shutdown。
+		g.backend = nil
+	}
+
+	// 步骤 4：等待旧 HTTP 端口完全释放，避免新内核绑定时 "address already in use"。
+	if oldHTTPPort != "" {
+		waitForPortRelease(oldHTTPPort, 3*time.Second)
+	}
+
+	// 步骤 5：创建并初始化新内核。
+	// Initialize() 内部已包含 InitConfigLoad()，无需重复调用。
+	newBackend := coreapp.New(Version, Version+CurrentCommit, path)
+	if err := newBackend.Initialize(); err != nil {
+		// 新内核初始化失败：应用处于无后端状态，通知前端显示错误。
+		g.pendingInit = true
+		return AppInfo{}, fmt.Errorf("初始化新配置失败: %w", err)
+	}
+
+	// 新内核拥有全新路由器，重新注册 GUI 专属路由
+	// （旧路由器随旧内核一起丢弃，不会触发 panic）。
+	registerGuiRoutes(newBackend.GetRouter())
+
+	utils.OSNotifyHook = func(title, body string) {
+		sendOSNotification(title, body)
+	}
+
+	go newBackend.Run()
+
+	g.backend = newBackend
+	g.configPath = newBackend.GetConfigPath()
+	g.isFirstRun = false
+	g.pendingInit = false
+
+	sendOSNotification("Subs Check PRO 内核", "已切换到新配置并重新启动")
+	return g.GetAppInfo(), nil
+}
+
+// waitForPortRelease 轮询直到指定端口可用（或超时），用于在旧后端 Shutdown 后、
+// 新后端 Initialize 前确保 TCP 端口已被 OS 完全释放，避免 "address already in use"。
+func waitForPortRelease(port string, timeout time.Duration) {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if !isPortInUse(port) {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	slog.Warn("SwitchConfigFile：等待端口释放超时，继续尝试初始化新内核", "port", port)
 }
 
 // ValidatePort 实时验证单个端口号合法性（格式 + 是否被占用）。

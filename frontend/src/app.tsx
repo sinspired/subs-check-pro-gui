@@ -154,7 +154,15 @@ export function App() {
   }
 
   function handleSelectConfig(path: string) { setCfgPath(path); setView('password'); }
-  function handlePasswordDone(newInfo: AppInfo | null) { if (newInfo) setInfo(newInfo); setView('main'); }
+  function handlePasswordDone(newInfo: AppInfo | null) {
+    if (newInfo) {
+      // 新配置可能使用不同端口，必须更新 base URL，避免 useTheme 等钩子用旧端口访问
+      (window as any).__CORE_BASE_URL = `http://127.0.0.1:${newInfo.listenPort}`;
+      syncFromServer();
+      setInfo(newInfo);
+    }
+    setView('main');
+  }
   function handlePasswordBack() { setView('main'); }
   function handlePasswordReselect(path: string) { setCfgPath(path); /* 保持 password 视图，只更新路径 */ }
   const requestClose = () => setShowQuit(true);

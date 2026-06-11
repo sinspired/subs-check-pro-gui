@@ -12,6 +12,7 @@ require (
 	github.com/sinspired/subs-check-pro/v2 v2.5.9
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.98
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -213,5 +214,4 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/ini.v1 v1.67.2 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

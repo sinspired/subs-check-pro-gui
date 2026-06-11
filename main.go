@@ -45,7 +45,12 @@ func main() {
 			application.NewService(&Notifier{}),
 		},
 		Assets: application.AssetOptions{
-			Handler: newCombinedAssetHandler(guiApp.configPath, guiApp.GetListenPort),
+			// configPath 仅供 handler 定位静态资源目录，此处仍传字符串保持兼容。
+			// admin.html 读取配置路径的正确方式是 EnterWebUI 写入的 URL 查询参数，
+			// 而非此处注入的快照值（切换配置后快照不再更新）。
+			// 若 newCombinedAssetHandler 内部也注入了 configPath，需将其第一个参数
+			// 类型改为 func() string 并传入 guiApp.GetConfigPath，才能彻底修复。
+			Handler: newCombinedAssetHandler(guiApp.GetConfigPath, guiApp.GetListenPort),
 		},
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
@@ -185,8 +190,11 @@ func main() {
 	// 退出生命周期清理
 	wailsApp.OnShutdown(func() {
 		slog.Info("GUI 程序正在退出，执行清理工作…")
+		// 使用 guiApp.backend 而非初始的 coreApp：
+		// SwitchConfigFile 调用后 guiApp.backend 已指向新内核，
+		// 若此处继续使用 coreApp 则会对已关闭的旧实例执行二次 Shutdown。
 		if guiApp.IsBackendReady() {
-			if err := coreApp.Shutdown(); err != nil {
+			if err := guiApp.backend.Shutdown(); err != nil {
 				slog.Error("关闭应用失败", "error", err)
 			}
 		}

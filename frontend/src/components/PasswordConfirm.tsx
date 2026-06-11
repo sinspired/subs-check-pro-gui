@@ -1,5 +1,8 @@
 /**
  * frontend/src/components/PasswordConfirm.tsx
+ *
+ * 「切换配置文件」视图 —— 用户选择新配置文件后输入其 api-key，
+ * 通过校验后 GUI 会 Shutdown 旧内核、初始化新内核，并自动进入管理界面。
  */
 import { useState } from 'preact/hooks';
 import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
@@ -18,28 +21,53 @@ export function PasswordConfirm({ cfgPath, toast, onDone, onBack, onReselect }: 
   const [loading, setLoading] = useState(false);
   const [keyShown, setKeyShown] = useState(false);
 
+  /**
+   * confirm：调用 SwitchConfigFile 验证密钥并切换内核，成功后自动进入 WebUI。
+   *
+   * 流程：
+   *   1. peekConfigAPIKey（Go 端只读新配置文件）→ 密钥比对
+   *   2. 旧内核 Shutdown
+   *   3. 等待旧 HTTP 端口释放
+   *   4. 新内核 Initialize → Run
+   *   5. 返回新 AppInfo → 前端更新状态 → EnterWebUI
+   */
   async function confirm() {
     const trimmed = key.trim();
     if (!trimmed) { toast('请输入 API 密钥'); return; }
     if (loading) return;
 
     setLoading(true);
+    // 确保 loading 状态在异步调用前渲染到屏幕
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
+    let newInfo: AppInfo;
     try {
-      await GuiApp.ValidateConfigKey(trimmed, true);
+      // SwitchConfigFile 会：验证新配置密钥 → 关闭旧内核 → 启动新内核 → 返回新 AppInfo
+      newInfo = await GuiApp.SwitchConfigFile(cfgPath, trimmed);
     } catch (e: any) {
-      toast('❌ ' + (e?.message || '密钥错误'));
+      const msg: string = e?.message ?? '切换失败';
+      if (msg.includes('密钥错误')) {
+        toast('❌ 密钥错误，请重新输入');
+      } else if (msg.includes('读取配置') || msg.includes('解析配置')) {
+        toast('❌ 配置文件无效：' + msg);
+      } else {
+        toast('❌ 切换配置失败：' + msg);
+      }
       setLoading(false);
       return;
     }
 
+    // 切换成功：通知父组件更新 AppInfo（同步更新 __CORE_BASE_URL）
+    onDone(newInfo);
+
+    // 自动进入 WebUI（用户切换配置的目的就是进入管理界面）
     try {
       await GuiApp.EnterWebUI();
     } catch (e: any) {
-      toast('进入管理界面失败: ' + (e?.message ?? ''));
-      setLoading(false);
+      // EnterWebUI 失败属极少数情况，用户可在 main 视图手动点击进入
+      toast('进入管理界面失败：' + (e?.message ?? ''));
     }
+    // 成功后不需要 setLoading(false)：EnterWebUI 会隐藏登录窗口
   }
 
   async function handleReselect() {
@@ -51,7 +79,7 @@ export function PasswordConfirm({ cfgPath, toast, onDone, onBack, onReselect }: 
       return;
     }
     if (!path) return;
-    setKey('');        // 清空密码，新配置的密码不同
+    setKey('');        // 新配置密钥与旧配置不同，清空输入
     onReselect(path);
   }
 
@@ -60,15 +88,21 @@ export function PasswordConfirm({ cfgPath, toast, onDone, onBack, onReselect }: 
 
       {/* ── 主体区 ── */}
       <div class="key-body">
+
+        {/* 操作说明 */}
+        <div class="hint" style="margin-top:10px">
+          验证通过后，当前内核将关闭并重新加载新配置。
+        </div>
+
         {/* 标签 */}
-        <div class="label" style="margin-top:14px">API 密钥</div>
+        <div class="label" style="margin-top:14px">新配置的 API 密钥</div>
 
         {/* 密码输入行：复用 key-wrap 样式 */}
         <div class="key-wrap" style="-webkit-app-region:no-drag">
           <input
             class="pw-input"
             type={keyShown ? 'text' : 'password'}
-            placeholder="请输入新配置的 API 密钥，回车确认"
+            placeholder="输入新配置文件的 api-key，回车确认"
             value={key}
             autoFocus
             onInput={e => setKey((e.target as HTMLInputElement).value)}
@@ -122,20 +156,19 @@ export function PasswordConfirm({ cfgPath, toast, onDone, onBack, onReselect }: 
         </div>
       </div>
 
-      {/* 返回登录框（使用默认配置） */}
+      {/* 返回登录框（使用默认配置，不切换） */}
       <div class="back-btn-row">
         <button class="btn-back" onClick={onBack}
-          title="返回登录框，使用默认配置文件"
+          title="取消切换，返回使用当前配置"
         >
-          返回默认
+          取消切换
         </button>
       </div>
 
       {/* ── 底部操作区 ── */}
       <div class="enter-spacer">
-        {/* 确认进入按钮 */}
         <button class="btn-enter" onClick={confirm} disabled={loading}>
-          {loading ? '验证中…' : '确认进入'}
+          {loading ? '切换中，请稍候…' : '验证并切换配置 →'}
         </button>
       </div>
     </div>
