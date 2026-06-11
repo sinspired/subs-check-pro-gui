@@ -4,9 +4,11 @@
 
 基于 [Wails v3](https://v3.wails.io/) 构建，为 [subs-check-pro](https://github.com/sinspired/subs-check-pro) 提供的桌面程序。
 
-[![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go)](https://go.dev/)
-[![Wails](https://img.shields.io/badge/Wails-v3.0.0--alpha.96-red?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyem0tMiAxNWwtNS01IDEuNDEtMS40MUwxMCAxNC4xN2w3LjU5LTcuNTlMMTkgOGwtOSA5eiIvPjwvc3ZnPg==)](https://v3.wails.io/)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENCE)
+[![Go](https://img.shields.io/github/go-mod/go-version/sinspired/subs-check-pro-gui
+)](https://go.dev/)
+[![Wails](https://img.shields.io/badge/Wails-v3.0.0--alpha-red?logo=wails)](https://v3.wails.io/)
+[![License: GPL v3](https://img.shields.io/github/license/sinspired/subs-check-pro-gui
+)](./LICENCE)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](#构建)
 
 </div>
@@ -25,7 +27,7 @@
 
 ### Windows 额外依赖
 
-正常 Windows10 或 Windows11 都已内置 Webview2，部分设备长期不更新，或所谓精简版，ghost版，被国内某些毒瘤所谓杀毒软件嚯嚯过的系统，请自行安装 [Microsoft Edge WebView2](https://developer.microsoft.com/zh-cn/microsoft-edge/webview2)
+正常 `Windows10` 或 `Windows11` 都已内置 `Webview2`，部分设备长期不更新，或所谓精简版，ghost版，被国内某些 `毒瘤所谓杀毒软件` 嚯嚯过的系统，请自行安装 [Microsoft Edge WebView2](https://developer.microsoft.com/zh-cn/microsoft-edge/webview2)
 
 ### Linux 额外依赖
 
