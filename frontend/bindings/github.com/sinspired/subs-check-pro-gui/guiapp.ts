@@ -43,6 +43,7 @@ export function CompleteInit(): $CancellablePromise<void> {
 
 /**
  * EnterWebUI 由前端调用：切换到本地 WebUI 大窗，隐藏登录小窗。
+ * 每次调用都会用 g.configPath 刷新 URL，确保切换配置后 admin 显示正确的配置路径。
  */
 export function EnterWebUI(): $CancellablePromise<void> {
     return $Call.ByID(551937120);
@@ -69,6 +70,14 @@ export function GetAppInfo(): $CancellablePromise<$models.AppInfo> {
  */
 export function GetAutoStartEnabled(): $CancellablePromise<boolean> {
     return $Call.ByID(2283529356);
+}
+
+/**
+ * GetConfigPath 返回当前生效配置文件的绝对路径。
+ * 以函数引用形式传给 newCombinedAssetHandler，保证切换配置后注入值实时更新。
+ */
+export function GetConfigPath(): $CancellablePromise<string> {
+    return $Call.ByID(1772900587);
 }
 
 /**
@@ -194,6 +203,24 @@ export function SetPorts(httpPort: string, subStorePort: string): $CancellablePr
  */
 export function ShowWindow(): $CancellablePromise<void> {
     return $Call.ByID(91192051);
+}
+
+/**
+ * SwitchConfigFile 切换到用户重新选择的配置文件：
+ *  1. 直接读取目标配置文件中的 api-key 并与用户输入比对（不影响当前运行的内核）；
+ *  2. 密钥匹配后，关闭（Shutdown）当前正在运行的内核实例；
+ *  3. 等待旧内核占用的 HTTP 端口完全释放；
+ *  4. 以新配置文件重新初始化并启动内核（Initialize 内部已包含 InitConfigLoad）；
+ *  5. 返回切换后的 AppInfo，前端据此刷新界面状态并调用 EnterWebUI 进入管理界面。
+ * 
+ * 密钥不匹配或步骤 1 失败时，当前内核保持不变。
+ * 步骤 2–4 失败时旧内核已不可恢复，g.backend 置 nil，g.pendingInit 置 true，
+ * 错误原样返回给前端展示，用户可重试或重启程序。
+ */
+export function SwitchConfigFile(path: string, enteredKey: string): $CancellablePromise<$models.AppInfo> {
+    return $Call.ByID(3083586062, path, enteredKey).then(($result: any) => {
+        return $$createType0($result);
+    });
 }
 
 /**
