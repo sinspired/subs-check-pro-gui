@@ -8,8 +8,8 @@ require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/lmittmann/tint v1.1.3
 	github.com/metacubex/mihomo v1.19.27
-	github.com/sinspired/subs-check-pro-webui v0.0.0-20260610033916-4f838f5aa529
-	github.com/sinspired/subs-check-pro/v2 v2.5.9
+	github.com/sinspired/subs-check-pro-webui v0.0.0-20260611031834-b912338bceee
+	github.com/sinspired/subs-check-pro/v2 v2.5.10
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.98
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
