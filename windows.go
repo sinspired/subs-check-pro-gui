@@ -20,7 +20,7 @@ func windowDimensions(size string) (width, height int) {
 	case "large":
 		return 1600, 1200
 	case "medium":
-		return 1200, 800
+		return 1100, 700
 	case "small":
 		return 720, 720
 	case "tiny":

@@ -126,15 +126,16 @@ func main() {
 			GeneralAutofillEnabled:  true,
 			PasswordAutosaveEnabled: true,
 		},
+		BackgroundType: application.BackgroundTypeTranslucent,
 	})
 
 	// WebUI 大窗（加载 admin 页面，初始隐藏）
 	webUIWin := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:          "webui",
 		Title:         "Subs Check Pro",
-		Width:         1200,
-		Height:        800,
-		MinWidth:      800,
+		Width:         1100,
+		Height:        700,
+		MinWidth:      700,
 		MinHeight:     600,
 		Hidden:        true,
 		DisableResize: false,
