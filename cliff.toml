@@ -18,8 +18,7 @@ body = """
 {% endfor %}\n
 
 {% if version %}
-{% set base = "https://github.com/sinspired/subs-check-pro-gui/releases/download/" ~ version ~ "/subs-check-pro-gui_" ~ version ~ "_" %}
-
+{% set base = "https://github.com/sinspired/subs-check-pro-gui/releases/download/" ~ version ~ "/subs-check-pro-gui_" %}
 
 ## 快捷下载链接
 
