@@ -101,10 +101,17 @@ export function App() {
       setUpdateVersion(rel.version ?? rel.Version ?? '');
     });
 
+    // 新增：监听 Go 端发来的检查结果 toast（已最新 / 出错 / 检查不可用）
+    const unsubToast = Events.On('gui:update:toast', (event) => {
+      const text = (event?.data as string) ?? '';
+      if (text) toast(text);
+    });
+
     return () => {
       unsubAvailable && unsubAvailable();
       unsubNoUpdate && unsubNoUpdate();
       unsubReady && unsubReady();
+      unsubToast && unsubToast();
     };
   }, [ready]);
 

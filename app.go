@@ -656,6 +656,8 @@ func (g *GuiApp) OpenAboutWindow() {
 func (g *GuiApp) CheckForUpdates() {
 	if g.updaterApp == nil {
 		sendOSNotification("Subs Check Pro", "更新检查暂不可用")
+		// 同时通知前端 toast，避免用户点击后毫无反馈
+		application.Get().Event.Emit("gui:update:toast", "更新检查暂不可用")
 		return
 	}
 
@@ -666,18 +668,21 @@ func (g *GuiApp) CheckForUpdates() {
 		if err != nil {
 			slog.Warn("检查更新失败", "error", err)
 			sendOSNotification("更新失败", err.Error())
+			// 新增：emit 给前端 toast 展示
+			g.updaterApp.Event.Emit("gui:update:toast", "检查更新失败: "+err.Error())
 			return
 		}
 
 		if updateInfo == nil {
 			// 已经是最新版
-			slog.Info("当前已是最新版")
-			sendOSNotification("Subs Check Pro GUI", "已经是最新版")
+			slog.Debug("当前已是最新版")
+			// sendOSNotification("Subs Check Pro GUI", "已经是最新版")
+			// 新增：emit 给前端 toast 展示
+			g.updaterApp.Event.Emit("gui:update:toast", "已经是最新版")
 			return
 		}
 
-		// 发现新版本：打开更新窗口，展示版本信息和发布说明，
-		// 由用户点击"下载并安装"按钮后才继续 DownloadAndInstall。
+		// 发现新版本：打开更新窗口...
 		g.showUpdateWindow(updateInfo)
 	}()
 }
