@@ -45,7 +45,7 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/ebitengine/purego v0.11.0-alpha.1 // indirect
+	github.com/ebitengine/purego v0.11.0-alpha.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/enfein/mieru/v3 v3.33.0 // indirect
 	github.com/ericlagergren/aegis v0.0.0-20250325060835-cd0defd64358 // indirect
