@@ -178,15 +178,7 @@ export function OpenSubLinksWindow(): $CancellablePromise<void> {
 }
 
 /**
- * OpenSubStoreUI 在弹出窗口中打开 Sub-Store 订阅管理页面。
- */
-export function OpenSubStoreUI(): $CancellablePromise<void> {
-    return $Call.ByID(3080875275);
-}
-
-/**
  * OpenSubStoreWindow 打开或聚焦 Sub-Store 订阅管理独立窗口（单例模式）。
- * 与 OpenSubStoreUI 的区别：此方法保持单例，不会重复创建窗口。
  */
 export function OpenSubStoreWindow(): $CancellablePromise<void> {
     return $Call.ByID(2471289197);

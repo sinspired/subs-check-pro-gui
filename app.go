@@ -549,47 +549,6 @@ func (g *GuiApp) SetAutoStart(enabled bool) error {
 	return g.autostart.Disable()
 }
 
-// OpenSubStoreUI 在弹出窗口中打开 Sub-Store 订阅管理页面。
-func (g *GuiApp) OpenSubStoreUI() {
-	subStorePort := strings.TrimPrefix(config.GlobalConfig.SubStorePort, ":")
-	if subStorePort == "" {
-		return
-	}
-
-	baseURL := "http://127.0.0.1:" + subStorePort
-	subStorePath := strings.TrimSpace(config.GlobalConfig.SubStorePath)
-	var targetURL string
-	if subStorePath != "" {
-		if !strings.HasPrefix(subStorePath, "/") {
-			subStorePath = "/" + subStorePath
-		}
-		targetURL = baseURL + "?api=" + subStorePath
-	} else {
-		targetURL = baseURL
-	}
-
-	wailsApp := application.Get()
-	if wailsApp == nil {
-		return
-	}
-
-	application.InvokeAsync(func() {
-		// Sub-Store 运行在本机回环地址，直接加载含 ?api= 参数的目标 URL。
-		popup := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-			Title:     "Sub-Store — 订阅管理",
-			Width:     1200,
-			Height:    800,
-			MinWidth:  800,
-			MinHeight: 600,
-			URL:       targetURL,
-			Mac:       macWindowOpts(50),
-		})
-		popup.Show()
-		popup.Center()
-		popup.Focus()
-	})
-}
-
 // OpenInternalPage 在新窗口中打开内置 Web 页面（如 /files、/analysis）。
 // 通过 /gui/enter?n=<nonce>&redirect=<path> 中转，确保弹出窗口自动写入 API Key。
 func (g *GuiApp) OpenInternalPage(path string, title string, windowSize string) {
@@ -987,7 +946,6 @@ func (g *GuiApp) OpenAnalysisWindow() {
 }
 
 // OpenSubStoreWindow 打开或聚焦 Sub-Store 订阅管理独立窗口（单例模式）。
-// 与 OpenSubStoreUI 的区别：此方法保持单例，不会重复创建窗口。
 func (g *GuiApp) OpenSubStoreWindow() {
 	wailsApp := application.Get()
 	if wailsApp == nil {
@@ -1021,7 +979,7 @@ func (g *GuiApp) OpenSubStoreWindow() {
 		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Name:      "sub-store",
 			Title:     "Sub-Store — 订阅管理",
-			Width:     1200,
+			Width:     800,
 			Height:    800,
 			MinWidth:  800,
 			MinHeight: 600,
