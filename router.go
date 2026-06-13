@@ -54,6 +54,8 @@ func registerGuiRoutes(router *gin.Engine) {
 	router.GET("/gui/popup", handleGuiPopup)
 	router.GET("/gui/back-to-login", handleGuiBackToLogin)
 	router.GET("/gui/open-about", handleGuiOpenAbout)
+	router.GET("/gui/open-sub-links", handleGuiOpenSubLinks)
+	router.GET("/gui/open-sub-store", handleGuiOpenSubStore)
 	router.GET("/gui/check-update", handleGuiCheckUpdate)
 }
 
@@ -205,6 +207,34 @@ func handleGuiOpenAbout(c *gin.Context) {
 	if globalGuiApp != nil {
 		application.InvokeAsync(func() {
 			globalGuiApp.OpenAboutWindow()
+		})
+	}
+}
+
+// handleGuiOpenSubLinks 打开「订阅链接」独立窗口（单例）。
+func handleGuiOpenSubLinks(c *gin.Context) {
+	if !isLoopback(c) {
+		c.String(http.StatusForbidden, "forbidden")
+		return
+	}
+	c.String(http.StatusOK, "ok")
+	if globalGuiApp != nil {
+		application.InvokeAsync(func() {
+			globalGuiApp.OpenSubLinksWindow()
+		})
+	}
+}
+
+// handleGuiOpenSubStore 打开 Sub-Store 订阅管理独立窗口（单例）。
+func handleGuiOpenSubStore(c *gin.Context) {
+	if !isLoopback(c) {
+		c.String(http.StatusForbidden, "forbidden")
+		return
+	}
+	c.String(http.StatusOK, "ok")
+	if globalGuiApp != nil {
+		application.InvokeAsync(func() {
+			globalGuiApp.OpenSubStoreWindow()
 		})
 	}
 }

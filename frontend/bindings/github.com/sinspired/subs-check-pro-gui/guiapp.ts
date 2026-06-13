@@ -169,6 +169,14 @@ export function OpenSubStoreUI(): $CancellablePromise<void> {
 }
 
 /**
+ * OpenSubStoreWindow 打开或聚焦 Sub-Store 订阅管理独立窗口（单例模式）。
+ * 与 OpenSubStoreUI 的区别：此方法保持单例，不会重复创建窗口。
+ */
+export function OpenSubStoreWindow(): $CancellablePromise<void> {
+    return $Call.ByID(2471289197);
+}
+
+/**
  * QuitApp 供前端"关闭按钮对话框"选择退出时调用。
  */
 export function QuitApp(): $CancellablePromise<void> {

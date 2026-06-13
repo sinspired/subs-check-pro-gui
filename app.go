@@ -51,6 +51,7 @@ type GuiApp struct {
 	inWebUI     atomic.Bool
 	aboutWin    *application.WebviewWindow
 	subLinksWin *application.WebviewWindow
+	subStoreWin *application.WebviewWindow
 
 	// updateWin 自定义更新窗口（懒加载，复用）。
 	updateWin *application.WebviewWindow
@@ -902,6 +903,58 @@ func semverGreater(a, b string) bool {
 		}
 	}
 	return false
+}
+
+// OpenSubStoreWindow 打开或聚焦 Sub-Store 订阅管理独立窗口（单例模式）。
+// 与 OpenSubStoreUI 的区别：此方法保持单例，不会重复创建窗口。
+func (g *GuiApp) OpenSubStoreWindow() {
+	wailsApp := application.Get()
+	if wailsApp == nil {
+		return
+	}
+
+	subStorePort := strings.TrimPrefix(config.GlobalConfig.SubStorePort, ":")
+	if subStorePort == "" {
+		return
+	}
+
+	baseURL := "http://127.0.0.1:" + subStorePort
+	subStorePath := strings.TrimSpace(config.GlobalConfig.SubStorePath)
+	var targetURL string
+	if subStorePath != "" {
+		if !strings.HasPrefix(subStorePath, "/") {
+			subStorePath = "/" + subStorePath
+		}
+		targetURL = baseURL + "?api=" + subStorePath
+	} else {
+		targetURL = baseURL
+	}
+
+	capturedURL := targetURL
+	application.InvokeAsync(func() {
+		if g.subStoreWin != nil {
+			g.subStoreWin.Show()
+			g.subStoreWin.Focus()
+			return
+		}
+		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+			Name:      "sub-store",
+			Title:     "Sub-Store — 订阅管理",
+			Width:     1200,
+			Height:    800,
+			MinWidth:  800,
+			MinHeight: 600,
+			URL:       capturedURL,
+			Mac:       macWindowOpts(50),
+		})
+		g.subStoreWin = win
+		win.RegisterHook(events.Common.WindowClosing, func(_ *application.WindowEvent) {
+			g.subStoreWin = nil
+		})
+		win.Show()
+		win.Center()
+		win.Focus()
+	})
 }
 
 // OpenSubLinksWindow 打开或聚焦「订阅链接」独立窗口（单例模式）。
