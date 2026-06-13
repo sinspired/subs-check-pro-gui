@@ -128,6 +128,15 @@ const ArrowIcon = () => (
   </svg>
 );
 
+// 刷新图标（检查更新 / 重新检查共用）
+const RefreshIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="23 4 23 10 17 10" />
+    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+  </svg>
+);
+
 // ── 组件 ──────────────────────────────────────────────────────────
 export function AboutApp() {
   const ready = useWailsReady();
@@ -147,6 +156,14 @@ export function AboutApp() {
     if (!ready) return;
     GuiApp.GetAppInfo().then(setInfo).catch(() => { });
   }, [ready]);
+
+  // 离开 update tab 时清空旧结果，避免下次进来看到过期数据
+  useEffect(() => {
+    if (activeTab !== 'update') {
+      setUpdateStatus('idle');
+      setUpdateInfo(null);
+    }
+  }, [activeTab]);
 
   const guiVer = info?.guiVersion || 'dev';
   const coreVer = info?.coreVersion || 'dev';
@@ -548,7 +565,7 @@ export function AboutApp() {
                 </div>
               </div>
 
-              {/* 检查按钮 */}
+              {/* 检查按钮：三态文案 idle / checking / done */}
               <button
                 class={`aw-update-check-btn ${updateStatus === 'checking' ? 'checking' : ''}`}
                 onClick={checkUpdate}
@@ -559,13 +576,14 @@ export function AboutApp() {
                     <span class="aw-update-spinner" />
                     检查中…
                   </>
+                ) : updateStatus === 'done' ? (
+                  <>
+                    <RefreshIcon />
+                    重新检查
+                  </>
                 ) : (
                   <>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="23 4 23 10 17 10" />
-                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-                    </svg>
+                    <RefreshIcon />
                     检查更新
                   </>
                 )}
@@ -604,45 +622,44 @@ export function AboutApp() {
                         </span>
                       </div>
 
-                      {/* Release Notes：Markdown 渲染（marked + DOMPurify），
-                          限高滚动展示，不再按字符数截断 —— 截断
-                          Markdown 源文本容易切坏链接/代码块语法，
-                          改为 CSS max-height + overflow-y:auto 限制高度。 */}
+                      {/* Release Notes：Markdown 渲染（marked + DOMPurify）,
+                          限高滚动展示。md2html() 内部已用 DOMPurify 清洗，可安全注入。 */}
                       {updateInfo.releaseNotes && (
                         <div
                           class="aw-update-notes"
-                          // md2html() 内部已用 DOMPurify 清洗，
-                          // 仅放行白名单结构标签，可安全注入。
                           dangerouslySetInnerHTML={{ __html: md2html(updateInfo.releaseNotes) }}
                           onClick={handleNotesClick}
                         />
                       )}
 
-                      {/* 下载按钮：通过 ghproxy.net 加速 */}
-                      <button
-                        class="aw-update-dl-btn"
-                        onClick={() => openLink(updateInfo.downloadURL, 'medium')}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="7 10 12 15 17 10" />
-                          <line x1="12" y1="15" x2="12" y2="3" />
-                        </svg>
-                        前往下载&nbsp;{updateInfo.latestVersion}
-                      </button>
+                      {/* 按钮操作区：两端对齐 */}
+                      <div class="aw-update-actions">
+                        {/* 下载按钮：通过 ghproxy.net 加速 */}
+                        <button
+                          class="aw-update-dl-btn"
+                          onClick={() => openLink(updateInfo.downloadURL, 'medium')}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                          </svg>
+                          前往下载&nbsp;{updateInfo.latestVersion}
+                        </button>
 
-                      {/* 自动安装按钮（通过 Wails 内置 updater，下载已走 ghproxy） */}
-                      <button
-                        class="aw-update-auto-btn"
-                        onClick={() => GuiApp.CheckForUpdates()}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                        </svg>
-                        自动下载并安装
-                      </button>
+                        {/* 自动安装按钮（通过 Wails 内置 updater，下载已走 ghproxy） */}
+                        <button
+                          class="aw-update-auto-btn"
+                          onClick={() => GuiApp.CheckForUpdates()}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                          </svg>
+                          自动下载并安装
+                        </button>
+                      </div>
                     </>
 
                   ) : (
