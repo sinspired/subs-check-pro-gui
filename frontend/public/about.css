@@ -9,16 +9,19 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
+
 @keyframes aw-slide-right {
   from {
     opacity: 0;
     transform: translateX(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -53,7 +56,8 @@
   background: var(--card);
   position: relative;
   overflow: hidden;
-  -webkit-app-region: drag; /* 整个侧边栏可拖动 */
+  -webkit-app-region: drag;
+  /* 整个侧边栏可拖动 */
   --wails-draggable: drag;
 }
 
@@ -65,13 +69,11 @@
   top: 48px;
   bottom: 48px;
   width: 1px;
-  background: linear-gradient(
-    to bottom,
-    transparent,
-    var(--border) 20%,
-    var(--border) 80%,
-    transparent
-  );
+  background: linear-gradient(to bottom,
+      transparent,
+      var(--border) 20%,
+      var(--border) 80%,
+      transparent);
   pointer-events: none;
 }
 
@@ -91,7 +93,8 @@
   padding: 8px 16px 20px;
   flex-shrink: 0;
   -webkit-app-region: drag;
-  pointer-events: none; /* 品牌区不拦截拖动 */
+  pointer-events: none;
+  /* 品牌区不拦截拖动 */
 }
 
 .aw-logo {
@@ -111,6 +114,7 @@
   text-align: center;
   line-height: 1.2;
 }
+
 .aw-app-name .pro {
   color: var(--accent);
   font-size: 9px;
@@ -150,6 +154,7 @@
   border-radius: 5px;
   transition: opacity 0.15s;
 }
+
 .aw-ver-row:hover {
   opacity: 0.7;
 }
@@ -161,10 +166,12 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 .aw-ver-dot.gui-dot {
   background: var(--accent);
   box-shadow: 0 0 5px color-mix(in srgb, var(--accent) 55%, transparent);
 }
+
 .aw-ver-dot.core-dot {
   background: var(--muted);
   opacity: 0.45;
@@ -191,6 +198,7 @@
   white-space: nowrap;
   opacity: 0.75;
 }
+
 .aw-ver-val.accent {
   color: var(--accent);
   opacity: 1;
@@ -220,7 +228,8 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 9px 14px 9px 18px; /* 左侧留出指示器空间 */
+  padding: 9px 14px 9px 18px;
+  /* 左侧留出指示器空间 */
   border: none;
   background: transparent;
   color: var(--muted);
@@ -258,6 +267,7 @@
   box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 60%, transparent);
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 .aw-nav-item.active::before {
   transform: translateY(-50%) scaleY(1);
 }
@@ -268,6 +278,7 @@
   flex: 1;
   transition: font-weight 0.1s;
 }
+
 .aw-nav-item.active .aw-nav-label {
   font-weight: 600;
 }
@@ -280,6 +291,7 @@
   font-family: "Fira Code", "Cascadia Code", monospace;
   transition: opacity 0.2s;
 }
+
 .aw-nav-item:hover .aw-nav-hint,
 .aw-nav-item.active .aw-nav-hint {
   opacity: 0.45;
@@ -304,7 +316,8 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  background: var(--bg); /* 细微的底色差，制造层次感 */
+  background: var(--bg);
+  /* 细微的底色差，制造层次感 */
   overflow: hidden;
   transition: background 0.2s;
 }
@@ -349,13 +362,16 @@
 .aw-panel::-webkit-scrollbar {
   width: 3px;
 }
+
 .aw-panel::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .aw-panel::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 2px;
 }
+
 .aw-panel::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
 }
@@ -369,6 +385,7 @@
   line-height: 1.8;
   margin-bottom: 32px;
 }
+
 .aw-intro-lead strong {
   color: var(--fg);
   font-weight: 600;
@@ -400,10 +417,12 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 .aw-arch-col h3 .dot.gui {
   background: var(--accent);
   box-shadow: 0 0 5px color-mix(in srgb, var(--accent) 45%, transparent);
 }
+
 .aw-arch-col h3 .dot.core {
   background: var(--muted);
   opacity: 0.55;
@@ -414,6 +433,7 @@
   padding: 0;
   margin: 0;
 }
+
 .aw-arch-col ul li {
   position: relative;
   font-size: 12px;
@@ -421,6 +441,7 @@
   line-height: 2.1;
   padding-left: 14px;
 }
+
 /* 极简项目符号：小圆点 */
 .aw-arch-col ul li::before {
   content: "";
@@ -456,10 +477,12 @@
     transform 0.18s ease,
     background 0.18s ease;
 }
+
 .aw-feature-item:hover {
   transform: translateX(3px);
   background: color-mix(in srgb, var(--fg) 3%, transparent);
 }
+
 .aw-feature-item:hover .aw-feature-label {
   color: var(--fg);
 }
@@ -475,6 +498,7 @@
     opacity 0.2s ease,
     filter 0.2s ease;
 }
+
 .aw-feature-item:hover .aw-feature-emoji {
   opacity: 0.9;
   filter: grayscale(0%);
@@ -503,7 +527,8 @@
 /* 主要两项：等宽并排，固定高度 */
 .aw-res-primary {
   display: grid;
-  flex: 0 0 auto; /* 上部固定高度，不参与伸缩 */
+  flex: 0 0 auto;
+  /* 上部固定高度，不参与伸缩 */
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   padding-bottom: 10px;
@@ -530,6 +555,7 @@
   position: relative;
   overflow: hidden;
 }
+
 .aw-link-card:active {
   transform: scale(0.98);
 }
@@ -550,6 +576,7 @@
     opacity 0.2s,
     transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
 .aw-link-card:hover::before {
   opacity: 1;
   transform: scaleY(1);
@@ -568,15 +595,18 @@
   background: transparent;
   padding: 12px;
 }
+
 .aw-link-card.aw-featured:hover {
   background: color-mix(in srgb, var(--accent) 10%, var(--card));
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   transform: translateY(-2px);
   box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 10%, transparent);
 }
+
 .aw-link-card.aw-featured .aw-link-title {
   font-size: 14px;
 }
+
 .aw-link-card.aw-featured .aw-link-desc {
   font-size: 12px;
   margin-top: 3px;
@@ -590,6 +620,7 @@
   background: color-mix(in srgb, var(--accent) 14%, transparent);
   border-color: color-mix(in srgb, var(--accent) 24%, transparent);
 }
+
 .aw-link-card.aw-featured:hover .aw-link-icon-wrap {
   transform: scale(1.08);
 }
@@ -602,20 +633,24 @@
   gap: 10px;
   padding: 18px 16px 14px;
 }
+
 .aw-link-card.aw-compact:hover {
   background: var(--info-bg);
   border-color: color-mix(in srgb, var(--accent) 25%, transparent);
   transform: translateY(-3px);
   box-shadow: 0 10px 26px color-mix(in srgb, var(--accent) 7%, transparent);
 }
+
 .aw-link-card.aw-compact .aw-link-title {
   font-size: 12.5px;
 }
+
 .aw-link-card.aw-compact .aw-link-desc {
   font-size: 11px;
   flex: 1;
   line-height: 1.5;
 }
+
 /* 箭头贴底部右侧 */
 .aw-link-card.aw-compact .aw-link-arrow {
   align-self: flex-end;
@@ -637,6 +672,7 @@
     border-color 0.2s,
     transform 0.2s;
 }
+
 .aw-link-card:hover .aw-link-icon-wrap {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   border-color: color-mix(in srgb, var(--accent) 20%, transparent);
@@ -652,9 +688,11 @@
   opacity: 0.6;
   transition: opacity 0.2s;
 }
+
 :root[data-theme="dark"] .aw-link-svg {
   filter: brightness(0) invert(1);
 }
+
 .aw-link-card:hover .aw-link-svg {
   opacity: 0.9;
 }
@@ -667,6 +705,7 @@
     color 0.2s,
     opacity 0.2s;
 }
+
 .aw-link-card:hover .aw-link-icon-wrap svg {
   color: var(--accent);
   opacity: 1;
@@ -705,6 +744,7 @@
     opacity 0.2s,
     transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
 .aw-link-card:hover .aw-link-arrow {
   opacity: 0.55;
   transform: translate(0, 0);
@@ -754,6 +794,7 @@
   opacity: 0.38;
   padding: 6px 6px 2px;
 }
+
 .aw-qr-group:first-child {
   padding-top: 2px;
 }
@@ -769,12 +810,15 @@
   transition: background 0.15s;
   -webkit-app-region: no-drag;
 }
+
 .aw-qr-item:hover {
   background: color-mix(in srgb, var(--fg) 4%, transparent);
 }
+
 .aw-qr-item:hover .aw-qr-action {
   opacity: 0.5;
 }
+
 .aw-qr-item:hover .aw-qr-icon {
   opacity: 0.75;
   color: var(--accent);
@@ -850,13 +894,14 @@
   gap: 14px;
 }
 
-/* 当前版本卡片：与侧边栏版本块风格一致 */
+/* 当前版本卡片：与侧边栏版本块风格一致
+   fix: var(--surface) 未定义，改用 var(--card) */
 .aw-update-ver-card {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 12px 14px;
-  background: var(--surface);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 8px;
 }
@@ -874,11 +919,15 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 .aw-update-ver-dot.gui-dot {
-  background: var(--accent, #6b8cff);
+  background: var(--accent);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--accent) 45%, transparent);
 }
+
 .aw-update-ver-dot.core-dot {
-  background: var(--muted, #999);
+  background: var(--muted);
+  opacity: 0.45;
 }
 
 .aw-update-ver-label {
@@ -905,7 +954,7 @@
   align-items: center;
   gap: 7px;
   padding: 8px 18px;
-  background: var(--accent, #6b8cff);
+  background: var(--accent);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -917,24 +966,19 @@
     transform 0.1s;
   align-self: flex-start;
 }
+
 .aw-update-check-btn:hover:not(:disabled) {
   opacity: 0.85;
   transform: translateY(-1px);
 }
+
 .aw-update-check-btn:active:not(:disabled) {
   transform: translateY(0);
 }
+
 .aw-update-check-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-/* 有新版本时按钮加深色调强化视觉 */
-.aw-update-check-btn.has-update {
-  background: color-mix(in srgb, var(--accent) 85%, #059669);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
-}
-.aw-update-check-btn.has-update:hover:not(:disabled) {
-  opacity: 0.9;
 }
 
 /* 检查中旋转动画 */
@@ -948,31 +992,36 @@
   animation: aw-spin 0.7s linear infinite;
   flex-shrink: 0;
 }
+
 @keyframes aw-spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-/* 结果卡 */
+/* 结果卡
+   fix: var(--surface) 未定义，改用 var(--card) */
 .aw-update-result {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 12px 14px;
+  /* padding: 12px 14px; */
   border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface);
+  /* border: 1px solid var(--border); */
+  /* background: var(--card); */
   font-size: 12.5px;
 }
+
 .aw-update-result.has-update {
-  border-color: var(--accent, #6b8cff);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
 }
+
 .aw-update-result.error {
-  border-color: #e05252;
+  border-color: color-mix(in srgb, #e05252 55%, transparent);
 }
+
 .aw-update-result.up-to-date {
-  border-color: #4caf7d;
+  border-color: color-mix(in srgb, #4caf7d 55%, transparent);
 }
 
 /* 状态行：图标 + 文字 */
@@ -982,60 +1031,53 @@
   gap: 8px;
   color: var(--muted);
 }
+
 .aw-update-state-row.has-update {
-  color: var(--accent, #6b8cff);
+  color: var(--accent);
 }
+
 .aw-update-state-row.up-to-date {
   color: #4caf7d;
 }
+
 .aw-update-state-row.error {
   color: #e05252;
 }
 
 /* ── Release Notes：Markdown 渲染容器 ──────────────────────────────
-   原实现为 <pre> 纯文本预览（等宽字体 + white-space: pre-wrap）。
-   现在 releaseNotes 经 marked + DOMPurify 渲染为真正的 HTML
-   （标题/列表/代码块/链接/表格等），容器本身改为普通排版盒子，
-   并为内部各类标签补充样式，与 .aw-update-result 卡片风格统一。 */
+   md2html() 渲染为真正的 HTML（标题/列表/代码块/链接/表格等），
+   容器本身为普通排版盒子（不使用等宽字体 / white-space:pre-wrap，
+   否则 HTML 标签会裸显为文本）。
+   fix: 删除第二条重复规则（曾覆盖此处，带 font-family:monospace 和
+        white-space:pre-wrap，导致 markdown 渲染失效）。 */
 .aw-update-notes {
   margin: 0;
   padding: 10px 12px;
-  background: var(--bg, #111);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 12px;
   line-height: 1.7;
   color: var(--muted);
-  max-height: 220px;
+  max-height: 200px;
   overflow-y: auto;
   word-break: break-word;
-}
-.aw-update-notes {
-  margin: 0;
-  padding: 8px 10px;
-  background: var(--bg, #111);
-  border-radius: 5px;
-  font-family: "Fira Code", monospace;
-  font-size: 10.5px;
-  color: var(--muted);
-  white-space: pre-wrap;
-  word-break: break-word;
-  max-height: 130px;
-  overflow-y: auto;
-  line-height: 1.55;
 }
 
 /* 细滚动条 */
 .aw-update-notes::-webkit-scrollbar {
   width: 4px;
 }
+
 .aw-update-notes::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .aw-update-notes::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 2px;
 }
+
 .aw-update-notes::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
 }
@@ -1053,6 +1095,7 @@
   color: var(--fg);
   line-height: 1.4;
 }
+
 .aw-update-notes h1:first-child,
 .aw-update-notes h2:first-child,
 .aw-update-notes h3:first-child,
@@ -1066,6 +1109,7 @@
 .aw-update-notes p {
   margin: 4px 0;
 }
+
 .aw-update-notes hr {
   margin: 10px 0;
   border: none;
@@ -1078,11 +1122,13 @@
   margin: 4px 0;
   padding-left: 18px;
 }
+
 .aw-update-notes li {
   margin: 2px 0;
 }
-.aw-update-notes li > ul,
-.aw-update-notes li > ol {
+
+.aw-update-notes li>ul,
+.aw-update-notes li>ol {
   margin: 2px 0;
 }
 
@@ -1104,6 +1150,7 @@
   border-radius: 5px;
   overflow-x: auto;
 }
+
 .aw-update-notes pre code {
   background: none;
   padding: 0;
@@ -1112,9 +1159,10 @@
 
 /* 链接 */
 .aw-update-notes a {
-  color: var(--accent, #6b8cff);
+  color: var(--accent);
   text-decoration: none;
 }
+
 .aw-update-notes a:hover {
   text-decoration: underline;
   opacity: 0.85;
@@ -1125,9 +1173,11 @@
   color: var(--fg);
   font-weight: 600;
 }
+
 .aw-update-notes em {
   font-style: italic;
 }
+
 .aw-update-notes del,
 .aw-update-notes s {
   color: var(--muted);
@@ -1157,6 +1207,7 @@
   margin: 6px 0;
   font-size: 11px;
 }
+
 .aw-update-notes th,
 .aw-update-notes td {
   padding: 4px 8px;
@@ -1164,9 +1215,17 @@
   text-align: left;
   vertical-align: middle;
 }
+
 .aw-update-notes th {
   color: var(--fg);
   font-weight: 600;
+}
+
+.aw-update-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 
 /* 下载按钮 */
@@ -1176,19 +1235,21 @@
   gap: 6px;
   padding: 7px 14px;
   background: transparent;
-  color: var(--accent, #6b8cff);
-  border: 1px solid var(--accent, #6b8cff);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
   border-radius: 5px;
   font-size: 12px;
   cursor: pointer;
   transition:
     background 0.15s,
-    color 0.15s;
-  align-self: flex-start;
+    color 0.15s,
+    border-color 0.15s;
 }
+
 .aw-update-dl-btn:hover {
-  background: var(--accent, #6b8cff);
+  background: var(--accent);
   color: #fff;
+  border-color: var(--accent);
 }
 
 /* 自动安装按钮 */
@@ -1198,18 +1259,20 @@
   gap: 6px;
   padding: 7px 14px;
   background: transparent;
-  color: var(--fg);
+  color: var(--muted);
   border: 1px solid var(--border);
   border-radius: 5px;
   font-size: 12px;
   cursor: pointer;
   transition:
-    border-color 0.15s,
-    color 0.15s;
-  align-self: flex-start;
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
+
 .aw-update-auto-btn:hover {
-  border-color: var(--fg);
+  background: color-mix(in srgb, var(--fg) 5%, transparent);
+  border-color: var(--muted);
   color: var(--fg);
 }
 
