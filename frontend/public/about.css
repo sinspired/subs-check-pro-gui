@@ -1010,6 +1010,20 @@
   overflow-y: auto;
   word-break: break-word;
 }
+.aw-update-notes {
+  margin: 0;
+  padding: 8px 10px;
+  background: var(--bg, #111);
+  border-radius: 5px;
+  font-family: "Fira Code", monospace;
+  font-size: 10.5px;
+  color: var(--muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 130px;
+  overflow-y: auto;
+  line-height: 1.55;
+}
 
 /* 细滚动条 */
 .aw-update-notes::-webkit-scrollbar {

@@ -172,6 +172,7 @@ func (g *GuiApp) GetListenPort() string {
 func (g *GuiApp) GetConfigPath() string {
 	return g.configPath
 }
+
 // BackToLogin 从 WebUI 返回登录窗口（可选功能，供托盘菜单使用）
 func (g *GuiApp) BackToLogin() {
 	if g.loginWin == nil {
@@ -676,11 +677,10 @@ func (g *GuiApp) showUpdateWindow(rel *wupdater.Release) {
 			MinHeight:     161,
 			DisableResize: false,
 			Frameless:     false,
-			HTML:          updater.CustomWindowHTML,
-			// 自定义窗口的 HTML 通过简化的 postMessage 路径 emit
-			// wails:updater:user:* 事件，必须开启该选项按钮才生效。
-			AllowSimpleEventEmit: true,
-			Mac:                  macWindowOpts(30),
+			// 复用前端构建产物（Preact + marked/DOMPurify 渲染 Markdown），
+			// 与登录/关于窗口共享同一套样式与依赖，不再使用 go:embed 内嵌 HTML。
+			URL: "/updater.html",
+			Mac: macWindowOpts(30),
 		})
 		g.updateWin = win
 
@@ -694,10 +694,20 @@ func (g *GuiApp) showUpdateWindow(rel *wupdater.Release) {
 
 		g.subscribeUpdateEvent(wupdater.EventUserInstall, func(_ *application.CustomEvent) {
 			go func() {
-				if err := g.updaterApp.Updater.DownloadAndInstall(ctx); err != nil {
+				err := g.updaterApp.Updater.DownloadAndInstall(ctx)
+				if err != nil {
 					slog.Warn("下载/安装更新失败", "error", err)
-					// EventError 已由 Updater 自身通过 wupdater.EventError 广播，
-					// 自定义窗口会监听并展示错误状态，这里仅记录日志。
+					if g.updaterApp != nil {
+						g.updaterApp.Event.Emit(wupdater.EventError, map[string]any{
+							"message": err.Error(),
+							"stage":   "install",
+						})
+					}
+					return
+				}
+				// alpha.98 不会在 DownloadAndInstall 成功后 emit EventUpdateReady，手动补发。
+				if g.updaterApp != nil {
+					g.updaterApp.Event.Emit(wupdater.EventUpdateReady, nil)
 				}
 			}()
 		})
