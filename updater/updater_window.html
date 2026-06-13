@@ -298,6 +298,42 @@
             padding: 24px 0;
         }
 
+        .upd-notes a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .upd-notes a:hover {
+            text-decoration: underline;
+            opacity: 0.85;
+        }
+
+        .upd-notes em {
+            font-style: italic;
+            color: var(--fg-dim);
+        }
+
+        .upd-notes img {
+            max-height: 18px;
+            vertical-align: middle;
+            border-radius: 3px;
+        }
+
+        .upd-notes table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 11px;
+            margin: 6px 0;
+        }
+
+        .upd-notes th,
+        .upd-notes td {
+            padding: 4px 8px;
+            border: 1px solid var(--border);
+            text-align: left;
+            vertical-align: middle;
+        }
+
         /* ── actions ── */
         .upd-actions {
             display: flex;
@@ -541,28 +577,128 @@
                 return d || {};
             }
 
-            /* minimal Markdown → safe HTML */
+            /* Markdown + 原始 HTML 混合渲染 → 安全 HTML
+             *
+             * 核心策略：
+             *  1. 逐行扫描，HTML 块（以 < 开头）原样透传，不做任何转义
+             *  2. 围栏代码块内容转义后包裹 <pre><code>
+             *  3. Markdown 行（标题/列表/段落）调用 inline() 处理行内语法：
+             *     - 行内代码、图片 ![alt](url)、链接 [text](url)、粗体、斜体
+             *     - 普通文本通过 esc() 转义，URL 单独保留不转义
+             *  4. 链接文字递归调用 inline()，正确渲染 [`hash`](url) 形式
+             */
             function md2html(src) {
                 if (!src) return '';
-                var s = src
-                    .replace(/\r\n/g, '\n')
-                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                    .replace(/```[\w]*\n([\s\S]*?)```/gm, function (_, c) { return '<pre><code>' + c.trimEnd() + '</code></pre>'; })
-                    .replace(/`([^`]+)`/g, '<code>$1</code>')
-                    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-                    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-                    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                    .replace(/^[-*] (.+)$/gm, '<li>$1</li>');
-                s = s.replace(/(<li>[^]*?<\/li>\n?)+/g, function (m) { return '<ul>' + m + '</ul>'; });
-                s = s.split('\n').map(function (line) {
-                    var t = line.trim();
-                    if (!t) return '';
-                    if (/<(h[1-3]|ul|ol|li|pre|p)/.test(t)) return t;
-                    return '<p>' + t + '</p>';
-                }).join('');
-                return s;
+                src = src.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+                function esc(s) {
+                    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                }
+
+                /* 处理行内 Markdown；输入为原始未转义文本，输出为安全 HTML */
+                function inline(text) {
+                    var result = '', rem = text;
+                    var patterns = [
+                        // 行内代码：`code`
+                        [/`([^`\n]+)`/, function (_, c) { return '<code>' + esc(c) + '</code>'; }],
+                        // 图片：![alt](url)
+                        [/!\[([^\]]*)\]\(([^)\s]+)[^)]*\)/, function (_, alt, url) {
+                            return /^https?:\/\//.test(url)
+                                ? '<img src="' + esc(url) + '" alt="' + esc(alt) + '">'
+                                : esc(alt || '');
+                        }],
+                        // 链接：[text](url)  — 递归处理链接文字，支持 [`hash`](url)
+                        [/\[([^\]]*)\]\(([^)\s]+)[^)]*\)/, function (_, txt, url) {
+                            var inner = inline(txt);
+                            return /^https?:\/\//.test(url)
+                                ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + inner + '</a>'
+                                : inner;
+                        }],
+                        // 粗体：**text**
+                        [/\*\*(.+?)\*\*/, function (_, c) { return '<strong>' + inline(c) + '</strong>'; }],
+                        // 斜体：*text*
+                        [/\*(.+?)\*/, function (_, c) { return '<em>' + inline(c) + '</em>'; }],
+                    ];
+                    while (rem) {
+                        var best = null, bestIdx = rem.length;
+                        for (var p = 0; p < patterns.length; p++) {
+                            var m = patterns[p][0].exec(rem);
+                            if (m && m.index < bestIdx) { best = { m: m, fn: patterns[p][1] }; bestIdx = m.index; }
+                        }
+                        if (!best) { result += esc(rem); break; }
+                        result += esc(rem.slice(0, bestIdx));
+                        result += best.fn.apply(null, best.m);
+                        rem = rem.slice(bestIdx + best.m[0].length);
+                    }
+                    return result;
+                }
+
+                var lines = src.split('\n');
+                var out = [], i = 0, listBuf = [];
+
+                function flushList() {
+                    if (listBuf.length) { out.push('<ul>' + listBuf.join('') + '</ul>'); listBuf = []; }
+                }
+
+                while (i < lines.length) {
+                    var raw = lines[i], t = raw.trim();
+
+                    // 空行
+                    if (!t) { flushList(); i++; continue; }
+
+                    // 围栏代码块
+                    if (/^```/.test(t)) {
+                        flushList();
+                        var code = []; i++;
+                        while (i < lines.length && !/^```/.test(lines[i].trim())) { code.push(lines[i]); i++; }
+                        i++;
+                        out.push('<pre><code>' + esc(code.join('\n').trimEnd()) + '</code></pre>');
+                        continue;
+                    }
+
+                    // 原始 HTML 块（行以 HTML 标签开头）→ 原样透传，不转义
+                    if (/^<[a-zA-Z\/!]/.test(t)) {
+                        flushList();
+                        var block = [raw]; i++;
+                        while (i < lines.length) {
+                            var nt = lines[i].trim();
+                            if (!nt) {
+                                // 空行：向前看，若后面仍有 HTML 则纳入同一块
+                                var j = i + 1;
+                                while (j < lines.length && !lines[j].trim()) j++;
+                                if (j < lines.length && /^<[a-zA-Z\/]/.test(lines[j].trim())) {
+                                    block.push(lines[i]); i++; continue;
+                                }
+                                break;
+                            }
+                            if (/^#{1,6}\s/.test(nt)) break; // 遇到 Markdown 标题退出 HTML 块
+                            block.push(lines[i]); i++;
+                        }
+                        out.push(block.join('\n'));
+                        continue;
+                    }
+
+                    // ATX 标题 # / ## / ###
+                    var hm = t.match(/^(#{1,6})\s+(.+)$/);
+                    if (hm) {
+                        flushList();
+                        var lvl = hm[1].length;
+                        out.push('<h' + lvl + '>' + inline(hm[2]) + '</h' + lvl + '>');
+                        i++; continue;
+                    }
+
+                    // 无序列表项
+                    var lm = t.match(/^[-*+]\s+(.+)$/);
+                    if (lm) { listBuf.push('<li>' + inline(lm[1]) + '</li>'); i++; continue; }
+
+                    // 普通段落
+                    flushList();
+                    out.push('<p>' + inline(t) + '</p>');
+                    i++;
+                }
+
+                flushList();
+                return out.join('\n');
             }
 
             function setNotes(html) {
@@ -574,6 +710,31 @@
                     hide(notesContent); show(notesPlaceholder);
                 }
             }
+
+            /* ── 拦截 notes 区域内所有链接点击，通过系统浏览器打开 ──
+             * 防止 WebView 发生内部导航（页面跳转）。
+             * 优先使用 Wails v3 runtime.BrowserOpenURL，
+             * 回退到 window.open（某些平台可能也能正确打开系统浏览器）。
+             */
+            notesContent.addEventListener('click', function (e) {
+                var anchor = e.target.closest('a[href]');
+                if (!anchor) return;
+                var url = anchor.href;
+                if (!url || !/^https?:\/\//.test(url)) return;
+                e.preventDefault();
+                // Wails v3 runtime（标准 SPA 模式）
+                if (window.runtime && typeof window.runtime.BrowserOpenURL === 'function') {
+                    window.runtime.BrowserOpenURL(url);
+                    return;
+                }
+                // Wails v3 _wails shim（BuiltinWindow 简化模式）
+                if (window._wails && typeof window._wails.invoke === 'function') {
+                    window._wails.invoke('wails:browser:openurl:' + url);
+                    return;
+                }
+                // 最终回退
+                window.open(url, '_blank');
+            });
 
             /* ── icon helpers ── */
             function iconNeutral() { iconWrap.className = 'upd-icon-wrap'; show(icoRefresh); hide(icoCheck); hide(icoError); }
