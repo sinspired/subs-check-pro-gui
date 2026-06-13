@@ -144,7 +144,7 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
 
   async function openSubStore() {
     try {
-      await GuiApp.OpenSubStoreUI();
+      await GuiApp.OpenSubStoreWindow();
     } catch (e: any) {
       toast('打开订阅管理失败: ' + (e?.message ?? ''));
     }
