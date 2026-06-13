@@ -992,20 +992,23 @@
   color: #e05252;
 }
 
-/* Release Notes 预览 */
+/* ── Release Notes：Markdown 渲染容器 ──────────────────────────────
+   原实现为 <pre> 纯文本预览（等宽字体 + white-space: pre-wrap）。
+   现在 releaseNotes 经 marked + DOMPurify 渲染为真正的 HTML
+   （标题/列表/代码块/链接/表格等），容器本身改为普通排版盒子，
+   并为内部各类标签补充样式，与 .aw-update-result 卡片风格统一。 */
 .aw-update-notes {
   margin: 0;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: var(--bg, #111);
-  border-radius: 5px;
-  font-family: "Fira Code", monospace;
-  font-size: 10.5px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.7;
   color: var(--muted);
-  white-space: pre-wrap;
-  word-break: break-word;
-  max-height: 130px;
+  max-height: 220px;
   overflow-y: auto;
-  line-height: 1.55;
+  word-break: break-word;
 }
 
 /* 细滚动条 */
@@ -1021,6 +1024,135 @@
 }
 .aw-update-notes::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
+}
+
+/* 标题：层级递减，首个标题去掉多余上边距 */
+.aw-update-notes h1,
+.aw-update-notes h2,
+.aw-update-notes h3,
+.aw-update-notes h4,
+.aw-update-notes h5,
+.aw-update-notes h6 {
+  margin: 10px 0 4px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fg);
+  line-height: 1.4;
+}
+.aw-update-notes h1:first-child,
+.aw-update-notes h2:first-child,
+.aw-update-notes h3:first-child,
+.aw-update-notes h4:first-child,
+.aw-update-notes h5:first-child,
+.aw-update-notes h6:first-child {
+  margin-top: 0;
+}
+
+/* 段落与分隔线 */
+.aw-update-notes p {
+  margin: 4px 0;
+}
+.aw-update-notes hr {
+  margin: 10px 0;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+/* 列表 */
+.aw-update-notes ul,
+.aw-update-notes ol {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+.aw-update-notes li {
+  margin: 2px 0;
+}
+.aw-update-notes li > ul,
+.aw-update-notes li > ol {
+  margin: 2px 0;
+}
+
+/* 行内代码 */
+.aw-update-notes code {
+  font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+  font-size: 11px;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--border) 60%, transparent);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* 围栏代码块 */
+.aw-update-notes pre {
+  margin: 6px 0;
+  padding: 8px 10px;
+  background: color-mix(in srgb, var(--border) 40%, transparent);
+  border-radius: 5px;
+  overflow-x: auto;
+}
+.aw-update-notes pre code {
+  background: none;
+  padding: 0;
+  color: var(--muted);
+}
+
+/* 链接 */
+.aw-update-notes a {
+  color: var(--accent, #6b8cff);
+  text-decoration: none;
+}
+.aw-update-notes a:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+/* 强调 */
+.aw-update-notes strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.aw-update-notes em {
+  font-style: italic;
+}
+.aw-update-notes del,
+.aw-update-notes s {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+/* 引用块 */
+.aw-update-notes blockquote {
+  margin: 6px 0;
+  padding: 2px 10px;
+  border-left: 2px solid var(--border);
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+/* 图片（如 GitHub 用户头像/徽章） */
+.aw-update-notes img {
+  max-height: 18px;
+  vertical-align: middle;
+  border-radius: 3px;
+}
+
+/* 表格 */
+.aw-update-notes table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 6px 0;
+  font-size: 11px;
+}
+.aw-update-notes th,
+.aw-update-notes td {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+.aw-update-notes th {
+  color: var(--fg);
+  font-weight: 600;
 }
 
 /* 下载按钮 */
