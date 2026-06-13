@@ -54,6 +54,8 @@ func registerGuiRoutes(router *gin.Engine) {
 	router.GET("/gui/popup", handleGuiPopup)
 	router.GET("/gui/back-to-login", handleGuiBackToLogin)
 	router.GET("/gui/open-about", handleGuiOpenAbout)
+	router.GET("/gui/open-files", handleGuiOpenFiles)
+	router.GET("/gui/open-analysis", handleGuiOpenAnalysis)
 	router.GET("/gui/open-sub-links", handleGuiOpenSubLinks)
 	router.GET("/gui/open-sub-store", handleGuiOpenSubStore)
 	router.GET("/gui/check-update", handleGuiCheckUpdate)
@@ -207,6 +209,34 @@ func handleGuiOpenAbout(c *gin.Context) {
 	if globalGuiApp != nil {
 		application.InvokeAsync(func() {
 			globalGuiApp.OpenAboutWindow()
+		})
+	}
+}
+
+// handleGuiOpenFiles 打开「内置文件」独立窗口（单例）。
+func handleGuiOpenFiles(c *gin.Context) {
+	if !isLoopback(c) {
+		c.String(http.StatusForbidden, "forbidden")
+		return
+	}
+	c.String(http.StatusOK, "ok")
+	if globalGuiApp != nil {
+		application.InvokeAsync(func() {
+			globalGuiApp.OpenFilesWindow()
+		})
+	}
+}
+
+// handleGuiOpenAnalysis 打开「分析报告」独立窗口（单例）。
+func handleGuiOpenAnalysis(c *gin.Context) {
+	if !isLoopback(c) {
+		c.String(http.StatusForbidden, "forbidden")
+		return
+	}
+	c.String(http.StatusOK, "ok")
+	if globalGuiApp != nil {
+		application.InvokeAsync(func() {
+			globalGuiApp.OpenAnalysisWindow()
 		})
 	}
 }

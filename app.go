@@ -52,6 +52,8 @@ type GuiApp struct {
 	aboutWin    *application.WebviewWindow
 	subLinksWin *application.WebviewWindow
 	subStoreWin *application.WebviewWindow
+	filesWin    *application.WebviewWindow
+	analysisWin *application.WebviewWindow
 
 	// updateWin 自定义更新窗口（懒加载，复用）。
 	updateWin *application.WebviewWindow
@@ -903,6 +905,80 @@ func semverGreater(a, b string) bool {
 		}
 	}
 	return false
+}
+
+// OpenFilesWindow 打开或聚焦「内置文件」独立窗口（单例模式）。
+// 通过 /gui/enter nonce 中转，自动完成 API Key 写入，无需用户手动登录。
+func (g *GuiApp) OpenFilesWindow() {
+	wailsApp := application.Get()
+	if wailsApp == nil {
+		return
+	}
+	application.InvokeAsync(func() {
+		if g.filesWin != nil {
+			g.filesWin.Show()
+			g.filesWin.Focus()
+			return
+		}
+		listenPort := defaultListenPort()
+		nonce := generateNonce(config.GlobalConfig.APIKey, false)
+		targetURL := "http://127.0.0.1:" + listenPort +
+			"/gui/enter?n=" + nonce + "&redirect=/files"
+		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+			Name:      "files",
+			Title:     "Subs Check Pro — 内置文件",
+			Width:     720,
+			Height:    720,
+			MinWidth:  600,
+			MinHeight: 400,
+			URL:       targetURL,
+			Mac:       macWindowOpts(50),
+		})
+		g.filesWin = win
+		win.RegisterHook(events.Common.WindowClosing, func(_ *application.WindowEvent) {
+			g.filesWin = nil
+		})
+		win.Show()
+		win.Center()
+		win.Focus()
+	})
+}
+
+// OpenAnalysisWindow 打开或聚焦「分析报告」独立窗口（单例模式）。
+// 通过 /gui/enter nonce 中转，自动完成 API Key 写入，无需用户手动登录。
+func (g *GuiApp) OpenAnalysisWindow() {
+	wailsApp := application.Get()
+	if wailsApp == nil {
+		return
+	}
+	application.InvokeAsync(func() {
+		if g.analysisWin != nil {
+			g.analysisWin.Show()
+			g.analysisWin.Focus()
+			return
+		}
+		listenPort := defaultListenPort()
+		nonce := generateNonce(config.GlobalConfig.APIKey, false)
+		targetURL := "http://127.0.0.1:" + listenPort +
+			"/gui/enter?n=" + nonce + "&redirect=/analysis"
+		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+			Name:      "analysis",
+			Title:     "Subs Check Pro — 分析报告",
+			Width:     1200,
+			Height:    800,
+			MinWidth:  800,
+			MinHeight: 600,
+			URL:       targetURL,
+			Mac:       macWindowOpts(50),
+		})
+		g.analysisWin = win
+		win.RegisterHook(events.Common.WindowClosing, func(_ *application.WindowEvent) {
+			g.analysisWin = nil
+		})
+		win.Show()
+		win.Center()
+		win.Focus()
+	})
 }
 
 // OpenSubStoreWindow 打开或聚焦 Sub-Store 订阅管理独立窗口（单例模式）。
