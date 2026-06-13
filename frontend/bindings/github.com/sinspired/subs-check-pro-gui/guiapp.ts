@@ -132,6 +132,14 @@ export function OpenAboutWindow(): $CancellablePromise<void> {
 }
 
 /**
+ * OpenAnalysisWindow 打开或聚焦「分析报告」独立窗口（单例模式）。
+ * 通过 /gui/enter nonce 中转，自动完成 API Key 写入，无需用户手动登录。
+ */
+export function OpenAnalysisWindow(): $CancellablePromise<void> {
+    return $Call.ByID(2205529368);
+}
+
+/**
  * OpenBrandURL 在 Wails 无地址栏窗口中打开品牌 / 社交链接。
  */
 export function OpenBrandURL(url: string, windowSize: string): $CancellablePromise<void> {
@@ -144,6 +152,14 @@ export function OpenBrandURL(url: string, windowSize: string): $CancellablePromi
  */
 export function OpenConfigFile(): $CancellablePromise<string> {
     return $Call.ByID(1547608438);
+}
+
+/**
+ * OpenFilesWindow 打开或聚焦「内置文件」独立窗口（单例模式）。
+ * 通过 /gui/enter nonce 中转，自动完成 API Key 写入，无需用户手动登录。
+ */
+export function OpenFilesWindow(): $CancellablePromise<void> {
+    return $Call.ByID(3767068697);
 }
 
 /**
