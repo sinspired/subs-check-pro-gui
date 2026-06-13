@@ -11,6 +11,7 @@ import { useWailsReady } from '../hooks/useWailsReady';
 import { GuiApp, AppInfo, UpdateInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 import { useToast } from '../hooks/useToast';
 import { Toast } from '../components/Toast';
+import { md2html } from '../utils/markdown';
 
 async function openLink(url: string, windowSize: 'extraLarge' | 'large' | 'medium' | 'small' | 'tiny' | 'wide' = 'medium') {
   try {
@@ -168,6 +169,21 @@ export function AboutApp() {
     }
   }
 
+  /**
+   * 拦截 Release Notes 区域内的链接点击。
+   * marked 渲染后的 Markdown 中可能包含 <a href="..."> 外链，
+   * 统一通过 openLink() 在内置浏览器窗口中打开，
+   * 避免在「关于」窗口内发生页面跳转。
+   */
+  function handleNotesClick(e: MouseEvent) {
+    const target = e.target as HTMLElement;
+    const anchor = target.closest('a[href]') as HTMLAnchorElement | null;
+    if (!anchor) return;
+    const url = anchor.href;
+    if (!/^https?:\/\//.test(url)) return;
+    e.preventDefault();
+    openLink(url);
+  }
 
   return (
     <div class="aw-root">
@@ -588,13 +604,18 @@ export function AboutApp() {
                         </span>
                       </div>
 
-                      {/* Release Notes 折叠展示（前 400 字符） */}
+                      {/* Release Notes：Markdown 渲染（marked + DOMPurify），
+                          限高滚动展示，不再按字符数截断 —— 截断
+                          Markdown 源文本容易切坏链接/代码块语法，
+                          改为 CSS max-height + overflow-y:auto 限制高度。 */}
                       {updateInfo.releaseNotes && (
-                        <pre class="aw-update-notes">
-                          {updateInfo.releaseNotes.length > 400
-                            ? updateInfo.releaseNotes.slice(0, 400) + '\n…'
-                            : updateInfo.releaseNotes}
-                        </pre>
+                        <div
+                          class="aw-update-notes"
+                          // md2html() 内部已用 DOMPurify 清洗，
+                          // 仅放行白名单结构标签，可安全注入。
+                          dangerouslySetInnerHTML={{ __html: md2html(updateInfo.releaseNotes) }}
+                          onClick={handleNotesClick}
+                        />
                       )}
 
                       {/* 下载按钮：通过 ghproxy.net 加速 */}
