@@ -54,5 +54,6 @@ func newPopupOptions(title, url, size string) application.WebviewWindowOptions {
 		MinHeight: 400,
 		URL:       url,
 		Mac:       macWindowOpts(50),
+		BackgroundType: application.BackgroundTypeTranslucent,
 	}
 }

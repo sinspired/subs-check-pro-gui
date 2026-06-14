@@ -602,6 +602,7 @@ func (g *GuiApp) OpenAboutWindow() {
 			Frameless:     false,
 			URL:           "/about.html",
 			Mac:           macWindowOpts(30),
+			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.aboutWin = win
 		win.RegisterHook(events.Common.WindowClosing, func(_ *application.WindowEvent) {
@@ -681,6 +682,7 @@ func (g *GuiApp) showUpdateWindow(rel *wupdater.Release) {
 			// 与登录/关于窗口共享同一套样式与依赖，不再使用 go:embed 内嵌 HTML。
 			URL: "/updater.html",
 			Mac: macWindowOpts(30),
+			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.updateWin = win
 
@@ -907,6 +909,7 @@ func (g *GuiApp) OpenFilesWindow() {
 			MinHeight: 400,
 			URL:       targetURL,
 			Mac:       macWindowOpts(50),
+			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.filesWin = win
 		win.RegisterHook(events.Common.WindowClosing, func(_ *application.WindowEvent) {
@@ -944,6 +947,7 @@ func (g *GuiApp) OpenAnalysisWindow() {
 			MinHeight: 600,
 			URL:       targetURL,
 			Mac:       macWindowOpts(50),
+			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.analysisWin = win
 		win.RegisterHook(events.Common.WindowClosing, func(_ *application.WindowEvent) {
@@ -995,6 +999,7 @@ func (g *GuiApp) OpenSubStoreWindow() {
 			MinHeight: 600,
 			URL:       capturedURL,
 			Mac:       macWindowOpts(50),
+			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.subStoreWin = win
 		win.RegisterHook(events.Common.WindowClosing, func(_ *application.WindowEvent) {
@@ -1031,6 +1036,7 @@ func (g *GuiApp) OpenSubLinksWindow() {
 			Frameless:     false,
 			URL:           "/sub-links.html",
 			Mac:           macWindowOpts(30),
+			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.subLinksWin = win
 		win.Center()
