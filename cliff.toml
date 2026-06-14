@@ -20,7 +20,7 @@ body = """
 {% if version %}
 {% set base = "https://github.com/sinspired/subs-check-pro-gui/releases/download/" ~ version ~ "/subs-check-pro-gui_" %}
 
-## 快捷下载链接
+## 下载说明
 
 请选择正确的操作系统和架构：苹果 M 系列芯片设备请选择 `macOS/Apple Silicon`，Windows 安装版请选择 `Setup`，二进制直接选择 `EXE`
 
