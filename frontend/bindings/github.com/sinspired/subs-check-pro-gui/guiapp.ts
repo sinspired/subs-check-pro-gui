@@ -134,6 +134,8 @@ export function OpenAboutWindow(): $CancellablePromise<void> {
 /**
  * OpenAnalysisWindow 打开或聚焦「分析报告」独立窗口（单例模式）。
  * 通过 /gui/enter nonce 中转，自动完成 API Key 写入，无需用户手动登录。
+ * OpenAnalysisWindow 打开或聚焦「分析报告」独立窗口（单例模式）。
+ * 通过 /gui/enter nonce 中转，自动完成 API Key 写入，无需用户手动登录。
  */
 export function OpenAnalysisWindow(): $CancellablePromise<void> {
     return $Call.ByID(2205529368);
