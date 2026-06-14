@@ -159,6 +159,7 @@ func main() {
 			GeneralAutofillEnabled:  true,
 			PasswordAutosaveEnabled: true,
 		},
+		BackgroundType: application.BackgroundTypeTranslucent,
 	})
 
 	// 注入窗口引用
