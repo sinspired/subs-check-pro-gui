@@ -293,7 +293,7 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
             {/* 节点分析报告 */}
             <button
               class="btn-quick"
-              onClick={() => openInternalPage('/analysis', '节点分析报告', 'medium')}
+              onClick={() => openInternalPage('/analysis', '节点分析报告', 'wide')}
               title="节点分析报告"
               disabled={launching}
             >

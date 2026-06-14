@@ -923,6 +923,8 @@ func (g *GuiApp) OpenFilesWindow() {
 
 // OpenAnalysisWindow 打开或聚焦「分析报告」独立窗口（单例模式）。
 // 通过 /gui/enter nonce 中转，自动完成 API Key 写入，无需用户手动登录。
+// OpenAnalysisWindow 打开或聚焦「分析报告」独立窗口（单例模式）。
+// 通过 /gui/enter nonce 中转，自动完成 API Key 写入，无需用户手动登录。
 func (g *GuiApp) OpenAnalysisWindow() {
 	wailsApp := application.Get()
 	if wailsApp == nil {
@@ -939,14 +941,14 @@ func (g *GuiApp) OpenAnalysisWindow() {
 		targetURL := "http://127.0.0.1:" + listenPort +
 			"/gui/enter?n=" + nonce + "&redirect=/analysis"
 		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-			Name:      "analysis",
-			Title:     "Subs Check Pro — 分析报告",
-			Width:     1200,
-			Height:    800,
-			MinWidth:  800,
-			MinHeight: 600,
-			URL:       targetURL,
-			Mac:       macWindowOpts(50),
+			Name:           "analysis",
+			Title:          "Subs Check Pro — 分析报告",
+			Width:          1200,
+			Height:         700,
+			MinWidth:       800,
+			MinHeight:      600,
+			URL:            targetURL,
+			Mac:            macWindowOpts(50),
 			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.analysisWin = win
