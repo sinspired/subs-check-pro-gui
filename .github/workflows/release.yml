@@ -344,3 +344,5 @@ jobs:
           release_notes: ${{ steps.release.outputs.notes }}
           email_url: ${{ secrets.EMAIL_APPRISE_URL }}
           telegram_url: ${{ secrets.TELEGRAM_APPRISE_URL }}
+          urls: |
+            ntfy://subs-check-pro?optional=yes&retry=3&wait=5
