@@ -36,6 +36,7 @@ func main() {
 	coreApp, guiApp := setupApp()
 	globalGuiApp = guiApp
 
+	// TODO:处理右键菜单
 	wailsApp := application.New(application.Options{
 		Name:        "Subs Check Pro",
 		Description: "订阅检测桌面管理面板",
