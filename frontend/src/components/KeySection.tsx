@@ -336,6 +336,8 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
                 <line x1="12" y1="8" x2="12.01" y2="8" />
               </svg>
             </button>
+
+            {/* TODO:添加WebUI浏览器跳转 */}
           </div>
         </div>
 
