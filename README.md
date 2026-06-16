@@ -9,7 +9,6 @@
 [![Wails](https://img.shields.io/badge/Wails-v3.0.0--alpha-red?logo=wails)](https://v3.wails.io/)
 [![License: GPL v3](https://img.shields.io/github/license/sinspired/subs-check-pro-gui
 )](./LICENCE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](#构建)
 
 </div>
 

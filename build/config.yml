@@ -8,7 +8,7 @@ info:
   companyName: "sinspired" # The name of the company
   productName: "subs-check-pro-gui" # The name of the application
   productIdentifier: "com.sinspired.subs-check-pro-gui" # The unique product identifier
-  description: "Subs-Check-Pro 跨平台现代客户端" # The application description
+  description: "Subs-Check-Pro 桌面端" # The application description
   copyright: "(c) 2025, sinspired" # Copyright text
   comments: "跨平台现代 GUI 客户端，基于 Subs Check PRO 内核，本地原生界面 + WebUI，可远程管理，后台运行，支持开机自启。" # Comments
   version: "1.0.0-beta.3" # The application version
