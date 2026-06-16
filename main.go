@@ -94,8 +94,6 @@ func main() {
 			slog.Warn("Updater: Init 失败", "error", err)
 		} else {
 			slog.Debug("Updater: 已初始化", "currentVersion", currentVer)
-			// 将 GuiVersion 显式传入，修复原先 updater 包访问不到 main 包变量的编译错误
-			guiupdater.InitDebugLog(wailsApp, GuiVersion)
 		}
 	}
 	guiApp.updaterApp = wailsApp
