@@ -256,7 +256,7 @@ func (g *GuiApp) CompleteInit() error {
 	g.configPath = g.backend.GetConfigPath()
 	g.pendingInit = false
 
-	sendOSNotification("Subs Check PRO 内核", "服务已成功启动")
+	sendOSNotification("Subs Check PRO", "内核服务已成功启动")
 	return nil
 }
 
@@ -363,7 +363,7 @@ func (g *GuiApp) SwitchConfigFile(path, enteredKey string) (AppInfo, error) {
 	g.isFirstRun = false
 	g.pendingInit = false
 
-	sendOSNotification("Subs Check PRO 内核", "已切换到新配置并重新启动")
+	sendOSNotification("Subs Check PRO", "内核已切换到新配置并重新启动")
 	return g.GetAppInfo(), nil
 }
 
@@ -414,12 +414,12 @@ func (g *GuiApp) HideToTray() {
 		return
 	}
 	hideWindow(g.loginWin)
-	sendOSNotification("主程序", "已最小化到系统托盘")
+	sendOSNotification("Subs Check PRO", "GUI已最小化到系统托盘")
 }
 
 // QuitApp 供前端"关闭按钮对话框"选择退出时调用。
 func (g *GuiApp) QuitApp() {
-	sendOSNotification("主程序", "正在关闭…")
+	sendOSNotification("Subs Check PRO", "GUI正在关闭…")
 	app := application.Get()
 	if app != nil {
 		app.Quit()
@@ -628,7 +628,7 @@ func (g *GuiApp) CheckForUpdates() {
 		updateInfo, err := g.updaterApp.Updater.Check(ctx)
 		if err != nil {
 			slog.Warn("检查更新失败", "error", err)
-			sendOSNotification("更新失败", err.Error())
+			sendOSNotification("Subs Check PRO GUI 更新失败", err.Error())
 			// 新增：emit 给前端 toast 展示
 			g.updaterApp.Event.Emit("gui:update:toast", "检查更新失败: "+err.Error())
 			return
@@ -718,7 +718,7 @@ func (g *GuiApp) showUpdateWindow(rel *wupdater.Release) {
 			go func() {
 				if err := g.updaterApp.Updater.Restart(ctx); err != nil {
 					slog.Warn("重启应用更新失败", "error", err)
-					sendOSNotification("更新失败", err.Error())
+					sendOSNotification("Subs Check PRO GUI 更新失败", err.Error())
 				}
 			}()
 		})
