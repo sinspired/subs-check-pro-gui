@@ -184,13 +184,13 @@ func main() {
 	webUIWin.OnWindowEvent(events.Common.WindowMinimise, func(e *application.WindowEvent) {
 		webUIWin.Hide()
 		windowVisible.Store(false)
-		sendOSNotification("管理界面", "已最小化到系统托盘")
+		sendOSNotification("Subs Check PRO", "管理界面已最小化到系统托盘")
 	})
 
 	loginWin.OnWindowEvent(events.Common.WindowMinimise, func(e *application.WindowEvent) {
 		loginWin.Hide()
 		windowVisible.Store(false)
-		sendOSNotification("登录窗口", "已最小化到系统托盘")
+		sendOSNotification("Subs Check PRO GUI", "登录窗口已最小化到系统托盘")
 	})
 
 	// 退出生命周期清理
@@ -205,7 +205,7 @@ func main() {
 			}
 		}
 		slog.Info("GUI 程序已退出")
-		sendOSNotification("Subs Check Pro", "已关闭")
+		sendOSNotification("Subs Check PRO", "GUI 程序已关闭")
 	})
 
 	onQuit := func() { wailsApp.Quit() }
