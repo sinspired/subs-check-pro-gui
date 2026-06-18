@@ -334,10 +334,10 @@ github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e h1:ur8uMsPIF
 github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e/go.mod h1:+e5fBW3bpPyo+3uLo513gIUblc03egGjMM0+5GKbzK8=
 github.com/sinspired/checkip v0.4.1 h1:+NLaj9UpU9/gpNlH0p1RmwUFoZldaHe+csBdIWIDa3I=
 github.com/sinspired/checkip v0.4.1/go.mod h1:10GI/01Kjj0JnOxncAA18SkTx1jx5oBW91FGZq+kyK4=
-github.com/sinspired/subs-check-pro-webui v0.0.0-20260617071334-392c2035708d h1:Dwziq2Ob1zyX/sGK2oC2qYG6XXZLHrp6xLviNwqh6KA=
-github.com/sinspired/subs-check-pro-webui v0.0.0-20260617071334-392c2035708d/go.mod h1:rg8DBZnTSh5/5tHCwQJrMVX6tKqqI5m8BrTT+gCB92M=
-github.com/sinspired/subs-check-pro/v2 v2.6.1 h1:sA4D18x+F/KUrGEnUWWnr9wbvJjfGEx4ta0FrP49fG4=
-github.com/sinspired/subs-check-pro/v2 v2.6.1/go.mod h1:r8J4qz56w48Ud+VkzsoSMSR20GSFH6yPivcl3bEPRNA=
+github.com/sinspired/subs-check-pro-webui v0.0.0-20260618122921-d624cf5036db h1:oxIJAF0GFyuc99mKEho+vDGeVYUKl4iDv32zA428KnQ=
+github.com/sinspired/subs-check-pro-webui v0.0.0-20260618122921-d624cf5036db/go.mod h1:rg8DBZnTSh5/5tHCwQJrMVX6tKqqI5m8BrTT+gCB92M=
+github.com/sinspired/subs-check-pro/v2 v2.6.2 h1:Mcw8ilCCAPRCydQ1pb9LQeLqUYW9NzvnYxaezF957pM=
+github.com/sinspired/subs-check-pro/v2 v2.6.2/go.mod h1:B6feziPHf6O9SKKSJK/f4UnN1CmvMg+rWJHv/MNSoeo=
 github.com/sirupsen/logrus v1.9.4 h1:TsZE7l11zFCLZnZ+teH4Umoq5BhEIfIzfRDZ1Uzql2w=
 github.com/sirupsen/logrus v1.9.4/go.mod h1:ftWc9WdOfJ0a92nsE2jF5u5ZwH8Bv2zdeOC42RjbV2g=
 github.com/sohaha/zlsgo v1.7.20 h1:1kE2/kFmi95Qz5bfZxe6td+40PJnuE8MzpKfQdGvtiw=
