@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 includes:
   common: ../Taskfile.yml
@@ -9,8 +9,14 @@ vars:
   # KEYCHAIN_PROFILE: "my-notarize-profile"
   # ENTITLEMENTS: "build/darwin/entitlements.plist"
 
-  # Docker image for cross-compilation (used when building on non-macOS)
   CROSS_IMAGE: wails-cross
+
+  # DMG 配置（需要 brew install create-dmg）
+  DMG_BACKGROUND: ""
+  DMG_WINDOW_SIZE: "560 400"
+  DMG_ICON_SIZE: "100"
+  DMG_APP_POSITION: "150 185"
+  DMG_APPLICATIONS_POSITION: "450 185"
 
 tasks:
   build:
@@ -18,18 +24,18 @@ tasks:
     cmds:
       - task: '{{if eq OS "darwin"}}build:native{{else}}build:docker{{end}}'
         vars:
-          ARCH: '{{.ARCH}}'
-          DEV: '{{.DEV}}'
-          OUTPUT: '{{.OUTPUT}}'
-          EXTRA_TAGS: '{{.EXTRA_TAGS}}'
-          OBFUSCATED: '{{.OBFUSCATED}}'
-          GARBLE_ARGS: '{{.GARBLE_ARGS}}'
+          ARCH: "{{.ARCH}}"
+          DEV: "{{.DEV}}"
+          OUTPUT: "{{.OUTPUT}}"
+          EXTRA_TAGS: "{{.EXTRA_TAGS}}"
+          OBFUSCATED: "{{.OBFUSCATED}}"
+          GARBLE_ARGS: "{{.GARBLE_ARGS}}"
           CORE_VERSION: '{{.CORE_VERSION | default "dev"}}'
           CORE_COMMIT: '{{.CORE_COMMIT | default "unknown"}}'
           GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
     vars:
-      DEFAULT_OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}'
-      OUTPUT: '{{ .OUTPUT | default .DEFAULT_OUTPUT }}'
+      DEFAULT_OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}"
+      OUTPUT: "{{ .OUTPUT | default .DEFAULT_OUTPUT }}"
 
   build:native:
     summary: Builds the application natively on macOS
@@ -47,18 +53,18 @@ tasks:
       - task: common:generate:icons
     preconditions:
       - sh: '{{if eq .OBFUSCATED "true"}}command -v garble >/dev/null 2>&1{{else}}true{{end}}'
-        msg: "garble is required for obfuscated builds. Install it with: go install mvdan.cc/garble@v0.16.0 (requires Go 1.24+). See https://github.com/burrowers/garble/releases for version/toolchain compatibility."
+        msg: "garble is required for obfuscated builds."
     cmds:
       - '{{if eq .OBFUSCATED "true"}}garble {{.GARBLE_ARGS}} build{{else}}go build{{end}} {{.BUILD_FLAGS}} -o "{{.OUTPUT}}"'
     vars:
       VERSION_LDFLAGS: '{{if ne .DEV "true"}}-X main.GuiVersion={{.GUI_VERSION | default "dev"}} -X main.Version={{.CORE_VERSION | default "dev"}} -X main.CurrentCommit={{.CORE_COMMIT | default "unknown"}}{{end}}'
       BUILD_FLAGS: '{{if eq .DEV "true"}}{{if or .EXTRA_TAGS (eq .OBFUSCATED "true")}}-tags {{if eq .OBFUSCATED "true"}}wails_obfuscated{{if .EXTRA_TAGS}},{{end}}{{end}}{{.EXTRA_TAGS}} {{end}}-buildvcs=false -gcflags=all="-l"{{else}}-tags production{{if eq .OBFUSCATED "true"}},wails_obfuscated{{end}}{{if .EXTRA_TAGS}},{{.EXTRA_TAGS}}{{end}} -trimpath -buildvcs=false -ldflags="-w -s {{.VERSION_LDFLAGS}}"{{end}}'
-      DEFAULT_OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}'
-      OUTPUT: '{{ .OUTPUT | default .DEFAULT_OUTPUT }}'
+      DEFAULT_OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}"
+      OUTPUT: "{{ .OUTPUT | default .DEFAULT_OUTPUT }}"
     env:
       GOOS: darwin
       CGO_ENABLED: 1
-      GOARCH: '{{.ARCH | default ARCH}}'
+      GOARCH: "{{.ARCH | default ARCH}}"
       CGO_CFLAGS: "-mmacosx-version-min=12.0"
       CGO_LDFLAGS: "-mmacosx-version-min=12.0"
       MACOSX_DEPLOYMENT_TARGET: "12.0"
@@ -76,9 +82,7 @@ tasks:
       - sh: docker info > /dev/null 2>&1
         msg: "Docker is required for cross-compilation. Please install Docker."
       - sh: docker image inspect {{.CROSS_IMAGE}} > /dev/null 2>&1
-        msg: |
-          Docker image '{{.CROSS_IMAGE}}' not found.
-          Build it first: wails3 task setup:docker
+        msg: "Docker image '{{.CROSS_IMAGE}}' not found. Build it first: wails3 task setup:docker"
     cmds:
       - docker run --rm -v "{{.ROOT_DIR}}:/app" {{.DOCKER_MOUNTS}} -e APP_NAME="{{.APP_NAME}}" {{if .EXTRA_TAGS}}-e EXTRA_TAGS="{{.EXTRA_TAGS}}"{{end}} {{if eq .OBFUSCATED "true"}}-e OBFUSCATED=true{{end}} {{if .GARBLE_ARGS}}-e GARBLE_ARGS="{{.GARBLE_ARGS}}"{{end}} {{.CROSS_IMAGE}} darwin {{.DOCKER_ARCH}}
       - cmd: docker run --rm -v "{{.ROOT_DIR}}:/app" alpine chown -R $(id -u):$(id -g) /app/bin
@@ -87,12 +91,10 @@ tasks:
       - mv "bin/{{.APP_NAME}}-darwin-{{.DOCKER_ARCH}}" "{{.OUTPUT}}"
     vars:
       DOCKER_ARCH: '{{if eq .ARCH "arm64"}}arm64{{else if eq .ARCH "amd64"}}amd64{{else}}arm64{{end}}'
-      DEFAULT_OUTPUT: '{{.BIN_DIR}}/{{.APP_NAME}}'
-      OUTPUT: '{{ .OUTPUT | default .DEFAULT_OUTPUT }}'
-      # Generate Docker volume mounts: Go module cache + go.mod replace directives
-      # Uses wails3 tool docker-mounts for cross-platform compatibility (Windows/Linux/macOS)
+      DEFAULT_OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}"
+      OUTPUT: "{{ .OUTPUT | default .DEFAULT_OUTPUT }}"
       DOCKER_MOUNTS:
-        sh: 'wails3 tool docker-mounts'
+        sh: "wails3 tool docker-mounts"
 
   build:universal:
     summary: Builds darwin universal binary (arm64 + amd64)
@@ -101,22 +103,22 @@ tasks:
         vars:
           ARCH: amd64
           OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}-amd64"
+          GUI_VERSION: '{{.GUI_VERSION}}'
       - task: build
         vars:
           ARCH: arm64
           OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
+          GUI_VERSION: '{{.GUI_VERSION}}'
     cmds:
       - task: '{{if eq OS "darwin"}}build:universal:lipo:native{{else}}build:universal:lipo:go{{end}}'
 
   build:universal:lipo:native:
-    summary: Creates universal binary using native lipo (macOS)
     internal: true
     cmds:
       - lipo -create -output "{{.BIN_DIR}}/{{.APP_NAME}}" "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
       - rm "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
 
   build:universal:lipo:go:
-    summary: Creates universal binary using wails3 tool lipo (Linux/Windows)
     internal: true
     cmds:
       - wails3 tool lipo -output "{{.BIN_DIR}}/{{.APP_NAME}}" -input "{{.BIN_DIR}}/{{.APP_NAME}}-amd64" -input "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
@@ -126,19 +128,75 @@ tasks:
     summary: Packages the application into a `.app` bundle
     deps:
       - task: build
+        vars:
+          GUI_VERSION: '{{.GUI_VERSION}}'
     cmds:
+      # 显式传 GUI_VERSION，避免 Taskfile vars 作用域切换时丢失
       - task: create:app:bundle
+        vars:
+          GUI_VERSION: '{{.GUI_VERSION}}'
 
   package:universal:
     summary: Packages darwin universal binary (arm64 + amd64)
     deps:
       - task: build:universal
+        vars:
+          GUI_VERSION: '{{.GUI_VERSION}}'
     cmds:
       - task: create:app:bundle
+        vars:
+          GUI_VERSION: '{{.GUI_VERSION}}'
 
+  # ── DMG ──────────────────────────────────────────────────────────────────
+  package:dmg:
+    summary: Builds .app bundle then creates DMG (macOS only, needs create-dmg)
+    deps:
+      - task: package
+        vars:
+          GUI_VERSION: '{{.GUI_VERSION}}'
+    cmds:
+      - task: create:dmg
 
+  package:dmg:universal:
+    summary: Packages universal binary into a DMG (macOS only)
+    deps:
+      - task: package:universal
+        vars:
+          GUI_VERSION: '{{.GUI_VERSION}}'
+    cmds:
+      - task: create:dmg
+
+  create:dmg:
+    summary: Creates DMG from existing .app bundle (macOS only)
+    platforms: [darwin]
+    preconditions:
+      - sh: command -v create-dmg >/dev/null 2>&1
+        msg: "create-dmg not found. Install: brew install create-dmg"
+      - sh: test -d "{{.BIN_DIR}}/{{.APP_NAME}}.app"
+        msg: "{{.BIN_DIR}}/{{.APP_NAME}}.app not found. Run 'task darwin:package' first."
+    cmds:
+      - |
+        set -euo pipefail
+        DMG_OUT="{{.BIN_DIR}}/{{.APP_NAME}}.dmg"
+        rm -f "${DMG_OUT}"
+
+        ARGS=(
+          --volname "{{.APP_NAME}}"
+          --window-size {{.DMG_WINDOW_SIZE}}
+          --icon-size {{.DMG_ICON_SIZE}}
+          --icon "{{.APP_NAME}}.app" {{.DMG_APP_POSITION}}
+          --hide-extension "{{.APP_NAME}}.app"
+          --app-drop-link {{.DMG_APPLICATIONS_POSITION}}
+        )
+        if [ -n "{{.DMG_BACKGROUND}}" ] && [ -f "{{.DMG_BACKGROUND}}" ]; then
+          ARGS+=(--background "{{.DMG_BACKGROUND}}")
+        fi
+
+        create-dmg "${ARGS[@]}" "${DMG_OUT}" "{{.BIN_DIR}}/{{.APP_NAME}}.app"
+        echo "✅ DMG created: ${DMG_OUT}"
+  # ─────────────────────────────────────────────────────────────────────────
   create:app:bundle:
-    summary: Creates an `.app` bundle
+    summary: Creates an `.app` bundle and injects version into Info.plist
     cmds:
       - mkdir -p "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS"
       - mkdir -p "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Resources"
@@ -149,6 +207,27 @@ tasks:
         fi
       - cp "{{.BIN_DIR}}/{{.APP_NAME}}" "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS"
       - cp build/darwin/Info.plist "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents"
+      # ── 版本号动态注入 ─────────────────────────────────────────────────
+      # CFBundleShortVersionString = GUI_VERSION（去掉 'v' 前缀，如 "1.1.2"）
+      # CFBundleVersion            = 同上（macOS 也接受语义版本字符串）
+      - |
+        set -euo pipefail
+        PLIST="{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Info.plist"
+        RAW_VER="{{.GUI_VERSION | default "0.0.1"}}"
+        # 去掉 v 前缀：v1.1.2 → 1.1.2；非 v 开头直接用原值
+        VER="${RAW_VER#v}"
+        python3 - "${PLIST}" "${VER}" << 'PYEOF'
+        import sys, plistlib, pathlib
+        plist_path, version = pathlib.Path(sys.argv[1]), sys.argv[2]
+        with open(plist_path, 'rb') as f:
+            data = plistlib.load(f)
+        data['CFBundleShortVersionString'] = version
+        data['CFBundleVersion'] = version
+        with open(plist_path, 'wb') as f:
+            plistlib.dump(data, f)
+        print(f"✅ Info.plist: CFBundleVersion → {version}")
+        PYEOF
+      # ────────────────────────────────────────────────────────────────────
       - task: '{{if eq OS "darwin"}}codesign:adhoc{{else}}codesign:skip{{end}}'
 
   codesign:adhoc:
@@ -161,7 +240,7 @@ tasks:
     summary: Skips codesigning when cross-compiling
     internal: true
     cmds:
-      - 'echo "Skipping codesign (not available on {{OS}}). Sign the .app on macOS before distribution."'
+      - 'echo "Skipping codesign (not on macOS). Sign the .app on macOS before distribution."'
 
   run:
     cmds:
@@ -179,31 +258,26 @@ tasks:
 
   sign:
     summary: Signs the application bundle with Developer ID
-    desc: |
-      Signs the .app bundle for distribution.
-      Configure SIGN_IDENTITY in the vars section at the top of this file.
     deps:
       - task: package
+        vars:
+          GUI_VERSION: '{{.GUI_VERSION}}'
     cmds:
       - wails3 tool sign --input "{{.BIN_DIR}}/{{.APP_NAME}}.app" --identity "{{.SIGN_IDENTITY}}" {{if .ENTITLEMENTS}}--entitlements {{.ENTITLEMENTS}}{{end}}
     preconditions:
       - sh: '[ -n "{{.SIGN_IDENTITY}}" ]'
-        msg: "SIGN_IDENTITY is required. Set it in the vars section at the top of build/darwin/Taskfile.yml"
+        msg: "SIGN_IDENTITY is required. Set it in vars section of build/darwin/Taskfile.yml"
 
   sign:notarize:
     summary: Signs and notarizes the application bundle
-    desc: |
-      Signs the .app bundle and submits it for notarization.
-      Configure SIGN_IDENTITY and KEYCHAIN_PROFILE in the vars section at the top of this file.
-
-      Setup (one-time):
-        wails3 signing credentials --apple-id "you@email.com" --team-id "TEAMID" --password "app-specific-password" --profile "my-profile"
     deps:
       - task: package
+        vars:
+          GUI_VERSION: '{{.GUI_VERSION}}'
     cmds:
       - wails3 tool sign --input "{{.BIN_DIR}}/{{.APP_NAME}}.app" --identity "{{.SIGN_IDENTITY}}" {{if .ENTITLEMENTS}}--entitlements {{.ENTITLEMENTS}}{{end}} --notarize --keychain-profile {{.KEYCHAIN_PROFILE}}
     preconditions:
       - sh: '[ -n "{{.SIGN_IDENTITY}}" ]'
-        msg: "SIGN_IDENTITY is required. Set it in the vars section at the top of build/darwin/Taskfile.yml"
+        msg: "SIGN_IDENTITY is required."
       - sh: '[ -n "{{.KEYCHAIN_PROFILE}}" ]'
-        msg: "KEYCHAIN_PROFILE is required. Set it in the vars section at the top of build/darwin/Taskfile.yml"
+        msg: "KEYCHAIN_PROFILE is required."
