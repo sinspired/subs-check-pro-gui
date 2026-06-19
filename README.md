@@ -31,7 +31,7 @@
 | Go                | ≥ 1.26   |                                                             |
 | Node.js           | ≥ 20     |                                                             |
 | pnpm / npm / yarn | 任意     | 前端包管理器                                                |
-| Wails CLI v3      | alpha.96 | `go install github.com/wailsapp/wails/v3/cmd/wails3@latest` |
+| Wails CLI v3      | alpha | `go install github.com/wailsapp/wails/v3/cmd/wails3@latest` |
 | Docker            | 可选     | 跨平台编译时需要                                            |
 
 ### Windows 额外依赖
@@ -46,6 +46,14 @@ sudo apt install libgtk-4-dev libwebkit2gtk-4.1-dev
 ```
 
 > **注意**：Wails v3 使用 `GtkFileDialog`（GTK 4.10+），Debian 12 Bookworm 自带的 GTK 4.8 无法编译。跨平台 Docker 编译请使用 `golang:1.26-trixie` 镜像，详见[跨平台构建](#跨平台构建-docker)。
+
+
+### Mac 需要处理权限？
+
+```bash
+# 用户安装后运行一次即可
+xattr -cr /Applications/subs-check-pro-gui.app
+```
 
 ---
 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 出站网络连接（代理检测、GitHub 更新检查）-->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<!-- 允许 JIT 编译（WebKit / JS 引擎需要）-->
+	<key>com.apple.security.cs.allow-jit</key>
+	<true/>
+	<!-- 允许非签名可执行内存（Wails WebView 运行时需要）-->
+	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+	<true/>
+</dict>
+</plist>

@@ -26,10 +26,12 @@
 		<dict>
 			<key>NSAllowsLocalNetworking</key>
 			<true/>
+			<key>NSAllowsArbitraryLoads</key>
+			<true/>
 		</dict>
 		<key>NSHighResolutionCapable</key>
 		<string>true</string>
 		<key>NSHumanReadableCopyright</key>
-		<string>(c) 2025, sinspired</string>
+		<string>(c) 2026, sinspired</string>
 	</dict>
 </plist>
