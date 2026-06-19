@@ -52,8 +52,12 @@ body = """
                     <a href="{{ base }}darwin_arm64.app.tar.gz"><img
                             src="https://img.shields.io/badge/App-Apple%20Silicon-%23000000.svg?logo=apple"></a><br>
                     <a href="{{ base }}darwin_x64.app.tar.gz"><img
-                            src="https://img.shields.io/badge/App-Intel%20X64-%2300A9E0.svg?logo=apple"></a>
-                </td>
+                            src="https://img.shields.io/badge/App-Intel%20X64-%2300A9E0.svg?logo=apple"></a><br>
+                    <a href="{{ base }}darwin_arm64.dmg"><img
+                            src="https://img.shields.io/badge/DMG-Apple%20Silicon-%23000000.svg?logo=apple"></a><br>
+                    <a href="{{ base }}darwin_arm64.dmg"><img
+                            src="https://img.shields.io/badge/DMG-Intel%20X64-%2300A9E0.svg?logo=apple"></a>
+                </td><br>
             </tr>
             <tr>
                 <td>Linux</td>
