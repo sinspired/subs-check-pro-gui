@@ -20,13 +20,13 @@
               }
             }
           ],
-          "image-name" : "wails_icon_vector.svg",
-          "name" : "wails_icon_vector",
+          "image-name" : "subs_check_pro.svg",
+          "name" : "subs_check_pro",
           "position" : {
-            "scale" : 1.25,
+            "scale" : 0.80,
             "translation-in-points" : [
-              36.890625,
-              4.96875
+              0,
+              0
             ]
           }
         }

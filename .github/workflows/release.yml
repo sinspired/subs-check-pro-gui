@@ -15,6 +15,7 @@ permissions:
 #   subs-check-pro-gui_windows_x64.exe
 #   subs-check-pro-gui_windows_x64_setup.exe
 #   subs-check-pro-gui_darwin_arm64.app.tar.gz
+#   subs-check-pro-gui_darwin_arm64.dmg
 #   subs-check-pro-gui_linux_x64.deb
 jobs:
   # 1. 生成 Changelog
@@ -30,7 +31,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          fetch-depth: 0 # 必须获取完整历史，cliff 才能对比 tag
+          fetch-depth: 0
 
       - name: Generate Changelog with git-cliff
         id: cliff
@@ -38,21 +39,51 @@ jobs:
         with:
           args: --latest --strip header
         env:
-          OUTPUT: CHANGES.md # 同时写入文件（供后续步骤引用）
+          OUTPUT: CHANGES.md
           GITHUB_REPO: ${{ github.repository }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Resolve subs-check-pro core version
+    # core_version 直接从 go.mod 读取
+      - name: Resolve subs-check-pro core version from go.mod
         id: core
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VER=$(gh release view --repo sinspired/subs-check-pro --json tagName -q .tagName 2>/dev/null || echo "dev")
-          SHA=$(gh api repos/sinspired/subs-check-pro/commits?per_page=1 -q '.[0].sha[0:7]' 2>/dev/null || echo "unknown")
-          echo "version=${VER}" >> "$GITHUB_OUTPUT"
-          echo "commit=${SHA}"  >> "$GITHUB_OUTPUT"
-          echo "core_version=${VER}  core_commit=${SHA}"
-  # 2. 矩阵构建各平台产物并按照规范重命名
+          # 从 go.mod 精确解析已锁定的版本号（格式：v2.6.2）
+          CORE_VERSION=$(grep 'github.com/sinspired/subs-check-pro/v2' go.mod \
+            | awk '{print $2}' | tr -d '[:space:]')
+
+          if [ -z "${CORE_VERSION}" ]; then
+            echo "⚠️  subs-check-pro/v2 not found in go.mod, falling back to dev"
+            CORE_VERSION="dev"
+            CORE_COMMIT="unknown"
+          else
+            echo "📦 core version from go.mod: ${CORE_VERSION}"
+            # 通过指定 tag 查 commit SHA（不依赖"最新 release"，确定性）
+            # 先尝试轻量 tag（ref/tags），再尝试 annotated tag（object.sha）
+            SHA_RAW=$(gh api "repos/sinspired/subs-check-pro/git/ref/tags/${CORE_VERSION}" \
+              -q '.object.sha' 2>/dev/null || echo "")
+
+            if [ -z "${SHA_RAW}" ]; then
+              # tag 不存在或网络失败，降级
+              CORE_COMMIT="unknown"
+            else
+              # annotated tag 的 object.sha 指向 tag 对象而非 commit，需再查一层
+              OBJ_TYPE=$(gh api "repos/sinspired/subs-check-pro/git/ref/tags/${CORE_VERSION}" \
+                -q '.object.type' 2>/dev/null || echo "commit")
+              if [ "${OBJ_TYPE}" = "tag" ]; then
+                SHA_RAW=$(gh api "repos/sinspired/subs-check-pro/git/tags/${SHA_RAW}" \
+                  -q '.object.sha' 2>/dev/null || echo "${SHA_RAW}")
+              fi
+              CORE_COMMIT="${SHA_RAW:0:7}"
+            fi
+          fi
+
+          echo "version=${CORE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "commit=${CORE_COMMIT}"   >> "$GITHUB_OUTPUT"
+          echo "core_version=${CORE_VERSION}  core_commit=${CORE_COMMIT}"
+
+  # 2. 矩阵构建各平台产物
   build:
     name: Build (${{ matrix.goos }}/${{ matrix.arch }})
     needs: changelog # 等 changelog 生成完再开始
@@ -135,15 +166,18 @@ jobs:
           echo "$nsisPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           Write-Host "Added NSIS to PATH: $nsisPath"
 
+      # macOS：安装 create-dmg
+      - name: Install create-dmg
+        if: runner.os == 'macOS'
+        run: brew install create-dmg
+
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
 
       - name: Install Task CLI and pnpm
         run: npm install -g @go-task/cli pnpm
 
-      # ──────────────────────────────────────────
       # Windows：先 build → 再 package（NSIS）
-      # ──────────────────────────────────────────
       - name: Build (Windows)
         if: runner.os == 'Windows'
         run: task windows:build
@@ -158,9 +192,7 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}
 
-      # ──────────────────────────────────────────
-      # macOS：package 已包含 build + .app bundle
-      # ──────────────────────────────────────────
+      # macOS：先打 .app bundle，再生成 DMG
       - name: Package macOS (.app bundle)
         if: runner.os == 'macOS'
         # task darwin:package 调用 create:app:bundle
@@ -169,9 +201,13 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}
 
-      # ──────────────────────────────────────────
+      - name: Create macOS DMG
+        if: runner.os == 'macOS'
+        run: task darwin:create:dmg
+        env:
+          ARCH: ${{ matrix.arch }}
+
       # Linux：先 build → 再生成 .deb
-      # ──────────────────────────────────────────
       - name: Build (Linux)
         if: runner.os == 'Linux'
         run: task linux:build
@@ -180,19 +216,13 @@ jobs:
 
       - name: Package Linux (.deb)
         if: runner.os == 'Linux'
-        # task linux:create:deb 使用 wails3 tool package（内置 nfpm）
-        # 输出：bin/subs-check-pro-gui_<version>_<arch>.deb
-        # 注意：nfpm.yaml 中 version 字段需改为 ${VERSION}（见说明）
         run: task linux:create:deb
         env:
           ARCH: ${{ matrix.arch }}
           GOARCH: ${{ matrix.arch }}
-          # nfpm.yaml 用 ${VERSION} 时读取此变量（去掉 v 前缀）
           VERSION: ${{ github.ref_name != '' && github.ref_name || 'dev' }}
 
-      # ──────────────────────────────────────────
       # 统一整理产物，重命名为规范格式
-      # ──────────────────────────────────────────
       - name: Collect and Rename Artifacts
         shell: bash
         env:
@@ -230,6 +260,14 @@ jobs:
             darwin)
               # 用 -C 指定源目录，避免 cd 改变工作目录导致后续 ls dist/ 失败
               tar czf "dist/${PREFIX}.app.tar.gz" -C bin "${APP_NAME}.app"
+
+              # DMG（推荐，拖拽安装体验）
+              DMG_SRC="bin/${APP_NAME}.dmg"
+              if [ -f "${DMG_SRC}" ]; then
+                cp "${DMG_SRC}" "dist/${PREFIX}.dmg"
+              else
+                echo "⚠️  DMG not found at ${DMG_SRC}, skipping"
+              fi
               ;;
 
             linux)
@@ -257,9 +295,7 @@ jobs:
           path: dist/
           retention-days: 1
 
-  # ══════════════════════════════════════════════
-  # Job 3: 汇总产物 → 创建 GitHub Release
-  # ══════════════════════════════════════════════
+  # 3. 汇总产物 → 创建 GitHub Release
   release:
     name: Create GitHub Release
     needs: [changelog, build]
@@ -306,12 +342,9 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           # 使用 git-cliff 生成的 changelog 作为 release body
           body: ${{ needs.changelog.outputs.content }}
-          # 不再使用 generate_release_notes: true（只会产生"Full Changelog"链接）
           files: dist/*
 
-  # ══════════════════════════════════════════════
-  # Job 4: 发送通知
-  # ══════════════════════════════════════════════
+  # 4. 发送通知
   notify:
     name: Send Release Notifications
     needs: release
