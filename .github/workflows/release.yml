@@ -125,14 +125,27 @@ jobs:
       # 从 changelog job 获取已解析好的内核版本，避免 Taskfile 重复网络拉取
       CORE_VERSION: ${{ needs.changelog.outputs.core_version }}
       CORE_COMMIT: ${{ needs.changelog.outputs.core_commit }}
-      # GUI 自身版本；tag push 时即 tag name，workflow_dispatch 时 Taskfile 会 fallback 到 git describe
-      GUI_VERSION: ${{ github.ref_name }}
+      # GUI_VERSION 通过 "Resolve GUI version" 步骤写入 GITHUB_ENV，此处不硬编码
+      # tag push → github.ref_name；workflow_dispatch → git describe --tags --abbrev=0
+      # GUI_VERSION: ${{ github.ref_name }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      # tag push → ref_name 即版本号；workflow_dispatch → git describe 取最近 tag
+      - name: Resolve GUI version
+        shell: bash
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            GUI_VER="${{ github.ref_name }}"
+          else
+            GUI_VER=$(git describe --tags --abbrev=0 2>/dev/null || echo "dev")
+          fi
+          echo "GUI_VERSION=${GUI_VER}" >> "$GITHUB_ENV"
+          echo "✅ GUI_VERSION=${GUI_VER}"
 
       - name: Setup Go
         uses: actions/setup-go@v6
@@ -171,11 +184,11 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install create-dmg
 
-      - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
-
       - name: Install Task CLI and pnpm
         run: npm install -g @go-task/cli pnpm
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
 
       # Windows：先 build → 再 package（NSIS）
       - name: Build (Windows)

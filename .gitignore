@@ -7,4 +7,5 @@ build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
 *.zip
 *.exe
 *.ps1
+*.syso
 .wiki/

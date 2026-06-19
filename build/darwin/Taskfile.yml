@@ -103,12 +103,16 @@ tasks:
         vars:
           ARCH: amd64
           OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}-amd64"
-          GUI_VERSION: '{{.GUI_VERSION}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
+          CORE_VERSION: '{{.CORE_VERSION | default "dev"}}'
+          CORE_COMMIT: '{{.CORE_COMMIT | default "unknown"}}'
       - task: build
         vars:
           ARCH: arm64
           OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}-arm64"
-          GUI_VERSION: '{{.GUI_VERSION}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
+          CORE_VERSION: '{{.CORE_VERSION | default "dev"}}'
+          CORE_COMMIT: '{{.CORE_COMMIT | default "unknown"}}'
     cmds:
       - task: '{{if eq OS "darwin"}}build:universal:lipo:native{{else}}build:universal:lipo:go{{end}}'
 
@@ -129,23 +133,27 @@ tasks:
     deps:
       - task: build
         vars:
-          GUI_VERSION: '{{.GUI_VERSION}}'
+          # 显式传递所有版本变量，避免 Taskfile 跨命名空间时 env 读取失效
+          GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
+          CORE_VERSION: '{{.CORE_VERSION | default "dev"}}'
+          CORE_COMMIT: '{{.CORE_COMMIT | default "unknown"}}'
     cmds:
-      # 显式传 GUI_VERSION，避免 Taskfile vars 作用域切换时丢失
       - task: create:app:bundle
         vars:
-          GUI_VERSION: '{{.GUI_VERSION}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
 
   package:universal:
     summary: Packages darwin universal binary (arm64 + amd64)
     deps:
       - task: build:universal
         vars:
-          GUI_VERSION: '{{.GUI_VERSION}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
+          CORE_VERSION: '{{.CORE_VERSION | default "dev"}}'
+          CORE_COMMIT: '{{.CORE_COMMIT | default "unknown"}}'
     cmds:
       - task: create:app:bundle
         vars:
-          GUI_VERSION: '{{.GUI_VERSION}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
 
   # ── DMG ──────────────────────────────────────────────────────────────────
   package:dmg:
@@ -153,7 +161,9 @@ tasks:
     deps:
       - task: package
         vars:
-          GUI_VERSION: '{{.GUI_VERSION}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
+          CORE_VERSION: '{{.CORE_VERSION | default "dev"}}'
+          CORE_COMMIT: '{{.CORE_COMMIT | default "unknown"}}'
     cmds:
       - task: create:dmg
 
@@ -162,7 +172,9 @@ tasks:
     deps:
       - task: package:universal
         vars:
-          GUI_VERSION: '{{.GUI_VERSION}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
+          CORE_VERSION: '{{.CORE_VERSION | default "dev"}}'
+          CORE_COMMIT: '{{.CORE_COMMIT | default "unknown"}}'
     cmds:
       - task: create:dmg
 
@@ -231,10 +243,10 @@ tasks:
       - task: '{{if eq OS "darwin"}}codesign:adhoc{{else}}codesign:skip{{end}}'
 
   codesign:adhoc:
-    summary: Ad-hoc signs the app bundle (macOS only)
+    summary: Ad-hoc signs the app bundle with entitlements (macOS only)
     internal: true
     cmds:
-      - codesign --force --deep --sign - "{{.BIN_DIR}}/{{.APP_NAME}}.app"
+      - codesign --force --deep --sign - --entitlements build/darwin/entitlements.plist "{{.BIN_DIR}}/{{.APP_NAME}}.app"
 
   codesign:skip:
     summary: Skips codesigning when cross-compiling
@@ -261,7 +273,9 @@ tasks:
     deps:
       - task: package
         vars:
-          GUI_VERSION: '{{.GUI_VERSION}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
+          CORE_VERSION: '{{.CORE_VERSION | default "dev"}}'
+          CORE_COMMIT: '{{.CORE_COMMIT | default "unknown"}}'
     cmds:
       - wails3 tool sign --input "{{.BIN_DIR}}/{{.APP_NAME}}.app" --identity "{{.SIGN_IDENTITY}}" {{if .ENTITLEMENTS}}--entitlements {{.ENTITLEMENTS}}{{end}}
     preconditions:
@@ -273,7 +287,9 @@ tasks:
     deps:
       - task: package
         vars:
-          GUI_VERSION: '{{.GUI_VERSION}}'
+          GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
+          CORE_VERSION: '{{.CORE_VERSION | default "dev"}}'
+          CORE_COMMIT: '{{.CORE_COMMIT | default "unknown"}}'
     cmds:
       - wails3 tool sign --input "{{.BIN_DIR}}/{{.APP_NAME}}.app" --identity "{{.SIGN_IDENTITY}}" {{if .ENTITLEMENTS}}--entitlements {{.ENTITLEMENTS}}{{end}} --notarize --keychain-profile {{.KEYCHAIN_PROFILE}}
     preconditions:

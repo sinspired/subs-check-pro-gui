@@ -8,6 +8,8 @@
 		<string>A modern GUI of Subs-Check-Pro, for high-performance proxy management, check, and subscription management and generation</string>
 		<key>CFBundleIconFile</key>
 		<string>icons</string>
+		<key>CFBundleIconName</key>
+		<string>appicon</string>
 		<key>CFBundleIdentifier</key>
 		<string>com.sinspired.subs-check-pro-gui</string>
 		<key>CFBundleName</key>
@@ -24,10 +26,12 @@
 		<dict>
 			<key>NSAllowsLocalNetworking</key>
 			<true/>
+			<key>NSAllowsArbitraryLoads</key>
+			<true/>
 		</dict>
 		<key>NSHighResolutionCapable</key>
 		<string>true</string>
 		<key>NSHumanReadableCopyright</key>
-		<string>(c) 2025, sinspired</string>
+		<string>(c) 2026, sinspired</string>
 	</dict>
 </plist>
