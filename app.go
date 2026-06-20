@@ -681,7 +681,7 @@ func (g *GuiApp) showUpdateWindow(rel *wupdater.Release) {
 			// 复用前端构建产物（Preact + marked/DOMPurify 渲染 Markdown），
 			// 与登录/关于窗口共享同一套样式与依赖，不再使用 go:embed 内嵌 HTML。
 			URL: "/updater.html",
-			Mac: macWindowOpts(30),
+			Mac: macWindowOpts(40),
 			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.updateWin = win
@@ -1037,7 +1037,7 @@ func (g *GuiApp) OpenSubLinksWindow() {
 			DisableResize: false,
 			Frameless:     false,
 			URL:           "/sub-links.html",
-			Mac:           macWindowOpts(30),
+			Mac:           macWindowOpts(40),
 			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.subLinksWin = win
