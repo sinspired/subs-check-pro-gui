@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@wailsio/runtime": "latest",
-    "dompurify": "^3.4.10",
+    "dompurify": "^3.4.11",
     "marked": "^18.0.5",
     "preact": "^10.29.2"
   },
