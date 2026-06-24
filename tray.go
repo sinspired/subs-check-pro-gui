@@ -9,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -65,6 +66,15 @@ func startSysTray(
 	// Wails v3 会根据平台自动选择使用哪个
 	tray.SetIcon(trayIcon)
 	tray.SetTemplateIcon(trayTemplateIcon) // ← 修复：传入变量，而非参数声明
+
+	// Support for template icons on macOS
+	if runtime.GOOS == "darwin" {
+		tray.SetTemplateIcon(trayTemplateIcon)
+	} else {
+		// Support for light/dark mode icons
+		// tray.SetDarkModeIcon(trayIconDark)
+		tray.SetIcon(trayIcon)
+	}
 
 	tray.SetTooltip(formatSysTrayTooltip(coreApp, guiApp))
 
