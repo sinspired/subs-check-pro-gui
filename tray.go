@@ -22,13 +22,20 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-// trayIcon 嵌入托盘图标文件（ICO 格式，Windows/Linux 通用）。
+// trayIcon 嵌入托盘彩色图标（Windows/Linux）。
 //
 //go:embed frontend/public/logo.png
 var trayIcon []byte
 
 //go:embed frontend/public/logo_32x32.png
 var logo32 []byte
+
+// trayTemplateIcon 嵌入黑白模板图标，供 macOS 菜单栏使用。
+// 要求：纯黑色笔画 + 完全透明背景，18x18px（同时提供 @2x 36x36）。
+// macOS 会自动在深色模式下将黑色反转为白色。
+//
+//go:embed frontend/public/logo_template.png
+var trayTemplateIcon []byte
 
 // windowVisible 跟踪当前窗口可见状态。
 var windowVisible atomic.Bool
@@ -52,7 +59,13 @@ func startSysTray(
 ) {
 	tray := wailsApp.SystemTray.New()
 
+	// 设置图标：
+	// - SetIcon 供 Windows/Linux 使用（彩色 PNG）
+	// - SetTemplateIcon 供 macOS 菜单栏使用（黑白模板，自动适配深浅色）
+	// Wails v3 会根据平台自动选择使用哪个
 	tray.SetIcon(trayIcon)
+	tray.SetTemplateIcon(trayTemplateIcon) // ← 修复：传入变量，而非参数声明
+
 	tray.SetTooltip(formatSysTrayTooltip(coreApp, guiApp))
 
 	updateTooltip := func() {
