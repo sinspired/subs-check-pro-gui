@@ -8,9 +8,9 @@ require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/lmittmann/tint v1.1.3
 	github.com/metacubex/mihomo v1.19.27
-	github.com/sinspired/subs-check-pro-webui v0.0.0-20260622063449-e8198f266556
-	github.com/sinspired/subs-check-pro/v2 v2.6.4
-	github.com/wailsapp/wails/v3 v3.0.0-alpha2.105
+	github.com/sinspired/subs-check-pro-webui v0.0.0-20260624130207-a684223c1314
+	github.com/sinspired/subs-check-pro/v2 v2.6.5-rc.1
+	github.com/wailsapp/wails/v3 v3.0.0-alpha2.106
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -171,7 +171,7 @@ require (
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
-	github.com/wailsapp/wails/webview2 v1.0.24 // indirect
+	github.com/wailsapp/wails/webview2 v1.0.27 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
