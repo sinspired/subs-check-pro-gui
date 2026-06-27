@@ -592,16 +592,16 @@ func (g *GuiApp) OpenAboutWindow() {
 			return
 		}
 		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-			Name:          "about",
-			Title:         "Subs Check Pro — 关于",
-			Width:         800,
-			Height:        600,
-			MinWidth:      640,
-			MinHeight:     480,
-			DisableResize: false,
-			Frameless:     false,
-			URL:           "/about.html",
-			Mac:           macWindowOpts(30),
+			Name:           "about",
+			Title:          "Subs Check Pro — 关于",
+			Width:          800,
+			Height:         600,
+			MinWidth:       640,
+			MinHeight:      480,
+			DisableResize:  false,
+			Frameless:      false,
+			URL:            "/about.html",
+			Mac:            macWindowOpts(30),
 			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.aboutWin = win
@@ -623,6 +623,14 @@ func (g *GuiApp) CheckForUpdates() {
 	}
 
 	go func() {
+		// 若更新窗口已存在（后台下载中），直接前置显示
+		if g.updateWin != nil {
+			application.InvokeAsync(func() {
+				g.updateWin.Show()
+				g.updateWin.Focus()
+			})
+			return // 不重新 Check，窗口里的进度事件仍在继续
+		}
 		ctx := context.Background()
 
 		updateInfo, err := g.updaterApp.Updater.Check(ctx)
@@ -680,8 +688,8 @@ func (g *GuiApp) showUpdateWindow(rel *wupdater.Release) {
 			Frameless:     false,
 			// 复用前端构建产物（Preact + marked/DOMPurify 渲染 Markdown），
 			// 与登录/关于窗口共享同一套样式与依赖，不再使用 go:embed 内嵌 HTML。
-			URL: "/updater.html",
-			Mac: macWindowOpts(40),
+			URL:            "/updater.html",
+			Mac:            macWindowOpts(40),
 			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.updateWin = win
@@ -728,10 +736,25 @@ func (g *GuiApp) showUpdateWindow(rel *wupdater.Release) {
 			g.closeUpdateWindow()
 		})
 
-		g.subscribeUpdateEvent(wupdater.EventUserRemind, func(_ *application.CustomEvent) {
-			g.closeUpdateWindow()
+		// user:background — 仅隐藏窗口，保留下载进度和事件监听
+		g.subscribeUpdateEvent("wails:updater:user:background", func(_ *application.CustomEvent) {
+			application.InvokeAsync(func() {
+				if g.updateWin != nil {
+					g.updateWin.Hide()
+				}
+			})
 		})
 
+		// user:remind 只隐藏（非下载阶段的"稍后提醒"，逻辑相同）
+		g.subscribeUpdateEvent(wupdater.EventUserRemind, func(_ *application.CustomEvent) {
+			application.InvokeAsync(func() {
+				if g.updateWin != nil {
+					g.updateWin.Hide()
+				}
+			})
+		})
+
+		// user:cancel：真正关闭
 		g.subscribeUpdateEvent(wupdater.EventUserCancel, func(_ *application.CustomEvent) {
 			g.closeUpdateWindow()
 		})
@@ -901,14 +924,14 @@ func (g *GuiApp) OpenFilesWindow() {
 		targetURL := "http://127.0.0.1:" + listenPort +
 			"/gui/enter?n=" + nonce + "&redirect=/files"
 		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-			Name:      "files",
-			Title:     "Subs Check Pro — 内置文件",
-			Width:     720,
-			Height:    720,
-			MinWidth:  600,
-			MinHeight: 400,
-			URL:       targetURL,
-			Mac:       macWindowOpts(50),
+			Name:           "files",
+			Title:          "Subs Check Pro — 内置文件",
+			Width:          720,
+			Height:         720,
+			MinWidth:       600,
+			MinHeight:      400,
+			URL:            targetURL,
+			Mac:            macWindowOpts(50),
 			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.filesWin = win
@@ -993,14 +1016,14 @@ func (g *GuiApp) OpenSubStoreWindow() {
 			return
 		}
 		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-			Name:      "sub-store",
-			Title:     "Sub-Store — 订阅管理",
-			Width:     800,
-			Height:    800,
-			MinWidth:  800,
-			MinHeight: 600,
-			URL:       capturedURL,
-			Mac:       macWindowOpts(50),
+			Name:           "sub-store",
+			Title:          "Sub-Store — 订阅管理",
+			Width:          800,
+			Height:         800,
+			MinWidth:       800,
+			MinHeight:      600,
+			URL:            capturedURL,
+			Mac:            macWindowOpts(50),
 			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.subStoreWin = win
@@ -1026,18 +1049,18 @@ func (g *GuiApp) OpenSubLinksWindow() {
 			return
 		}
 		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
-			Name:          "sub-links",
-			Title:         "Subs Check Pro — 订阅链接",
-			Width:         500,
-			Height:        540,
-			MinWidth:      500,
-			MinHeight:     540,
-			MaxWidth:      500,
-			MaxHeight:     580,
-			DisableResize: false,
-			Frameless:     false,
-			URL:           "/sub-links.html",
-			Mac:           macWindowOpts(40),
+			Name:           "sub-links",
+			Title:          "Subs Check Pro — 订阅链接",
+			Width:          500,
+			Height:         540,
+			MinWidth:       500,
+			MinHeight:      540,
+			MaxWidth:       500,
+			MaxHeight:      580,
+			DisableResize:  false,
+			Frameless:      false,
+			URL:            "/sub-links.html",
+			Mac:            macWindowOpts(40),
 			BackgroundType: application.BackgroundTypeTranslucent,
 		})
 		g.subLinksWin = win

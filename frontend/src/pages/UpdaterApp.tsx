@@ -192,9 +192,9 @@ export function UpdaterApp() {
       const rawNotes: string =
         pick(d, 'notes', 'Notes', 'body', 'Body', 'releaseNotes', 'ReleaseNotes') ?? '';
       setRelease({
-        version:        pick(d, 'version', 'Version'),
+        version: pick(d, 'version', 'Version'),
         currentVersion: pick(d, 'currentVersion', 'CurrentVersion'),
-        size:           pick(d?.artifact ?? d?.Artifact, 'size', 'Size'),
+        size: pick(d?.artifact ?? d?.Artifact, 'size', 'Size'),
       });
       setNotesHtml(md2html(rawNotes));
       setBusy(false);
@@ -227,17 +227,17 @@ export function UpdaterApp() {
       const d = extractData(e);
       setProgress({
         written: pick<number>(d, 'written', 'Written') ?? 0,
-        total:   pick<number>(d, 'total',   'Total')   ?? 0,
-        rate:    pick<number>(d, 'rate',     'Rate')    ?? 0,
+        total: pick<number>(d, 'total', 'Total') ?? 0,
+        rate: pick<number>(d, 'rate', 'Rate') ?? 0,
       });
       setStage('downloading');
     });
 
-    on('wails:updater:verifying',  () => setStage('verifying'));
+    on('wails:updater:verifying', () => setStage('verifying'));
     on('wails:updater:installing', () => setStage('installing'));
 
     const onReady = () => { setBusy(false); setStage('ready'); };
-    on('wails:updater:update-ready',     onReady);
+    on('wails:updater:update-ready', onReady);
     on('wails:updater:ready-to-install', onReady);
 
     on('wails:updater:error', (e) => {
@@ -274,9 +274,10 @@ export function UpdaterApp() {
     setStage('checking');
     GuiApp.CheckForUpdates();
   }
-  function handleSkip()   { emitEv('wails:updater:user:skip'); }
+  function handleSkip() { emitEv('wails:updater:user:skip'); }
+  function handleBackground() { emitEv('wails:updater:user:background'); }
   function handleRemind() { emitEv('wails:updater:user:remind'); }
-  function handleClose()  { emitEv('wails:updater:user:cancel'); }
+  function handleClose() { emitEv('wails:updater:user:cancel'); }
 
   /** 拦截 notes 内链接，用内置无地址栏窗口打开外链。 */
   function handleNotesClick(e: MouseEvent) {
@@ -289,20 +290,20 @@ export function UpdaterApp() {
   }
 
   // ── 派生展示数据 ──────────────────────────────────────────────────
-  const ver    = release.version        ? `v${release.version.replace(/^v/, '')}` : '';
+  const ver = release.version ? `v${release.version.replace(/^v/, '')}` : '';
   const curVer = release.currentVersion ? `v${release.currentVersion.replace(/^v/, '')}` : '';
 
   // 图标变体
   const iconKind: 'spin' | 'update' | 'check' | 'error' =
-    stage === 'up-to-date' || stage === 'ready'   ? 'check'  :
-    stage === 'error'                              ? 'error'  :
-    stage === 'available'                          ? 'update' :
-    'spin'; // checking / downloading / verifying / installing
+    stage === 'up-to-date' || stage === 'ready' ? 'check' :
+      stage === 'error' ? 'error' :
+        stage === 'available' ? 'update' :
+          'spin'; // checking / downloading / verifying / installing
 
   // Hero 文案
   const [heroTitle, heroSub] = ((): [string, string] => {
     switch (stage) {
-      case 'checking':   return ['正在检查更新…', '请稍候'];
+      case 'checking': return ['正在检查更新…', '请稍候'];
       case 'available': {
         const parts = [ver, release.size ? fmtBytes(release.size) : ''].filter(Boolean);
         return ['发现新版本', parts.join('  ·  ')];
@@ -316,10 +317,10 @@ export function UpdaterApp() {
           : fmtBytes(written);
         return ['正在下载更新…', [sizeStr, rateStr].filter(Boolean).join('  ·  ')];
       }
-      case 'verifying':  return ['正在验证文件…', '校验完整性，请稍候'];
+      case 'verifying': return ['正在验证文件…', '校验完整性，请稍候'];
       case 'installing': return ['正在安装更新…', '准备替换旧版本'];
-      case 'ready':      return ['更新已就绪', '重启即可应用新版本'];
-      case 'error':      return ['更新失败', errMsg];
+      case 'ready': return ['更新已就绪', '重启即可应用新版本'];
+      case 'error': return ['更新失败', errMsg];
     }
   })();
 
@@ -343,10 +344,10 @@ export function UpdaterApp() {
   const show = {
     install: stage === 'available',
     restart: stage === 'ready',
-    retry:   stage === 'error',
-    skip:    stage === 'available',
-    later:   stage === 'checking' || stage === 'available' || stage === 'downloading',
-    close:   stage !== 'verifying' && stage !== 'installing',
+    retry: stage === 'error',
+    skip: stage === 'available',
+    later: stage === 'checking' || stage === 'available' || stage === 'downloading',
+    close: stage !== 'verifying' && stage !== 'installing',
   } as const;
 
   return (
@@ -356,14 +357,13 @@ export function UpdaterApp() {
 
       {/* ── Hero ── */}
       <div class="upd-hero">
-        <div class={`upd-icon-wrap${
-          iconKind === 'check'  ? ' is-success' :
-          iconKind === 'error'  ? ' is-error'   : ''
-        }`}>
-          {iconKind === 'spin'   && <IconSpin />}
+        <div class={`upd-icon-wrap${iconKind === 'check' ? ' is-success' :
+          iconKind === 'error' ? ' is-error' : ''
+          }`}>
+          {iconKind === 'spin' && <IconSpin />}
           {iconKind === 'update' && <IconArrowUp />}
-          {iconKind === 'check'  && <IconCheck />}
-          {iconKind === 'error'  && <IconAlert />}
+          {iconKind === 'check' && <IconCheck />}
+          {iconKind === 'error' && <IconAlert />}
         </div>
 
         <p class="upd-hero-title">{heroTitle}</p>
@@ -403,8 +403,8 @@ export function UpdaterApp() {
             />
           )
           : <p class="upd-notes-placeholder">
-              {stage === 'up-to-date' ? '当前已是最新版本，无需更新。' : '暂无发布说明'}
-            </p>
+            {stage === 'up-to-date' ? '当前已是最新版本，无需更新。' : '暂无发布说明'}
+          </p>
         }
       </div>
 
@@ -439,10 +439,14 @@ export function UpdaterApp() {
         {/* 次级操作行 */}
         {(show.skip || show.later || show.close) && (
           <div class="upd-btn-row">
-            {show.skip  && <button class="upd-btn-ghost" onClick={handleSkip}>跳过此版本</button>}
-            {show.later && <button class="upd-btn-ghost" onClick={handleRemind}>
-              {stage === 'downloading' ? '后台下载' : '稍后提醒'}
-            </button>}
+            {show.skip && <button class="upd-btn-ghost" onClick={handleSkip}>跳过此版本</button>}
+            {show.later && (
+              <button class="upd-btn-ghost" onClick={
+                stage === 'downloading' ? handleBackground : handleRemind
+              }>
+                {stage === 'downloading' ? '后台下载' : '稍后提醒'}
+              </button>
+            )}
             {show.close && <button class="upd-btn-ghost" onClick={handleClose}>关闭</button>}
           </div>
         )}
