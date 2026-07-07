@@ -53,11 +53,66 @@
   margin-left: auto;
 }
 
+/* ── 访问地址切换（无外容器背景，仅胶囊高亮） ── */
+.sl-host-switch {
+  display: flex;
+  justify-content: center;
+  padding: 12px 14px; 
+  flex-shrink: 0;
+}
+
+/* 移除所有背景、边框和玻璃效果，仅作为并排布局的容器 */
+.sl-tabs-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px; /* 各个胶囊之间的间距 */
+}
+
+.sl-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border: 1px solid transparent; /* 预留边框位，防止切换时文字抖动 */
+  border-radius: 14px; /* 圆角调大到 14px，视觉上更像精致的药丸胶囊 */
+  background: transparent; /* 默认完全透明，融入页面背景 */
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 鼠标悬浮时仅给一点微弱的提示 */
+.sl-tab:hover {
+  color: var(--fg);
+  background: rgba(128, 128, 128, 0.05); 
+}
+
+/* 仅选中项拥有背景实体，形成视觉焦点 */
+.sl-tab.active {
+  background: var(--card); /* 采用卡片底色（明亮模式下偏白，暗黑模式下偏深灰） */
+  border-color: var(--border); /* 加上细边框勾勒轮廓 */
+  color: var(--fg);
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); /* 极轻柔的一丝投影 */
+}
+
+.sl-tab-ip {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.sl-tab-label {
+  font-size: 10px;
+  opacity: 0.65;
+}
+
 /* ── 内容区 ── */
 .sl-body {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 14px;
+  padding: 0px 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -204,7 +259,7 @@
 
 /* ── 底部提示 ── */
 .sl-footer {
-  padding: 8px 14px 10px;
+  padding: 8px 14px 20px;
   border-top: 1px solid var(--border);
   font-size: 10.5px;
   color: var(--muted);
