@@ -4,8 +4,15 @@
    ─────────────────────────────────────────── */
 
 @keyframes sl-fade-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── 根容器：撑满窗口 ── */
@@ -21,18 +28,22 @@
   -webkit-user-select: none;
 }
 
-/* ── 标题栏（可拖拽） ── */
+/* ── 标题栏（通用样式：适用于 Windows / Linux） ── */
 .sl-titlebar {
   --wails-draggable: drag;
   display: flex;
   align-items: center;
   gap: 8px;
-  /* padding-top: macOS MacTitleBarHiddenInset + InvisibleTitleBarHeight(30) 会将红绿灯
-     嵌入内容区前 30px，此处预留等高上边距使标题文本不被红绿灯遮挡。
-     Windows / Linux 无此标题栏行为，多出的 padding 仅是视觉留白，可接受。 */
-  padding: 30px 16px 10px;
+  /* 💡 Windows/Linux 下不需要避让红绿灯，恢复正常的上下间距（例如 12px） */
+  padding: 12px 16px 10px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+}
+
+/* ── macOS 专属适配 ── */
+.sl-titlebar.is-mac {
+  /* 💡 仅在 Mac 下预留 30px 高度，防止被左上角的交通灯（红绿灯）遮挡文本 */
+  padding-top: 30px;
 }
 
 .sl-titlebar-icon {
@@ -57,7 +68,7 @@
 .sl-host-switch {
   display: flex;
   justify-content: center;
-  padding: 12px 14px; 
+  padding: 12px 14px;
   flex-shrink: 0;
 }
 
@@ -65,7 +76,8 @@
 .sl-tabs-container {
   display: inline-flex;
   align-items: center;
-  gap: 8px; /* 各个胶囊之间的间距 */
+  gap: 8px;
+  /* 各个胶囊之间的间距 */
 }
 
 .sl-tab {
@@ -73,9 +85,12 @@
   align-items: center;
   gap: 5px;
   padding: 6px 14px;
-  border: 1px solid transparent; /* 预留边框位，防止切换时文字抖动 */
-  border-radius: 14px; /* 圆角调大到 14px，视觉上更像精致的药丸胶囊 */
-  background: transparent; /* 默认完全透明，融入页面背景 */
+  border: 1px solid transparent;
+  /* 预留边框位，防止切换时文字抖动 */
+  border-radius: 14px;
+  /* 圆角调大到 14px，视觉上更像精致的药丸胶囊 */
+  background: transparent;
+  /* 默认完全透明，融入页面背景 */
   color: var(--muted);
   font-size: 11px;
   cursor: pointer;
@@ -87,16 +102,19 @@
 /* 鼠标悬浮时仅给一点微弱的提示 */
 .sl-tab:hover {
   color: var(--fg);
-  background: rgba(128, 128, 128, 0.05); 
+  background: rgba(128, 128, 128, 0.05);
 }
 
 /* 仅选中项拥有背景实体，形成视觉焦点 */
 .sl-tab.active {
-  background: var(--card); /* 采用卡片底色（明亮模式下偏白，暗黑模式下偏深灰） */
-  border-color: var(--border); /* 加上细边框勾勒轮廓 */
+  background: var(--card);
+  /* 采用卡片底色（明亮模式下偏白，暗黑模式下偏深灰） */
+  border-color: var(--border);
+  /* 加上细边框勾勒轮廓 */
   color: var(--fg);
   font-weight: 500;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); /* 极轻柔的一丝投影 */
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  /* 极轻柔的一丝投影 */
 }
 
 .sl-tab-ip {
@@ -143,8 +161,11 @@
 
 /* 旋转动画（加载中） */
 @keyframes sl-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
+
 .sl-spinner {
   animation: sl-spin 0.9s linear infinite;
   color: var(--accent);
