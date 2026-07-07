@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"runtime"
 
 	coreapp "github.com/sinspired/subs-check-pro/v2/app"
 	"github.com/sinspired/subs-check-pro/v2/config"
@@ -13,7 +14,6 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/events"
 	wupdater "github.com/wailsapp/wails/v3/pkg/updater"
 
-	"github.com/sinspired/subs-check-pro-gui/updater"
 	"log/slog"
 	"net"
 	"net/http"
@@ -23,6 +23,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"github.com/sinspired/subs-check-pro-gui/updater"
 
 	"gopkg.in/yaml.v3"
 )
@@ -1091,21 +1093,34 @@ func (g *GuiApp) OpenSubLinksWindow() {
 			g.subLinksWin.Focus()
 			return
 		}
+
+		// 动态计算窗口高度：Mac 因为红绿灯预留了 padding，需增加 18px 高度
+		winHeight := 545
+		minHeight := 520
+		maxHeight := 560
+
+		if runtime.GOOS == "darwin" {
+			winHeight = 560
+			minHeight = 530
+			maxHeight = 575
+		}
+
 		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Name:           "sub-links",
 			Title:          "Subs Check Pro — 订阅链接",
 			Width:          520,
-			Height:         565,
+			Height:         winHeight,
 			MinWidth:       500,
-			MinHeight:      540,
+			MinHeight:      minHeight,
 			MaxWidth:       540,
-			MaxHeight:      580,
+			MaxHeight:      maxHeight,
 			DisableResize:  false,
 			Frameless:      false,
 			URL:            "/sub-links.html",
 			Mac:            macWindowOpts(40),
 			BackgroundType: application.BackgroundTypeTranslucent,
 		})
+
 		g.subLinksWin = win
 		win.Center()
 		win.RegisterHook(events.Common.WindowClosing, func(_ *application.WindowEvent) {

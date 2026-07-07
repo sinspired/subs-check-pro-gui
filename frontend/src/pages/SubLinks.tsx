@@ -11,6 +11,9 @@ import { useTheme } from '../hooks/useTheme';
 import { useWailsReady } from '../hooks/useWailsReady';
 import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 
+// 通过 userAgent 判断是否为 macOS
+const isMac = /Macintosh|Mac OS X/i.test(navigator.userAgent);
+
 // 根据 IP 段智能返回图标、标签和提示信息
 function getIpMeta(ip: string) {
   if (ip === '127.0.0.1') {
@@ -174,8 +177,8 @@ export function SubLinks() {
 
   return (
     <div class="sl-root">
-      {/* ── 标题栏 ── */}
-      <div class="sl-titlebar">
+      {/* ── 标题栏（动态注入 macOS 专属 class） ── */}
+      <div class={`sl-titlebar ${isMac ? 'is-mac' : ''}`}>
         <svg class="sl-titlebar-icon" width="14" height="14" viewBox="0 0 24 24"
           fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
