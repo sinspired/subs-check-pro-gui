@@ -11,6 +11,49 @@ import { useTheme } from '../hooks/useTheme';
 import { useWailsReady } from '../hooks/useWailsReady';
 import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 
+// 根据 IP 段智能返回图标、标签和提示信息
+function getIpMeta(ip: string) {
+  if (ip === '127.0.0.1') {
+    return {
+      label: '本机',
+      tooltip: '仅当前电脑自己可访问',
+      icon: (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" />
+          <line x1="8" y1="21" x2="16" y2="21" />
+          <line x1="12" y1="17" x2="12" y2="21" />
+        </svg>
+      )
+    };
+  }
+  if (ip.startsWith('192.168.')) {
+    return {
+      label: '局域网',
+      tooltip: '同一路由器下的设备（如手机/平板）可访问',
+      icon: (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+          <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+          <line x1="12" y1="20" x2="12.01" y2="20" />
+        </svg>
+      )
+    };
+  }
+  return {
+    label: '虚拟/其他',
+    tooltip: '通常为虚拟机(Hyper-V)、Docker或VPN虚拟网卡',
+    // 💡 全新的 3D Box (容器/虚拟机) 图标，线条极其轻盈
+    icon: (
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+        <line x1="12" y1="22.08" x2="12" y2="12" />
+      </svg>
+    )
+  };
+}
+
 interface SubLink {
   key: string;
   label: string;
@@ -31,10 +74,44 @@ export function SubLinks() {
   // key → 是否刚刚复制成功（用于短暂高亮）
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
+  // 可切换的访问地址列表（127.0.0.1 + 各网卡的局域网 IPv4），及当前选中项
+  const [hosts, setHosts] = useState<string[]>(['127.0.0.1']);
+  const [selectedHost, setSelectedHost] = useState('127.0.0.1');
+
+  // 缓存生成链接所需的信息，切换 host 时无需重新请求接口
+  const [linkCtx, setLinkCtx] = useState<{
+    subStorePort: string;
+    path: string;
+    oldVer: string;
+    latestVer: string;
+  } | null>(null);
+
   useEffect(() => {
     if (!wailsReady) return;
     load();
   }, [wailsReady]);
+
+  // host 切换时，仅用缓存的上下文信息重建链接列表，避免重复请求
+  useEffect(() => {
+    if (!linkCtx) return;
+    setLinks(buildLinks(selectedHost, linkCtx));
+  }, [selectedHost, linkCtx]);
+
+  function buildLinks(
+    host: string,
+    ctx: { subStorePort: string; path: string; oldVer: string; latestVer: string },
+  ): SubLink[] {
+    const subBase = `http://${host}:${ctx.subStorePort}`;
+    const { path, oldVer, latestVer } = ctx;
+    return [
+      { key: 'common', label: '通用订阅', url: `${subBase}${path}/download/sub` },
+      { key: 'v2ray', label: 'V2Ray 订阅', url: `${subBase}${path}/download/sub?target=V2Ray`, icon: '/v2ray.png' },
+      { key: 'mihomo', label: 'Mihomo 订阅', url: `${subBase}${path}/api/file/mihomo`, icon: '/mihomo.png' },
+      { key: 'singbox-old', label: `singbox-${oldVer} 订阅`, url: `${subBase}${path}/api/file/singbox-${oldVer}`, icon: '/singbox.png' },
+      { key: 'singbox-latest', label: `singbox-${latestVer} 订阅`, url: `${subBase}${path}/api/file/singbox-${latestVer}`, icon: '/singbox.png' },
+      { key: 'shadowrocket', label: 'Shadowrocket 订阅', url: `${subBase}${path}/download/sub?target=ShadowRocket`, icon: '/shadowrocket.png' },
+    ];
+  }
 
   async function load() {
     setStatus('loading');
@@ -61,16 +138,23 @@ export function SubLinks() {
         throw new Error('请先在 config.yaml 中设置 sub-store-path');
 
       const path = `/${info.subStorePath}`;
-      const subBase = `http://127.0.0.1:${info.subStorePort}`;
 
-      setLinks([
-        { key: 'common', label: '通用订阅', url: `${subBase}${path}/download/sub` },
-        { key: 'v2ray', label: 'V2Ray 订阅', url: `${subBase}${path}/download/sub?target=V2Ray`, icon: '/v2ray.png' },
-        { key: 'mihomo', label: 'Mihomo 订阅', url: `${subBase}${path}/api/file/mihomo`, icon: '/mihomo.png' },
-        { key: 'singbox-old', label: `singbox-${vData.old} 订阅`, url: `${subBase}${path}/api/file/singbox-${vData.old}`, icon: '/singbox.png' },
-        { key: 'singbox-latest', label: `singbox-${vData.latest} 订阅`, url: `${subBase}${path}/api/file/singbox-${vData.latest}`, icon: '/singbox.png' },
-        { key: 'shadowrocket', label: 'Shadowrocket 订阅', url: `${subBase}${path}/download/sub?target=ShadowRocket`, icon: '/shadowrocket.png' },
-      ]);
+      // 组装可切换的访问地址：本机回环地址始终排第一，
+      // 其后追加后端探测到的所有局域网 IPv4（去重）。
+      const detected = (info.localIPs ?? []).filter(ip => ip && ip !== '127.0.0.1');
+      const hostList = ['127.0.0.1', ...Array.from(new Set(detected))];
+      setHosts(hostList);
+      // 若之前选中的地址在新列表中不存在（如切换配置后网卡变化），回退到第一个
+      setSelectedHost(prev => (hostList.includes(prev) ? prev : hostList[0]));
+
+      const ctx = {
+        subStorePort: info.subStorePort,
+        path,
+        oldVer: vData.old,
+        latestVer: vData.latest,
+      };
+      setLinkCtx(ctx);
+      setLinks(buildLinks(hostList.includes(selectedHost) ? selectedHost : hostList[0], ctx));
       setStatus('ready');
     } catch (e: any) {
       setErrorMsg(e?.message ?? '获取订阅链接失败');
@@ -101,6 +185,30 @@ export function SubLinks() {
         <span class="sl-titlebar-title">订阅链接</span>
         <span class="sl-titlebar-sub">点击复制订阅链接</span>
       </div>
+
+      {/* ── 访问地址切换胶囊（本机存在多个可用地址时才显示）── */}
+      {status === 'ready' && hosts.length > 1 && (
+        <div class="sl-host-switch">
+          <div class="sl-tabs-container">
+            {hosts.map(host => {
+              const meta = getIpMeta(host);
+              const isActive = host === selectedHost;
+              return (
+                <button
+                  key={host}
+                  class={`sl-tab${isActive ? ' active' : ''}`}
+                  onClick={() => setSelectedHost(host)}
+                  title={meta.tooltip}
+                >
+                  {meta.icon}
+                  <span class="sl-tab-ip">{host}</span>
+                  <span class="sl-tab-label">{meta.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── 内容区 ── */}
       <div class="sl-body">
