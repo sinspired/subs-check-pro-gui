@@ -68,6 +68,11 @@ export class AppInfo {
      */
     "originVersion": string;
 
+    /**
+     * LocalIPs 本机所有可用局域网 IPv4 地址（不含回环），供订阅链接窗口切换访问地址。
+     */
+    "localIPs": string[];
+
     /** Creates a new AppInfo instance. */
     constructor($$source: Partial<AppInfo> = {}) {
         if (!("apiKey" in $$source)) {
@@ -112,6 +117,9 @@ export class AppInfo {
         if (!("originVersion" in $$source)) {
             this["originVersion"] = "";
         }
+        if (!("localIPs" in $$source)) {
+            this["localIPs"] = [];
+        }
 
         Object.assign(this, $$source);
     }
@@ -120,7 +128,11 @@ export class AppInfo {
      * Creates a new AppInfo instance from a string or object.
      */
     static createFrom($$source: any = {}): AppInfo {
+        const $$createField14_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("localIPs" in $$parsedSource) {
+            $$parsedSource["localIPs"] = $$createField14_0($$parsedSource["localIPs"]);
+        }
         return new AppInfo($$parsedSource as Partial<AppInfo>);
     }
 }
@@ -168,3 +180,6 @@ export class UpdateInfo {
         return new UpdateInfo($$parsedSource as Partial<UpdateInfo>);
     }
 }
+
+// Private type creation functions
+const $$createType0 = $Create.Array($Create.Any);

@@ -94,6 +94,48 @@ type AppInfo struct {
 	CoreVersion string `json:"coreVersion"`
 	// OriginVersion 内核版本
 	OriginVersion string `json:"originVersion"`
+	// LocalIPs 本机所有可用局域网 IPv4 地址（不含回环），供订阅链接窗口切换访问地址。
+	LocalIPs []string `json:"localIPs"`
+}
+
+// getLocalIPv4s 枚举本机所有活动网络接口上的 IPv4 地址（排除回环、
+// 未启用、虚拟/回环类接口），用于生成局域网可访问的订阅链接。
+// 多网卡（有线+无线、虚拟网卡等）情况下可能返回多个地址，
+// 交由前端以胶囊按钮形式展示供用户选择。
+func getLocalIPv4s() []string {
+	var ips []string
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return ips
+	}
+	for _, iface := range ifaces {
+		// 跳过未启用或回环接口
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, addr := range addrs {
+			var ip net.IP
+			switch v := addr.(type) {
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+			ip4 := ip.To4()
+			if ip4 == nil {
+				continue // 仅取 IPv4，跳过 IPv6
+			}
+			ips = append(ips, ip4.String())
+		}
+	}
+	return ips
 }
 
 // OpenBrandURL 在 Wails 无地址栏窗口中打开品牌 / 社交链接。
@@ -223,6 +265,7 @@ func (g *GuiApp) GetAppInfo() AppInfo {
 		GuiVersion:           GuiVersion,
 		CoreVersion:          coreVer,
 		OriginVersion:        Version,
+		LocalIPs:             getLocalIPv4s(),
 	}
 }
 
@@ -1051,11 +1094,11 @@ func (g *GuiApp) OpenSubLinksWindow() {
 		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Name:           "sub-links",
 			Title:          "Subs Check Pro — 订阅链接",
-			Width:          500,
-			Height:         540,
+			Width:          520,
+			Height:         565,
 			MinWidth:       500,
 			MinHeight:      540,
-			MaxWidth:       500,
+			MaxWidth:       540,
 			MaxHeight:      580,
 			DisableResize:  false,
 			Frameless:      false,
