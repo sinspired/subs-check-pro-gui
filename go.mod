@@ -9,8 +9,8 @@ require (
 	github.com/lmittmann/tint v1.2.0
 	github.com/metacubex/mihomo v1.19.29
 	github.com/metacubex/utls v1.8.7
-	github.com/sinspired/subs-check-pro-webui v0.0.0-20260627061020-b8db5f51c367
-	github.com/sinspired/subs-check-pro/v2 v2.6.8
+	github.com/sinspired/subs-check-pro-webui v0.0.0-20260722093027-fe885518be2e
+	github.com/sinspired/subs-check-pro/v2 v2.6.9
 	github.com/wailsapp/wails/v3 v3.0.0-alpha2.117
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -105,8 +105,8 @@ require (
 	github.com/metacubex/hkdf v0.1.0 // indirect
 	github.com/metacubex/hpke v0.1.0 // indirect
 	github.com/metacubex/http v0.1.6 // indirect
-	github.com/metacubex/jls-quic-go v0.0.0-20260717074316-85a8decdd355 // indirect
-	github.com/metacubex/jls-tls v0.0.0-20260716145614-4bf88db633e2 // indirect
+	github.com/metacubex/jls-quic-go v0.0.0-20260722070908-2d506f2b0d24 // indirect
+	github.com/metacubex/jls-tls v0.0.0-20260722070430-048cc2060002 // indirect
 	github.com/metacubex/jsonv2 v0.0.0-20260518173308-f4597c22f1df // indirect
 	github.com/metacubex/kcp-go v0.0.0-20260105040817-550693377604 // indirect
 	github.com/metacubex/mlkem v0.1.0 // indirect
