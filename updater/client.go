@@ -29,15 +29,15 @@ const GhProxyBase = "https://proxy.linkpc.dpdns.org/"
 // 客户端做整体超时——client.Timeout 会在下载到一半时把已收到的数据直接
 // 截断报错，不适合大文件流式下载；由调用方在业务层面控制整体截止时间，
 // 到期后可以提示用户"网络较差，建议稍后重试或手动下载"。
-const MaxDownloadDuration = 5 * time.Minute
+const MaxDownloadDuration = 10 * time.Minute
 
 // minDownloadSpeedBytesPerSec / speedCheckGrace 用于"下载已开始但速度明显
 // 不达标"时尽早失败，而不是傻等到 MaxDownloadDuration 超时才报错。
-// 130MB / 5min ≈ 443KB/s，这里留一点余量，低于 300KB/s 持续一段时间就
+// 130MB / 5min ≈ 443KB/s，这里留一点余量，低于 50KB/s 持续一段时间就
 // 判定为这条链路不可用。
 const (
-	minDownloadSpeedBytesPerSec = 300 * 1024 // 300KB/s
-	speedCheckGrace             = 20 * time.Second
+	minDownloadSpeedBytesPerSec = 50 * 1024 // 50KB/s
+	speedCheckGrace             = 180 * time.Second
 )
 
 // ---------------------------------------------------------------------
