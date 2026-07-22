@@ -107,11 +107,23 @@ export function App() {
       if (text) toast(text);
     });
 
+    // 新增：监听后台静默检查（启动时 / 托盘每 4 小时一次）完成后推送的状态。
+    // 之前只在组件挂载时 GetUpdateStatus() 读一次缓存值，若此时后台检查
+    // （经代理访问 GitHub，耗时不定）还没跑完，就会读到"无更新"的初始值，
+    // 且之后再也不会刷新，导致徽标一直不出现。订阅这个事件后，无论检查
+    // 何时完成，前端都能收到最新结果。
+    const unsubStatusChanged = Events.On('gui:update:status-changed', (event) => {
+      const st: any = event?.data ?? {};
+      setUpdateAvailable(!!(st.available ?? st.Available));
+      setUpdateVersion((st.version ?? st.Version) || '');
+    });
+
     return () => {
       unsubAvailable && unsubAvailable();
       unsubNoUpdate && unsubNoUpdate();
       unsubReady && unsubReady();
       unsubToast && unsubToast();
+      unsubStatusChanged && unsubStatusChanged();
     };
   }, [ready]);
 
