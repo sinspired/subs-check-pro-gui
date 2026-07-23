@@ -36,15 +36,17 @@ func setUpdateStatus(v UpdateStatus) {
 // 同步，而不必依赖“组件挂载时读一次缓存值”这种存在竞态的方式。
 const EventStatusChanged = "gui:update:status-changed"
 
-// checkTimeout 更新检查请求经过代理服务器中转（github.com / api.github.com），
-// 网络状况不如直连稳定，3 秒的超时经常不够、会被误判为“检查失败/无更新”，
-// 因此放宽到 15 秒；同时又不能设为 0（永不超时），避免代理彻底失联时
+// CheckTimeout 更新检查请求经过代理服务器中转（github.com / api.github.com），
+// 网络状况不如直连稳定；fallbackTransport 内部最多会先经历 sysProxyAttemptTimeout
+// （8 秒）的系统代理探测（见 sysproxy.go），失败后立即切到不经系统代理的 GitHub 代理线路兜底，
+// 外层超时仍需留出足够余量给这一次兜底尝试，
+// 因此放宽到 20 秒；同时又不能设为 0（永不超时），避免代理彻底失联时
 // goroutine 长期挂起。
-const checkTimeout = 15 * time.Second
+const CheckTimeout = 20 * time.Second
 
 // CheckUpdateStatus 只做“检查是否有新版本”，不下载、不安装。
 func CheckUpdateStatus(wailsApp *application.App) {
-	ctx, cancel := context.WithTimeout(context.Background(), checkTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), CheckTimeout)
 	defer cancel()
 
 	rel, err := wailsApp.Updater.Check(ctx)

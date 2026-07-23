@@ -67,6 +67,14 @@ type GuiApp struct {
 
 	// updaterApp 持有 wails App 引用，供 CheckForUpdates 调用 Updater。
 	updaterApp *application.App
+
+	// checkingUpdate 防止用户连续快速点击"检查更新"图标：Check() 经代理
+	// 访问 GitHub，耗时可能到十几秒，这段时间里 updateWin 仍是 nil，若不
+	// 加这个防重入标志，每次点击都会另起一个 goroutine 重复调用 Check()，
+	// 多个 goroutine 前后脚判断出"窗口不存在"后各自尝试创建/订阅更新
+	// 窗口，导致窗口状态混乱、事件监听器重复订阅，表现为"点两次图标更新
+	// 窗口就出问题""下载完成偶发不显示更新日志"等间歇性故障。
+	checkingUpdate atomic.Bool
 }
 
 // AppInfo 前端展示所需的应用运行信息。
@@ -667,16 +675,32 @@ func (g *GuiApp) CheckForUpdates() {
 		return
 	}
 
+	// 若更新窗口已存在（后台下载中），直接前置显示，不重新触发检查。
+	// 放在加锁之前、goroutine 之外同步判断，响应更快。
+	if g.updateWin != nil {
+		application.InvokeAsync(func() {
+			g.updateWin.Show()
+			g.updateWin.Focus()
+		})
+		return
+	}
+
+	// 防重入：Check() 经代理访问 GitHub 耗时不定（最长 updater.CheckTimeout），
+	// 这段时间内 updateWin 仍是 nil，用户容易因为"点了没反应"而多点几次。
+	// CompareAndSwap 保证同一时刻只有一次 Check() 在跑，重复点击只提示
+	// "正在检查中"，不会再并发跑出多个 goroutine 抢着创建/订阅更新窗口。
+	if !g.checkingUpdate.CompareAndSwap(false, true) {
+		g.updaterApp.Event.Emit("gui:update:toast", "正在检查更新，请稍候…")
+		return
+	}
+
 	go func() {
-		// 若更新窗口已存在（后台下载中），直接前置显示
-		if g.updateWin != nil {
-			application.InvokeAsync(func() {
-				g.updateWin.Show()
-				g.updateWin.Focus()
-			})
-			return // 不重新 Check，窗口里的进度事件仍在继续
-		}
-		ctx := context.Background()
+		defer g.checkingUpdate.Store(false)
+
+		// 用 updater.CheckTimeout 接上整体上限，之前此处用的是裸 context.Background()，
+		// 没有任何超时上限，一旦代理彻底失联，这个 goroutine 会永久挂起。
+		ctx, cancel := context.WithTimeout(context.Background(), updater.CheckTimeout)
+		defer cancel()
 
 		updateInfo, err := g.updaterApp.Updater.Check(ctx)
 		if err != nil {
@@ -740,6 +764,9 @@ func (g *GuiApp) showUpdateWindow(rel *wupdater.Release) {
 		g.updateWin = win
 
 		// --- 订阅窗口发出的用户操作事件 ---
+		// 注意：这个 ctx 不能在此处直接包 context.WithTimeout(updater.MaxDownloadDuration)，
+		// 因为它同时被 restart/skip 等事件复用，下载超时不应影响重启。
+		// 下载本身的整体超时在 EventUserInstall 的 handler 里单独构造。
 		ctx := context.Background()
 
 		g.subscribeUpdateEvent(wupdater.EventWindowReady, func(_ *application.CustomEvent) {
@@ -749,7 +776,12 @@ func (g *GuiApp) showUpdateWindow(rel *wupdater.Release) {
 
 		g.subscribeUpdateEvent(wupdater.EventUserInstall, func(_ *application.CustomEvent) {
 			go func() {
-				err := g.updaterApp.Updater.DownloadAndInstall(ctx)
+				// 用 updater.MaxDownloadDuration 给整个下载+安装流程一个硬性上限，避免
+				// 极端情况下 goroutine 无限挂起；具体的限速及早失败逻辑由
+				// updater.NewHTTPClient 内部的 speedGuardTransport 负责，这里只是其上限保障。
+				dlCtx, dlCancel := context.WithTimeout(ctx, updater.MaxDownloadDuration)
+				defer dlCancel()
+				err := g.updaterApp.Updater.DownloadAndInstall(dlCtx)
 				if err != nil {
 					slog.Warn("下载/安装更新失败", "error", err)
 					if g.updaterApp != nil {
