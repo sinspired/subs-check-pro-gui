@@ -2,16 +2,16 @@ module github.com/sinspired/subs-check-pro-gui
 
 go 1.26.4
 
-replace gopkg.in/ini.v1 => github.com/go-ini/ini v1.67.2
+replace gopkg.in/ini.v1 => github.com/go-ini/ini v1.67.3
 
 require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/lmittmann/tint v1.2.0
 	github.com/metacubex/mihomo v1.19.30
 	github.com/metacubex/utls v1.8.7
-	github.com/sinspired/subs-check-pro-webui v0.0.0-20260819115854-8d1627919e86
-	github.com/sinspired/subs-check-pro/v2 v2.6.11
-	github.com/wailsapp/wails/v3 v3.0.0-beta.9
+	github.com/sinspired/subs-check-pro-webui v0.0.0-20260821100702-0fa646047152
+	github.com/sinspired/subs-check-pro/v2 v2.7.0
+	github.com/wailsapp/wails/v3 v3.0.0-beta.11
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -82,7 +82,7 @@ require (
 	github.com/klauspost/compress v1.19.2 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
 	github.com/klauspost/crc32 v1.3.0 // indirect
-	github.com/klauspost/reedsolomon v1.14.1 // indirect
+	github.com/klauspost/reedsolomon v1.14.2 // indirect
 	github.com/leodido/go-urn v1.5.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20260802145828-341c2f0c90b5 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
@@ -108,7 +108,7 @@ require (
 	github.com/metacubex/jls-tls v0.0.0-20260723084315-67adc0e2f796 // indirect
 	github.com/metacubex/jsonv2 v0.0.0-20260721082349-16b4998c8f89 // indirect
 	github.com/metacubex/kcp-go v0.0.0-20260105040817-550693377604 // indirect
-	github.com/metacubex/mipstack v0.0.0-20260817003612-3b1d17af5a49 // indirect
+	github.com/metacubex/mipstack v0.0.0-20260820120222-f3276095eefa // indirect
 	github.com/metacubex/mlkem v0.1.0 // indirect
 	github.com/metacubex/qpack v0.6.0 // indirect
 	github.com/metacubex/quic-go v0.61.1-0.20260727080200-2548683b76f4 // indirect
@@ -123,7 +123,7 @@ require (
 	github.com/metacubex/sing-wireguard v0.0.0-20260810013230-110eac03c3f0 // indirect
 	github.com/metacubex/smux v0.0.0-20260105030934-d0c8756d3141 // indirect
 	github.com/metacubex/ssh v0.1.0 // indirect
-	github.com/metacubex/tailscale v0.0.0-20260807072706-a4fb5feabcbb // indirect
+	github.com/metacubex/tailscale v0.0.0-20260821002758-7e607643d76d // indirect
 	github.com/metacubex/tailscale-wireguard-go v0.0.0-20260725073821-e61ab99cede2 // indirect
 	github.com/metacubex/tfo-go v0.0.0-20260623020846-376a77860b8c // indirect
 	github.com/metacubex/tls v0.1.8 // indirect
@@ -187,7 +187,7 @@ require (
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
 	golang.org/x/arch v0.30.0 // indirect
 	golang.org/x/crypto v0.55.0 // indirect
-	golang.org/x/exp v0.0.0-20260813180055-c1d0aacb2297 // indirect
+	golang.org/x/exp v0.0.0-20260820142414-ca536658362e // indirect
 	golang.org/x/mod v0.40.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
