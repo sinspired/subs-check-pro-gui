@@ -9,9 +9,9 @@ require (
 	github.com/lmittmann/tint v1.2.0
 	github.com/metacubex/mihomo v1.19.30
 	github.com/metacubex/utls v1.8.7
-	github.com/sinspired/subs-check-pro-webui v0.0.0-20260821100702-0fa646047152
-	github.com/sinspired/subs-check-pro/v2 v2.7.0
-	github.com/wailsapp/wails/v3 v3.0.0-beta.11
+	github.com/sinspired/subs-check-pro-webui v1.0.0
+	github.com/sinspired/subs-check-pro/v2 v2.7.1-beta.1
+	github.com/wailsapp/wails/v3 v3.0.0-beta.12
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )

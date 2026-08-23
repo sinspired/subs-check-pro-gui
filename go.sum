@@ -339,10 +339,10 @@ github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e h1:ur8uMsPIF
 github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e/go.mod h1:+e5fBW3bpPyo+3uLo513gIUblc03egGjMM0+5GKbzK8=
 github.com/sinspired/checkip v0.5.1 h1:Bw259sBaactAF3HOmTfgAKb8ilzVrmnGB3fV21Vf9tk=
 github.com/sinspired/checkip v0.5.1/go.mod h1:SvLx5K0kEV/s4BUp2EJ9LiaaMUgSJ54njAwQI84iOo8=
-github.com/sinspired/subs-check-pro-webui v0.0.0-20260821100702-0fa646047152 h1:SfDeU1yY3sjNAGGFrsY3R9+07eAB9OnwFEWHw0+M3iI=
-github.com/sinspired/subs-check-pro-webui v0.0.0-20260821100702-0fa646047152/go.mod h1:rg8DBZnTSh5/5tHCwQJrMVX6tKqqI5m8BrTT+gCB92M=
-github.com/sinspired/subs-check-pro/v2 v2.7.0 h1:t7l78PVgh4F5QIlS9nfulSvvgg9AtYm8F7n4LY0VUqE=
-github.com/sinspired/subs-check-pro/v2 v2.7.0/go.mod h1:Z2dIPnYvdSoiH/gBX344xP+RoLoMR15Qv0/IXuwZomk=
+github.com/sinspired/subs-check-pro-webui v1.0.0 h1:tAO+MuAPl5eHD3Ct3MbxQEwEf72qr3oT/ldUYN3tSUY=
+github.com/sinspired/subs-check-pro-webui v1.0.0/go.mod h1:rg8DBZnTSh5/5tHCwQJrMVX6tKqqI5m8BrTT+gCB92M=
+github.com/sinspired/subs-check-pro/v2 v2.7.1-beta.1 h1:grz/+jq6yRSsFDoj2QBB8oYlqL8zq1zue0O/cUoWVfg=
+github.com/sinspired/subs-check-pro/v2 v2.7.1-beta.1/go.mod h1:aXQrs/bm7uZsxnSCrxe5pHkUazpKvfdkR/LyNDZU1vs=
 github.com/sirupsen/logrus v1.10.1 h1:xi4336Zh11WpU14fXR6I67V3yaTPQYwRx2WEtHbRg4Q=
 github.com/sirupsen/logrus v1.10.1/go.mod h1:vsQHnG7xzNsxk3NrwboUiWPnIC3dmbjcGPykD7+tiHk=
 github.com/sohaha/zlsgo v1.7.21 h1:8FF+aHJUvA0MudSYGY+AUipy+UFgDbJQhSIhPE6f1Fs=
@@ -390,8 +390,8 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/wailsapp/wails/v3 v3.0.0-beta.11 h1:+DA9+DjHq/zV1Wkrg637WD0nSKly20w6jYbe/4LCwk4=
-github.com/wailsapp/wails/v3 v3.0.0-beta.11/go.mod h1:zKZYhB3WjrN5LhJWbnOAVMN0Xf8qTozbw2nf5micKl4=
+github.com/wailsapp/wails/v3 v3.0.0-beta.12 h1:Vema2kFgJvkwPovQ8GMBBrkZNm5cKVR4bYzSCMgU+PU=
+github.com/wailsapp/wails/v3 v3.0.0-beta.12/go.mod h1:zKZYhB3WjrN5LhJWbnOAVMN0Xf8qTozbw2nf5micKl4=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 github.com/xtaci/lossyconn v0.0.0-20190602105132-8df528c0c9ae h1:J0GxkO96kL4WF+AIT3M4mfUVinOCPgf2uUWYFUzN0sM=
