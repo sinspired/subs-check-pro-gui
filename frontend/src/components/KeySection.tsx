@@ -2,6 +2,7 @@
  * frontend/src/components/KeySection.tsx
  */
 import { useState, useRef, useEffect } from 'preact/hooks';
+import { Browser } from '@wailsio/runtime'; // 引入 Wails3 Browser API
 import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
 
@@ -175,6 +176,18 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
     }
   }
 
+  // 在系统浏览器中打开 WebUI 方法
+  async function openWebUIInBrowser() {
+    const port = info.listenPort || '8199';
+    const url = `http://localhost:${port}/admin`;
+    try {
+      await Browser.OpenURL(url);
+    } catch {
+      // 如果 Wails API 失败，降级使用原生 window.open
+      window.open(url, '_blank');
+    }
+  }
+
   // ── 渲染 ─────────────────────────────────────────────────────────────────
   return (
     <div id="keySection" class="key-section-flex">
@@ -262,6 +275,20 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
         {/* 快捷入口小按钮组 */}
         <div class="quick-btn-area">
           <div class="btn-quick-group">
+            {/* WebUI浏览器跳转按钮 */}
+            <button
+              class="btn-quick"
+              onClick={openWebUIInBrowser}
+              title={`在系统浏览器中打开 WebUI (端口 ${info.listenPort})`}
+              disabled={launching}
+            >
+              <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
+            </button>
             {/* Sub-Store 订阅管理按钮 */}
             {info.subStorePort && (
               <button
@@ -336,8 +363,6 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
                 <line x1="12" y1="8" x2="12.01" y2="8" />
               </svg>
             </button>
-
-            {/* TODO:添加WebUI浏览器跳转 */}
           </div>
         </div>
 
