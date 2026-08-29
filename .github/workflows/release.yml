@@ -33,11 +33,35 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Detect release type
+        id: release_type
+        run: |
+          if [[ "${GITHUB_REF_NAME}" =~ -(alpha|beta|rc|preview|nightly) ]]; then
+            echo "type=pre" >> $GITHUB_OUTPUT
+          else
+            echo "type=stable" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Find previous tag
+        id: prev_tag
+        run: |
+          if [[ "${{ steps.release_type.outputs.type }}" == "stable" ]]; then
+            # 稳定版：只找上一个稳定版
+            prev=$(git tag --list "v[0-9]*" --sort=-creatordate \
+              | grep -Ev '\-(alpha|beta|rc|preview|nightly)' \
+              | grep -v "${GITHUB_REF_NAME}" | head -n1)
+          else
+            # 预览版：直接找上一个 tag
+            prev=$(git tag --list "v[0-9]*" --sort=-creatordate \
+              | grep -v "${GITHUB_REF_NAME}" | head -n1)
+          fi
+          echo "tag=$prev" >> $GITHUB_OUTPUT
+
       - name: Generate Changelog with git-cliff
         id: cliff
         uses: orhun/git-cliff-action@v4
         with:
-          args: --latest --strip header
+          args: --range "${{ steps.prev_tag.outputs.tag }}..${GITHUB_REF_NAME}" --strip header
         env:
           OUTPUT: CHANGES.md
           GITHUB_REPO: ${{ github.repository }}
