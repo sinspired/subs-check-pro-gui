@@ -704,7 +704,7 @@ func (g *GuiApp) CheckForUpdates() {
 		if err != nil {
 			slog.Warn("检查更新失败", "error", err)
 			sendOSNotification("Subs Check PRO GUI 更新失败", err.Error())
-			// 新增：emit 给前端 toast 展示
+			// emit 给前端 toast 展示
 			g.updaterApp.Event.Emit("gui:update:toast", "检查更新失败: "+err.Error())
 			return
 		}
@@ -712,9 +712,12 @@ func (g *GuiApp) CheckForUpdates() {
 		if updateInfo == nil {
 			// 已经是最新版
 			slog.Debug("当前已是最新版")
-			// sendOSNotification("Subs Check Pro GUI", "已经是最新版")
-			// 新增：emit 给前端 toast 展示
+			
+			// emit 给前端 toast 展示
 			g.updaterApp.Event.Emit("gui:update:toast", "已经是最新版")
+
+			// 发送系统通知
+			sendOSNotification("Subs Check Pro GUI", "已经是最新版")
 			return
 		}
 
