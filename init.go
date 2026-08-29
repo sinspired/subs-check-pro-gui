@@ -28,7 +28,7 @@ func init() {
 		MaxBackups: 3,
 		MaxAge:     7,
 	}
-	fileHandler := tint.NewHandler(fileLogger, &tint.Options{
+	fileHandler := tint.NewTextHandler(fileLogger, &tint.Options{
 		Level:      logLevel,
 		TimeFormat: "01-02 15:04:05",
 		NoColor:    true,
