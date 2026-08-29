@@ -180,7 +180,19 @@ export function AboutApp() {
       const result = await GuiApp.GetUpdateInfo();
       setUpdateInfo(result);
     } catch (e) {
-      setUpdateInfo({ hasUpdate: false, latestVersion: '', currentVersion: guiVer, releaseNotes: '', downloadURL: '', error: String(e) });
+      setUpdateInfo({
+        hasUpdate: false,
+        latestVersion: '',
+        currentVersion: guiVer,
+        releaseNotes: '',
+        downloadURL: '',
+        error: String(e),
+        publishDate: '',
+        platform: '',
+        arch: '',
+        filetype: '',
+        assetSize: ''
+      });
     } finally {
       setUpdateStatus('done');
     }
@@ -622,14 +634,54 @@ export function AboutApp() {
                         </span>
                       </div>
 
-                      {/* Release Notes：Markdown 渲染（marked + DOMPurify）,
-                          限高滚动展示。md2html() 内部已用 DOMPurify 清洗，可安全注入。 */}
-                      {updateInfo.releaseNotes && (
-                        <div
-                          class="aw-update-notes"
-                          dangerouslySetInnerHTML={{ __html: md2html(updateInfo.releaseNotes) }}
-                          onClick={handleNotesClick}
-                        />
+                      {/* 详情卡片：头部铭牌 + 更新日志主体 */}
+                      {(updateInfo.publishDate || updateInfo.releaseNotes) && (
+                        <div class="aw-update-details-card">
+
+                          {/* 头部：上方圆角，下方无圆角 */}
+                          <div class="aw-update-meta-header">
+                            <div class="aw-update-meta-item">
+                              <span class="aw-update-meta-label">DATE</span>
+                              <span class="aw-update-meta-val">{updateInfo.publishDate || 'Unknown'}</span>
+                            </div>
+                            <div class="aw-update-meta-divider" />
+                            <div className="aw-update-meta-item">
+                              <span className="aw-update-meta-label">PLATFORM</span>
+                              <span className="aw-update-meta-val">{updateInfo.platform}</span>
+                            </div>
+
+                            <div className="aw-update-meta-item">
+                              <span className="aw-update-meta-label">ARCH</span>
+                              <span className="aw-update-meta-val">{updateInfo.arch}</span>
+                            </div>
+
+                            <div className="aw-update-meta-item">
+                              <span className="aw-update-meta-label">TYPE</span>
+                              <span className="aw-update-meta-val">
+                                {updateInfo.filetype && (
+                                  <span className="aw-update-meta-ext">
+                                    {updateInfo.filetype.replace('.', '')}
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+
+                            <div class="aw-update-meta-divider" />
+                            <div class="aw-update-meta-item">
+                              <span class="aw-update-meta-label">SIZE</span>
+                              <span class="aw-update-meta-val">{updateInfo.assetSize || 'N/A'}</span>
+                            </div>
+                          </div>
+
+                          {/* 主体：上方无圆角，下方圆角 */}
+                          {updateInfo.releaseNotes && (
+                            <div
+                              class="aw-update-notes"
+                              dangerouslySetInnerHTML={{ __html: md2html(updateInfo.releaseNotes) }}
+                              onClick={handleNotesClick}
+                            />
+                          )}
+                        </div>
                       )}
 
                       {/* 按钮操作区：两端对齐 */}

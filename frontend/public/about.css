@@ -69,11 +69,13 @@
   top: 48px;
   bottom: 48px;
   width: 1px;
-  background: linear-gradient(to bottom,
-      transparent,
-      var(--border) 20%,
-      var(--border) 80%,
-      transparent);
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--border) 20%,
+    var(--border) 80%,
+    transparent
+  );
   pointer-events: none;
 }
 
@@ -1044,18 +1046,72 @@
   color: #e05252;
 }
 
-/* ── Release Notes：Markdown 渲染容器 ──────────────────────────────
-   md2html() 渲染为真正的 HTML（标题/列表/代码块/链接/表格等），
-   容器本身为普通排版盒子（不使用等宽字体 / white-space:pre-wrap，
-   否则 HTML 标签会裸显为文本）。
-   fix: 删除第二条重复规则（曾覆盖此处，带 font-family:monospace 和
-        white-space:pre-wrap，导致 markdown 渲染失效）。 */
+/* 更新详情卡片：一体化设计 (Header + Body) */
+
+/* 卡片外层容器 */
+.aw-update-details-card {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4px;
+}
+
+/* ── 卡片头部 (铭牌) ── */
+.aw-update-meta-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 12px;
+  /* 头部背景微调，与下方主体拉开极其微弱的层次感 */
+  background: color-mix(in srgb, var(--border) 12%, var(--card));
+  border: 1px solid var(--border);
+  /* 底部使用微弱的线与主体拼接 */
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  border-radius: 6px 6px 0 0; /* 上方圆角，下方平角 */
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.aw-update-meta-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.aw-update-meta-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted);
+  opacity: 0.45;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.aw-update-meta-val {
+  font-size: 10.5px;
+  font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+.aw-update-meta-ext {
+  opacity: 0.45;
+}
+
+.aw-update-meta-divider {
+  width: 1px;
+  height: 10px;
+  background: var(--border);
+  opacity: 0.4;
+}
+
+/* ── 卡片主体 (Release Notes) ── */
 .aw-update-notes {
   margin: 0;
   padding: 10px 12px;
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-top: none; /* 去掉上边框，让 Header 和 Body 无缝融合 */
+  border-radius: 0 0 6px 6px; /* 上方平角，下方圆角 */
   font-size: 12px;
   line-height: 1.7;
   color: var(--muted);
@@ -1068,16 +1124,13 @@
 .aw-update-notes::-webkit-scrollbar {
   width: 4px;
 }
-
 .aw-update-notes::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .aw-update-notes::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 2px;
 }
-
 .aw-update-notes::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
 }
@@ -1127,8 +1180,8 @@
   margin: 2px 0;
 }
 
-.aw-update-notes li>ul,
-.aw-update-notes li>ol {
+.aw-update-notes li > ul,
+.aw-update-notes li > ol {
   margin: 2px 0;
 }
 

@@ -96,7 +96,7 @@ export function GetListenPort(): $CancellablePromise<string> {
 }
 
 /**
- * GetUpdateInfo 向 GitHub API 查询最新 Release，返回更新状态给前端。
+ * GetUpdateInfo 通过 Wails 内置更新器查询更新状态，返回给前端。
  */
 export function GetUpdateInfo(): $CancellablePromise<$models.UpdateInfo> {
     return $Call.ByID(1712625151).then(($result: any) => {

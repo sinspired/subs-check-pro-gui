@@ -148,6 +148,32 @@ export class UpdateInfo {
     "downloadURL": string;
     "error": string;
 
+    /**
+     * 元信息展示字段
+     * 发布日期
+     */
+    "publishDate": string;
+
+    /**
+     * 平台 (如 windows, darwin, linux)
+     */
+    "platform": string;
+
+    /**
+     * 架构 (如 amd64, arm64)
+     */
+    "arch": string;
+
+    /**
+     * 文件类型 (如 .exe, .dmg)
+     */
+    "filetype": string;
+
+    /**
+     * 格式化后的文件大小 (如 12.5 MB)
+     */
+    "assetSize": string;
+
     /** Creates a new UpdateInfo instance. */
     constructor($$source: Partial<UpdateInfo> = {}) {
         if (!("hasUpdate" in $$source)) {
@@ -167,6 +193,21 @@ export class UpdateInfo {
         }
         if (!("error" in $$source)) {
             this["error"] = "";
+        }
+        if (!("publishDate" in $$source)) {
+            this["publishDate"] = "";
+        }
+        if (!("platform" in $$source)) {
+            this["platform"] = "";
+        }
+        if (!("arch" in $$source)) {
+            this["arch"] = "";
+        }
+        if (!("filetype" in $$source)) {
+            this["filetype"] = "";
+        }
+        if (!("assetSize" in $$source)) {
+            this["assetSize"] = "";
         }
 
         Object.assign(this, $$source);

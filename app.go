@@ -3,7 +3,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"runtime"
 
@@ -16,7 +15,6 @@ import (
 
 	"log/slog"
 	"net"
-	"net/http"
 	"net/url"
 	"os"
 	"strconv"
@@ -901,86 +899,75 @@ type UpdateInfo struct {
 	ReleaseNotes   string `json:"releaseNotes"`
 	DownloadURL    string `json:"downloadURL"`
 	Error          string `json:"error"`
+
+	// 元信息展示字段
+	PublishDate string `json:"publishDate"` // 发布日期
+	Platform    string `json:"platform"`    // 平台 (如 windows, darwin, linux)
+	Arch        string `json:"arch"`        // 架构 (如 amd64, arm64)
+	Filetype    string `json:"filetype"`    // 文件类型 (如 .exe, .dmg)
+	AssetSize   string `json:"assetSize"`   // 格式化后的文件大小 (如 12.5 MB)
 }
 
-// GetUpdateInfo 向 GitHub API 查询最新 Release，返回更新状态给前端。
+// GetUpdateInfo 通过 Wails 内置更新器查询更新状态，返回给前端。
 func (g *GuiApp) GetUpdateInfo() UpdateInfo {
-	const apiURL = "https://api.github.com/repos/sinspired/subs-check-pro-gui/releases/latest"
+	if g.updaterApp == nil {
+		return UpdateInfo{Error: "更新器未初始化"}
+	}
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, apiURL, nil)
+	ctx, cancel := context.WithTimeout(context.Background(), updater.CheckTimeout)
+	defer cancel()
+
+	// 1. 直接调用 Wails 的 Updater，自动享受代理加速！
+	rel, err := g.updaterApp.Updater.Check(ctx)
 	if err != nil {
-		return UpdateInfo{Error: "构造请求失败: " + err.Error()}
-	}
-	req.Header.Set("User-Agent", "subs-check-pro-gui/"+GuiVersion)
-	req.Header.Set("Accept", "application/vnd.github+json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return UpdateInfo{Error: "网络请求失败: " + err.Error()}
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return UpdateInfo{Error: fmt.Sprintf("GitHub API 返回 %d", resp.StatusCode)}
+		return UpdateInfo{Error: "检查更新失败: " + err.Error()}
 	}
 
-	var release struct {
-		TagName string `json:"tag_name"`
-		Body    string `json:"body"`
-		HTMLURL string `json:"html_url"`
-		Assets  []struct {
-			Name               string `json:"name"`
-			BrowserDownloadURL string `json:"browser_download_url"`
-		} `json:"assets"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-		return UpdateInfo{Error: "解析响应失败: " + err.Error()}
-	}
-
-	latest := strings.TrimPrefix(release.TagName, "v")
-	current := strings.TrimPrefix(GuiVersion, "v")
+	current := GuiVersion
 	if current == "" || current == "dev" {
 		current = "0.0.0"
 	}
 
-	return UpdateInfo{
-		HasUpdate:      semverGreater(latest, current),
-		LatestVersion:  release.TagName,
-		CurrentVersion: GuiVersion,
-		ReleaseNotes:   release.Body,
-		DownloadURL:    updater.GhProxyBase + release.HTMLURL,
+	// 2. 如果 rel 为 nil，说明已经是最新版本
+	if rel == nil {
+		return UpdateInfo{
+			HasUpdate:      false,
+			CurrentVersion: current,
+		}
 	}
-}
 
-// semverGreater 简单比较两个版本号字符串（格式 "x.y.z"），
-// 返回 a > b。不处理预发布标签，仅比较数字段。
-func semverGreater(a, b string) bool {
-	parse := func(s string) [3]int {
-		var parts [3]int
-		segs := strings.SplitN(s, ".", 3)
-		for i, seg := range segs {
-			if i >= 3 {
-				break
-			}
-			// 截断预发布后缀（如 "2-alpha1" → "2"）
-			if idx := strings.IndexAny(seg, "-+"); idx >= 0 {
-				seg = seg[:idx]
-			}
-			n, _ := strconv.Atoi(seg)
-			parts[i] = n
-		}
-		return parts
+	// 3. Wails 引擎返回的 rel.Version 可能没有 v 前缀，我们补上以匹配 GitHub Tag
+	tagName := rel.Version
+	if !strings.HasPrefix(tagName, "v") {
+		tagName = "v" + tagName
 	}
-	pa, pb := parse(a), parse(b)
-	for i := 0; i < 3; i++ {
-		if pa[i] > pb[i] {
-			return true
-		}
-		if pa[i] < pb[i] {
-			return false
-		}
+
+	// 拼出 Release 页面链接
+	targetURL := fmt.Sprintf("https://github.com/sinspired/subs-check-pro-gui/releases/tag/%s", tagName)
+
+	// 计算文件大小 (MB)
+	sizeMB := float64(rel.Artifact.Size) / (1024 * 1024)
+	sizeStr := fmt.Sprintf("%.2f MB", sizeMB)
+
+	// 格式化发布时间 (只取日期部分，或者加时间也可以)
+	pubDate := ""
+	if !rel.PublishedAt.IsZero() {
+		pubDate = rel.PublishedAt.Format("2006-01-02")
 	}
-	return false
+
+	return UpdateInfo{
+		HasUpdate:      true, 
+		LatestVersion:  tagName,
+		CurrentVersion: current,
+		ReleaseNotes:   rel.Notes,
+		DownloadURL:    updater.GhProxyBase + targetURL,
+		// 赋值新增字段
+		PublishDate: pubDate,
+		Platform:    rel.Artifact.Platform,
+		Arch:        rel.Artifact.Arch,
+		Filetype:    rel.Artifact.Filetype,
+		AssetSize:   sizeStr,
+	}
 }
 
 // OpenFilesWindow 打开或聚焦「内置文件」独立窗口（单例模式）。
