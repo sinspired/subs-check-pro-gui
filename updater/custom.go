@@ -25,7 +25,7 @@ func GetUpdateStatus() UpdateStatus {
 	return status
 }
 
-func setUpdateStatus(v UpdateStatus) {
+func SetUpdateStatus(v UpdateStatus) {
 	statusMu.Lock()
 	status = v
 	statusMu.Unlock()
@@ -65,7 +65,7 @@ func CheckUpdateStatus(wailsApp *application.App) {
 	} else {
 		next = UpdateStatus{Available: false, Version: ""}
 	}
-	setUpdateStatus(next)
+	SetUpdateStatus(next)
 	emitStatusChanged(wailsApp, next)
 }
 

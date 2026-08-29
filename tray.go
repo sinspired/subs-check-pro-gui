@@ -97,10 +97,19 @@ func startSysTray(
 				version = guiupdater.GetUpdateStatus().Version
 			}
 
+			// 1. 更新自定义状态并派发事件
+			nextSt := guiupdater.UpdateStatus{Available: true, Version: version}
+			guiupdater.SetUpdateStatus(nextSt)
+			wailsApp.Event.Emit(guiupdater.EventStatusChanged, nextSt)
+
+			// 2. 更新托盘菜单文本
 			if version != "" {
 				checkUpdateItem.SetLabel("有新版本 v" + version)
+				// 3. 发送系统通知提示用户
+				sendOSNotification("Subs Check Pro 更新", "发现新版本 v"+version+"，请及时更新")
 			} else {
 				checkUpdateItem.SetLabel("有新版本")
+				sendOSNotification("Subs Check Pro 更新", "发现新版本，请及时更新")
 			}
 		})
 	})
@@ -108,6 +117,11 @@ func startSysTray(
 	wailsApp.Event.On(updater.EventNoUpdate, func(_ *application.CustomEvent) {
 		application.InvokeAsync(func() {
 			checkUpdateItem.SetLabel("检查更新")
+
+			// 确保状态恢复
+			nextSt := guiupdater.UpdateStatus{Available: false, Version: ""}
+			guiupdater.SetUpdateStatus(nextSt)
+			wailsApp.Event.Emit(guiupdater.EventStatusChanged, nextSt)
 		})
 	})
 
@@ -280,26 +294,6 @@ func buildTrayMenu(
 		sendOSNotification("Subs Check Pro", "正在关闭…")
 		onQuit()
 	})
-
-	// 每2小时检查更新
-	go func() {
-		ticker := time.NewTicker(4 * time.Hour)
-		defer ticker.Stop()
-
-		for range ticker.C {
-			guiupdater.CheckUpdateStatus(wailsApp)
-			st := guiupdater.GetUpdateStatus()
-			if st.Available {
-				if st.Version != "" {
-					checkUpdateItem.SetLabel("有新版本 v" + st.Version)
-				} else {
-					checkUpdateItem.SetLabel("有新版本")
-				}
-			} else {
-				checkUpdateItem.SetLabel("检查更新")
-			}
-		}
-	}()
 
 	// 启动后台协程，定时更新托盘状态
 	go func() {
