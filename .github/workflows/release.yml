@@ -49,14 +49,14 @@ jobs:
         id: prev_tag
         run: |
           if [[ "${{ steps.release_type.outputs.type }}" == "stable" ]]; then
-            # 稳定版：只找上一个稳定版
+            # 稳定版：只找上一个稳定版 (注意加上 --)
             prev=$(git tag --list "v[0-9]*" --sort=-version:refname \
-              | grep -Ev "${{ env.PRERELEASE_REGEX }}" \
-              | grep -v "${GITHUB_REF_NAME}" | head -n1)
+              | grep -Ev -- "${{ env.PRERELEASE_REGEX }}" \
+              | grep -v -- "${GITHUB_REF_NAME}" | head -n1)
           else
-            # 预览版：找上一个任意 tag
+            # 预览版：找上一个任意 tag (注意加上 --)
             prev=$(git tag --list "v[0-9]*" --sort=-version:refname \
-              | grep -v "${GITHUB_REF_NAME}" | head -n1)
+              | grep -v -- "${GITHUB_REF_NAME}" | head -n1)
           fi
 
           if [ -z "$prev" ]; then
