@@ -9,6 +9,9 @@ on:
 permissions:
   contents: write
 
+env:
+  PRERELEASE_REGEX: "-(alpha|beta|rc|preview|nightly)"
+
 # 产物命名规范（用户可见架构名统一用 x64/arm64/x86）：
 #   subs-check-pro-gui_<goos>_<arch>[_variant][.ext]
 # 示例：
@@ -36,7 +39,7 @@ jobs:
       - name: Detect release type
         id: release_type
         run: |
-          if [[ "${GITHUB_REF_NAME}" =~ -(alpha|beta|rc|preview|nightly) ]]; then
+          if [[ "${GITHUB_REF_NAME}" =~ ${{ env.PRERELEASE_REGEX }} ]]; then
             echo "type=pre" >> $GITHUB_OUTPUT
           else
             echo "type=stable" >> $GITHUB_OUTPUT
@@ -47,21 +50,41 @@ jobs:
         run: |
           if [[ "${{ steps.release_type.outputs.type }}" == "stable" ]]; then
             # 稳定版：只找上一个稳定版
-            prev=$(git tag --list "v[0-9]*" --sort=-creatordate \
-              | grep -Ev '\-(alpha|beta|rc|preview|nightly)' \
+            prev=$(git tag --list "v[0-9]*" --sort=-version:refname \
+              | grep -Ev "${{ env.PRERELEASE_REGEX }}" \
               | grep -v "${GITHUB_REF_NAME}" | head -n1)
           else
-            # 预览版：直接找上一个 tag
-            prev=$(git tag --list "v[0-9]*" --sort=-creatordate \
+            # 预览版：找上一个任意 tag
+            prev=$(git tag --list "v[0-9]*" --sort=-version:refname \
               | grep -v "${GITHUB_REF_NAME}" | head -n1)
           fi
+
+          if [ -z "$prev" ]; then
+            echo "⚠️ 没有找到上一个 tag，使用仓库初始 commit 作为起点"
+            prev=$(git rev-list --max-parents=0 HEAD)
+          fi
+
           echo "tag=$prev" >> $GITHUB_OUTPUT
 
-      - name: Generate Changelog with git-cliff
+      # 稳定版 changelog：范围 = 上一个稳定版..当前稳定版
+      - name: Build cliff extra args
+        id: cliff_args
+        run: |
+          if [[ "${{ steps.release_type.outputs.type }}" == "stable" ]]; then
+            # 用双引号包裹正则，避免括号被 shell 解析
+            echo 'extra=--ignore-tags ".*-(alpha|beta|rc|preview|nightly).*"' >> "$GITHUB_OUTPUT"
+          else
+            echo "extra=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate Changelog
         id: cliff
         uses: orhun/git-cliff-action@v4
         with:
-          args: --range "${{ steps.prev_tag.outputs.tag }}..${GITHUB_REF_NAME}" --strip header
+          args: >-
+            --strip header
+            ${{ steps.cliff_args.outputs.extra }}
+            "${{ steps.prev_tag.outputs.tag }}..${{ github.ref_name }}"
         env:
           OUTPUT: CHANGES.md
           GITHUB_REPO: ${{ github.repository }}
