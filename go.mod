@@ -1,6 +1,6 @@
 module github.com/sinspired/subs-check-pro-gui
 
-go 1.26.4
+go 1.27.0
 
 replace gopkg.in/ini.v1 => github.com/go-ini/ini v1.67.3
 
@@ -9,9 +9,9 @@ require (
 	github.com/lmittmann/tint v1.2.0
 	github.com/metacubex/mihomo v1.19.30
 	github.com/metacubex/utls v1.8.7
-	github.com/sinspired/subs-check-pro-webui v1.0.0
-	github.com/sinspired/subs-check-pro/v2 v2.7.1-beta.1
-	github.com/wailsapp/wails/v3 v3.0.0-beta.12
+	github.com/sinspired/subs-check-pro-webui v1.2.0
+	github.com/sinspired/subs-check-pro/v2 v2.7.1
+	github.com/wailsapp/wails/v3 v3.0.0-beta.16
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -25,11 +25,11 @@ require (
 	github.com/Yawning/aez v0.0.0-20211027044916-e49e68abd344 // indirect
 	github.com/adrg/xdg v0.5.3 // indirect
 	github.com/akutz/memconn v0.1.0 // indirect
-	github.com/andybalholm/brotli v1.2.2 // indirect
+	github.com/andybalholm/brotli v1.2.3 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/biter777/countries v1.7.5 // indirect
 	github.com/bytedance/gopkg v0.1.4 // indirect
-	github.com/bytedance/sonic v1.15.2 // indirect
+	github.com/bytedance/sonic v1.15.3 // indirect
 	github.com/bytedance/sonic/loader v0.5.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.7 // indirect
@@ -40,7 +40,7 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dunglas/httpsfv v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/ebitengine/purego v0.11.0-alpha.9 // indirect
+	github.com/ebitengine/purego v0.11.0-alpha.10 // indirect
 	github.com/enfein/mieru/v3 v3.36.0 // indirect
 	github.com/ericlagergren/aegis v0.0.0-20250325060835-cd0defd64358 // indirect
 	github.com/ericlagergren/polyval v0.0.0-20230805202542-18692a1b76f9 // indirect
@@ -69,7 +69,7 @@ require (
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-github/v86 v86.0.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
-	github.com/google/pprof v0.0.0-20260802141513-ef3492d7dac3 // indirect
+	github.com/google/pprof v0.0.0-20260825171938-4d453200e7d9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
@@ -100,7 +100,7 @@ require (
 	github.com/metacubex/edwards25519 v1.2.0 // indirect
 	github.com/metacubex/fswatch v0.1.1 // indirect
 	github.com/metacubex/gopacket v1.1.20-0.20230608035415-7e2f98a3e759 // indirect
-	github.com/metacubex/gvisor v0.0.0-20260810011720-3cc44cf9ac22 // indirect
+	github.com/metacubex/gvisor v0.0.0-20260826100401-79317d808312 // indirect
 	github.com/metacubex/hkdf v0.1.0 // indirect
 	github.com/metacubex/hpke v0.1.0 // indirect
 	github.com/metacubex/http v0.1.7 // indirect
@@ -120,10 +120,10 @@ require (
 	github.com/metacubex/sing-shadowsocks v0.2.12 // indirect
 	github.com/metacubex/sing-shadowsocks2 v0.2.7 // indirect
 	github.com/metacubex/sing-vmess v0.2.5 // indirect
-	github.com/metacubex/sing-wireguard v0.0.0-20260810013230-110eac03c3f0 // indirect
+	github.com/metacubex/sing-wireguard v0.0.0-20260826105301-c3ae17d19f9e // indirect
 	github.com/metacubex/smux v0.0.0-20260105030934-d0c8756d3141 // indirect
 	github.com/metacubex/ssh v0.1.0 // indirect
-	github.com/metacubex/tailscale v0.0.0-20260821002758-7e607643d76d // indirect
+	github.com/metacubex/tailscale v0.0.0-20260821153257-ff0ecd818181 // indirect
 	github.com/metacubex/tailscale-wireguard-go v0.0.0-20260725073821-e61ab99cede2 // indirect
 	github.com/metacubex/tfo-go v0.0.0-20260623020846-376a77860b8c // indirect
 	github.com/metacubex/tls v0.1.8 // indirect
@@ -158,7 +158,7 @@ require (
 	github.com/sina-ghaderi/rabaead v0.0.0-20220730151906-ab6e06b96e8c // indirect
 	github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e // indirect
 	github.com/sinspired/checkip v0.5.1 // indirect
-	github.com/sirupsen/logrus v1.10.1 // indirect
+	github.com/sirupsen/logrus v1.10.2 // indirect
 	github.com/sohaha/zlsgo v1.7.21 // indirect
 	github.com/tailscale/certstore v0.1.1-0.20260409135935-3638fb84b77d // indirect
 	github.com/tailscale/go-winio v0.0.0-20231025203758-c4f33415bf55 // indirect
@@ -181,13 +181,13 @@ require (
 	gitlab.com/gitlab-org/api/client-go v1.46.0 // indirect
 	gitlab.com/go-extension/aes-ccm v0.0.0-20230221065045-e58665ef23c7 // indirect
 	gitlab.com/yawning/bsaes.git v0.0.0-20190805113838-0a714cd429ec // indirect
-	go.mongodb.org/mongo-driver/v2 v2.8.0 // indirect
+	go.mongodb.org/mongo-driver/v2 v2.8.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	go4.org/mem v0.0.0-20240501181205-ae6ca9944745 // indirect
-	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
+	go4.org/netipx v0.0.0-20260823151212-3075585bcbeb // indirect
 	golang.org/x/arch v0.30.0 // indirect
 	golang.org/x/crypto v0.55.0 // indirect
-	golang.org/x/exp v0.0.0-20260820142414-ca536658362e // indirect
+	golang.org/x/exp v0.0.0-20260824195058-e88cd73687aa // indirect
 	golang.org/x/mod v0.40.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
