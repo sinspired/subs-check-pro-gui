@@ -339,10 +339,10 @@ github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e h1:ur8uMsPIF
 github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e/go.mod h1:+e5fBW3bpPyo+3uLo513gIUblc03egGjMM0+5GKbzK8=
 github.com/sinspired/checkip v0.5.1 h1:Bw259sBaactAF3HOmTfgAKb8ilzVrmnGB3fV21Vf9tk=
 github.com/sinspired/checkip v0.5.1/go.mod h1:SvLx5K0kEV/s4BUp2EJ9LiaaMUgSJ54njAwQI84iOo8=
-github.com/sinspired/subs-check-pro-webui v1.2.0 h1:rvHjPkqPsdSArryM4S3Y2nQNYzbR+mDIQuCx4Ytpr20=
-github.com/sinspired/subs-check-pro-webui v1.2.0/go.mod h1:rg8DBZnTSh5/5tHCwQJrMVX6tKqqI5m8BrTT+gCB92M=
-github.com/sinspired/subs-check-pro/v2 v2.7.1 h1:dg9SflEG/0kY//qexknQo8Dl5KMxP5NrBZL/NS8DquQ=
-github.com/sinspired/subs-check-pro/v2 v2.7.1/go.mod h1:FItANzfd2tYFf76ieZ5ij/iajUFXcnajB6tNWGdUZLE=
+github.com/sinspired/subs-check-pro-webui v1.2.1 h1:XxHkPRPPpoqAdzFSRxb0T58WLt0P/PJPXaE65xQKahs=
+github.com/sinspired/subs-check-pro-webui v1.2.1/go.mod h1:rg8DBZnTSh5/5tHCwQJrMVX6tKqqI5m8BrTT+gCB92M=
+github.com/sinspired/subs-check-pro/v2 v2.7.2 h1:pKngH8lLeRRP9rIkkdL0TvNi5bEZPU7/Nol7yFcXZ5o=
+github.com/sinspired/subs-check-pro/v2 v2.7.2/go.mod h1:3TsX75a4yf8oXTZZ4cyndPinV8wztFUI5uxnoqQ6eOw=
 github.com/sirupsen/logrus v1.10.2 h1:G2SED73/qrAu6YwbdxOD6peLkCBI3z7L+ykJFTXJBBo=
 github.com/sirupsen/logrus v1.10.2/go.mod h1:SLEg8TqYulVKKfIGHldVp2K2aYz2DKSVBq4g/H5bR7Q=
 github.com/sohaha/zlsgo v1.7.21 h1:8FF+aHJUvA0MudSYGY+AUipy+UFgDbJQhSIhPE6f1Fs=
