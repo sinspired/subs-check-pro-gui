@@ -9,8 +9,8 @@ require (
 	github.com/lmittmann/tint v1.2.0
 	github.com/metacubex/mihomo v1.19.30
 	github.com/metacubex/utls v1.8.7
-	github.com/sinspired/subs-check-pro-webui v1.2.1
-	github.com/sinspired/subs-check-pro/v2 v2.7.2
+	github.com/sinspired/subs-check-pro-webui v1.2.5
+	github.com/sinspired/subs-check-pro/v2 v2.7.3-beta.1
 	github.com/wailsapp/wails/v3 v3.0.0-beta.16
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -157,7 +157,7 @@ require (
 	github.com/sina-ghaderi/poly1305 v0.0.0-20220724002748-c5926b03988b // indirect
 	github.com/sina-ghaderi/rabaead v0.0.0-20220730151906-ab6e06b96e8c // indirect
 	github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e // indirect
-	github.com/sinspired/checkip v0.5.1 // indirect
+	github.com/sinspired/checkip v0.5.3 // indirect
 	github.com/sirupsen/logrus v1.10.2 // indirect
 	github.com/sohaha/zlsgo v1.7.21 // indirect
 	github.com/tailscale/certstore v0.1.1-0.20260409135935-3638fb84b77d // indirect
@@ -186,7 +186,7 @@ require (
 	go4.org/mem v0.0.0-20240501181205-ae6ca9944745 // indirect
 	go4.org/netipx v0.0.0-20260823151212-3075585bcbeb // indirect
 	golang.org/x/arch v0.30.0 // indirect
-	golang.org/x/crypto v0.55.0 // indirect
+	golang.org/x/crypto v0.56.0 // indirect
 	golang.org/x/exp v0.0.0-20260824195058-e88cd73687aa // indirect
 	golang.org/x/mod v0.40.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
