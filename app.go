@@ -1089,10 +1089,10 @@ func (g *GuiApp) OpenSubStoreWindow() {
 		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Name:           "sub-store",
 			Title:          "Sub-Store — 订阅管理",
-			Width:          800,
-			Height:         800,
-			MinWidth:       800,
-			MinHeight:      600,
+			Width:          530,
+			Height:         600,
+			MinWidth:       530,
+			MinHeight:      500,
 			URL:            capturedURL,
 			Mac:            macWindowOpts(50),
 			BackgroundType: application.BackgroundTypeTranslucent,
@@ -1122,23 +1122,32 @@ func (g *GuiApp) OpenSubLinksWindow() {
 
 		// 动态计算窗口高度：Mac 因为红绿灯预留了 padding，需增加 18px 高度
 		winHeight := 545
-		minHeight := 520
+		minHeight := 545
 		maxHeight := 560
 
 		if runtime.GOOS == "darwin" {
 			winHeight = 560
-			minHeight = 530
+			minHeight = 560
 			maxHeight = 575
 		}
+
+		// 根据网卡数量动态调整宽度
+		ips := getLocalIPv4s()
+		baseWidth := 520
+
+		// 每个 IP 增加一定宽度，比如 120px
+		Width := baseWidth + (len(ips)-2)*120
+		MinWidth := Width - 0
+		maxWidth := Width + 20
 
 		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Name:           "sub-links",
 			Title:          "Subs Check Pro — 订阅链接",
-			Width:          520,
+			Width:          Width,
 			Height:         winHeight,
-			MinWidth:       500,
+			MinWidth:       MinWidth,
 			MinHeight:      minHeight,
-			MaxWidth:       540,
+			MaxWidth:       maxWidth,
 			MaxHeight:      maxHeight,
 			DisableResize:  false,
 			Frameless:      false,
