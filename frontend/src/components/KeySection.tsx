@@ -307,7 +307,7 @@ export function KeySection({ info, toast, onSelectConfig }: Props) {
             {/* 内置文件 */}
             <button
               class="btn-quick"
-              onClick={() => openInternalPage('/files', '内置文件', 'small')}
+              onClick={() => openInternalPage('/files', '内置文件', 'window-file')}
               title="内置文件管理"
               disabled={launching}
             >

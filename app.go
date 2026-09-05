@@ -621,8 +621,10 @@ func (g *GuiApp) OpenInternalPage(path string, title string, windowSize string) 
 
 	application.InvokeAsync(func() {
 		opts := newPopupOptions("Subs Check Pro — "+title, targetURL, windowSize)
-		opts.MinWidth = 800
-		opts.MinHeight = 600
+		opts.MinWidth = 600
+		opts.MinHeight = 640
+		opts.MaxWidth = 960
+		opts.MaxHeight = 660
 		popup := wailsApp.Window.NewWithOptions(opts)
 		popup.Show()
 		popup.Center()
@@ -712,7 +714,7 @@ func (g *GuiApp) CheckForUpdates() {
 		if updateInfo == nil {
 			// 已经是最新版
 			slog.Debug("当前已是最新版")
-			
+
 			// emit 给前端 toast 展示
 			g.updaterApp.Event.Emit("gui:update:toast", "已经是最新版")
 
@@ -959,7 +961,7 @@ func (g *GuiApp) GetUpdateInfo() UpdateInfo {
 	}
 
 	return UpdateInfo{
-		HasUpdate:      true, 
+		HasUpdate:      true,
 		LatestVersion:  tagName,
 		CurrentVersion: current,
 		ReleaseNotes:   rel.Notes,
@@ -993,10 +995,12 @@ func (g *GuiApp) OpenFilesWindow() {
 		win := wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
 			Name:           "files",
 			Title:          "Subs Check Pro — 内置文件",
-			Width:          720,
-			Height:         720,
-			MinWidth:       600,
-			MinHeight:      400,
+			Width:          940,
+			Height:         640,
+			MinWidth:       800,
+			MaxWidth:       960,
+			MinHeight:      640,
+			MaxHeight:      660,
 			URL:            targetURL,
 			Mac:            macWindowOpts(50),
 			BackgroundType: application.BackgroundTypeTranslucent,

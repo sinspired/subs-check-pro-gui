@@ -21,6 +21,8 @@ func windowDimensions(size string) (width, height int) {
 		return 1600, 1200
 	case "medium":
 		return 1100, 700
+	case "window-file":
+		return 940, 640
 	case "small":
 		return 720, 720
 	case "tiny":
