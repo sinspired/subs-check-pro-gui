@@ -295,6 +295,20 @@ func buildTrayMenu(
 		onQuit()
 	})
 
+	// 初始化 Notch Window (macOS 灵动岛通知)
+	notchWin := wailsApp.Window.NewNotchWindow(application.NotchWindowOptions{
+		Width:    260,
+		Height:   46, // 保持细长，贴合物理摄像头模组
+		Animated: true,
+		WindowOptions: application.WebviewWindowOptions{
+			Name:           "notch_progress",
+			URL:            "/notch.html",
+			BackgroundType: application.BackgroundTypeTransparent,
+		},
+	})
+
+	var isNotchVisible atomic.Bool
+
 	// 启动后台协程，定时更新托盘状态
 	go func() {
 		enabled, err := guiApp.GetAutoStartEnabled()
@@ -304,7 +318,7 @@ func buildTrayMenu(
 		}
 		autostartItem.SetChecked(enabled)
 
-		ticker := time.NewTicker(1500 * time.Millisecond)
+		ticker := time.NewTicker(1000 * time.Millisecond)
 		defer ticker.Stop()
 
 		for range ticker.C {
@@ -317,7 +331,15 @@ func buildTrayMenu(
 				continue
 			}
 
+			// 状态：正在检测
 			if coreApp.IsChecking() {
+				// 1. 如果开始检测且 Notch 未显示，则滑动滑出
+				if !isNotchVisible.Load() {
+					isNotchVisible.Store(true) // 立即锁定状态，防止重复调用
+					application.InvokeAsync(func() {
+						notchWin.Show()
+					})
+				}
 				stopCheckMenu.SetEnabled(true)
 				stopCheckAndExitMenu.SetEnabled(true)
 				statusItem.SetHidden(false)
@@ -326,6 +348,23 @@ func buildTrayMenu(
 				continue
 			}
 
+			// 2. 状态：检测空闲 (刚结束检测)
+			if isNotchVisible.Load() {
+				// 立即将可见性标记为 false，防止在接下来的 4 秒内重复触发计时器
+				isNotchVisible.Store(false)
+
+				// 延迟 4 秒收起，让用户看清最终的检测结果（如：可用 15 个）
+				time.AfterFunc(4*time.Second, func() {
+					// 4秒后，双重确认用户没有在这4秒内再次点击“开始检测”
+					if !coreApp.IsChecking() {
+						application.InvokeAsync(func() {
+							notchWin.Hide()
+						})
+					}
+				})
+			}
+
+			// 更新托盘文案
 			lastResult := coreApp.GetLastCheckResult()
 			if lastResult != "" {
 				statusItem.SetHidden(false)
@@ -343,7 +382,7 @@ func buildTrayMenu(
 	return menu, checkUpdateItem
 }
 
-// ── 后端 HTTP API 辅助函数 ────────────────────────────────────────────────────
+// 后端 HTTP API 辅助函数
 
 func backendBase() string {
 	return "http://127.0.0.1:" + defaultListenPort()
@@ -426,34 +465,42 @@ func NotifyHideToTray() {
 	slog.Debug("已最小化到系统托盘，单击托盘图标可恢复窗口")
 }
 
-// ── 进度/Tooltip 格式化 ───────────────────────────────────────────────────────
-
+// renderProgressString 在托盘显示进度
 func renderProgressString(coreApp *app.App) string {
 	state := coreApp.GetCurrentState()
 	stepName := state.StepName
-
-	var percent float64
-	if state.ProxyCount == 0 {
-		if stepName == "保存中" {
-			percent = 100.0
-		}
-	} else {
-		percent = float64(state.Progress) / float64(state.ProxyCount) * 100.0
-		if percent < 0 {
-			percent = 0
-		}
-		if percent > 100 {
-			percent = 100
-		}
-	}
-
 	if stepName == "" {
 		stepName = "进度"
 	}
 
-	return fmt.Sprintf("%s %.1f%% %s", stepName, percent, state.ETASuffix)
+	var percent *float64
+	// 计算百分比
+	if state.ProxyCount > 0 {
+		val := float64(state.Progress) / float64(state.ProxyCount) * 100.0
+		if val < 0 {
+			val = 0
+		} else if val > 100 {
+			val = 100
+		}
+		percent = &val
+	} else if stepName == "保存中" {
+		val := 100.0
+		percent = &val
+	}
+
+	// 特殊情况：代理或结果处理时不显示进度
+	if strings.Contains(stepName, "代理") || state.ProcessResults {
+		percent = nil
+	}
+
+	// 输出
+	if percent == nil {
+		return fmt.Sprintf("%s... %s", stepName, state.ETASuffix)
+	}
+	return fmt.Sprintf("%s %.1f%% %s", stepName, *percent, state.ETASuffix)
 }
 
+// formatSysTrayTooltip 格式化托盘提示
 func formatSysTrayTooltip(coreApp *app.App, guiApp *GuiApp) string {
 	base := "Subs Check Pro GUI" + " - 端口 " + strings.TrimPrefix(config.GlobalConfig.ListenPort, ":")
 

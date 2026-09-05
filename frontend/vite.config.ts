@@ -26,6 +26,8 @@ export default defineConfig({
         "sub-links": resolve(__dirname, "sub-links.html"),
         // 检查更新窗口（独立 Wails 窗口，复用前端 Markdown 渲染等代码/库）
         updater: resolve(__dirname, "updater.html"),
+        // 灵动岛独立窗口
+        notch: resolve(__dirname, "notch.html"),
       },
     },
   },

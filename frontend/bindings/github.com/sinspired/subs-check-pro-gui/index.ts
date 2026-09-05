@@ -10,5 +10,6 @@ export {
 
 export {
     AppInfo,
+    CheckState,
     UpdateInfo
 } from "./models.js";

@@ -138,6 +138,46 @@ export class AppInfo {
 }
 
 /**
+ * CheckState 前端展示检测进度所需的状态信息
+ */
+export class CheckState {
+    "isChecking": boolean;
+    "stepName": string;
+    "progress": number;
+    "proxyCount": number;
+    "lastResult": string;
+
+    /** Creates a new CheckState instance. */
+    constructor($$source: Partial<CheckState> = {}) {
+        if (!("isChecking" in $$source)) {
+            this["isChecking"] = false;
+        }
+        if (!("stepName" in $$source)) {
+            this["stepName"] = "";
+        }
+        if (!("progress" in $$source)) {
+            this["progress"] = 0;
+        }
+        if (!("proxyCount" in $$source)) {
+            this["proxyCount"] = 0;
+        }
+        if (!("lastResult" in $$source)) {
+            this["lastResult"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new CheckState instance from a string or object.
+     */
+    static createFrom($$source: any = {}): CheckState {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new CheckState($$parsedSource as Partial<CheckState>);
+    }
+}
+
+/**
  * UpdateInfo 前端展示更新状态所需的结构体。
  */
 export class UpdateInfo {

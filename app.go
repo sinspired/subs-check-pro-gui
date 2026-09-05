@@ -1167,3 +1167,34 @@ func (g *GuiApp) OpenSubLinksWindow() {
 func (g *GuiApp) GetUpdateStatus() updater.UpdateStatus {
 	return updater.GetUpdateStatus()
 }
+
+// CheckState 前端展示检测进度所需的状态信息
+type CheckState struct {
+	IsChecking bool   `json:"isChecking"`
+	StepName   string `json:"stepName"`
+	Progress   int64  `json:"progress"`
+	ProxyCount int64  `json:"proxyCount"`
+	LastResult string `json:"lastResult"`
+}
+
+// GetCheckState 返回当前后端的检测进度状态，供灵动岛等前端页面调用
+func (g *GuiApp) GetCheckState() CheckState {
+	// 防止端口冲突未解决时（内核还未启动）前端轮询导致的空指针 Panic
+	if g.backend == nil || g.pendingInit {
+		return CheckState{
+			IsChecking: false,
+			StepName:   "内核未就绪",
+		}
+	}
+
+	isChecking := g.backend.IsChecking()
+	st := g.backend.GetCurrentState()
+
+	return CheckState{
+		IsChecking: isChecking,
+		StepName:   st.StepName,
+		Progress:   st.Progress,
+		ProxyCount: st.ProxyCount,
+		LastResult: g.backend.GetLastCheckResult(),
+	}
+}

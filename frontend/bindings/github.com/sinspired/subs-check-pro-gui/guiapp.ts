@@ -73,6 +73,15 @@ export function GetAutoStartEnabled(): $CancellablePromise<boolean> {
 }
 
 /**
+ * GetCheckState 返回当前后端的检测进度状态，供灵动岛等前端页面调用
+ */
+export function GetCheckState(): $CancellablePromise<$models.CheckState> {
+    return $Call.ByID(3279137383).then(($result: any) => {
+        return $$createType1($result);
+    });
+}
+
+/**
  * GetConfigPath 返回当前生效配置文件的绝对路径。
  * 以函数引用形式传给 newCombinedAssetHandler，保证切换配置后注入值实时更新。
  */
@@ -100,13 +109,13 @@ export function GetListenPort(): $CancellablePromise<string> {
  */
 export function GetUpdateInfo(): $CancellablePromise<$models.UpdateInfo> {
     return $Call.ByID(1712625151).then(($result: any) => {
-        return $$createType1($result);
+        return $$createType2($result);
     });
 }
 
 export function GetUpdateStatus(): $CancellablePromise<updater$0.UpdateStatus> {
     return $Call.ByID(3197368653).then(($result: any) => {
-        return $$createType2($result);
+        return $$createType3($result);
     });
 }
 
@@ -258,5 +267,6 @@ export function ValidatePort(port: string): $CancellablePromise<string> {
 
 // Private type creation functions
 const $$createType0 = $models.AppInfo.createFrom;
-const $$createType1 = $models.UpdateInfo.createFrom;
-const $$createType2 = updater$0.UpdateStatus.createFrom;
+const $$createType1 = $models.CheckState.createFrom;
+const $$createType2 = $models.UpdateInfo.createFrom;
+const $$createType3 = updater$0.UpdateStatus.createFrom;
