@@ -390,8 +390,8 @@ github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IU
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
 github.com/vmihailenco/tagparser/v2 v2.0.0 h1:y09buUbR+b5aycVFQs/g70pqKVZNBmxwAhO7/IwNM9g=
 github.com/vmihailenco/tagparser/v2 v2.0.0/go.mod h1:Wri+At7QHww0WTrCBeu4J6bNtoV6mEfg5OIWRZA9qds=
-github.com/wailsapp/wails/v3 v3.0.0-beta.16 h1:ud3YMzTbPPae4EP3Wls4qBVsESZwwAkEny1P/zzw6Tk=
-github.com/wailsapp/wails/v3 v3.0.0-beta.16/go.mod h1:zKZYhB3WjrN5LhJWbnOAVMN0Xf8qTozbw2nf5micKl4=
+github.com/wailsapp/wails/v3 v3.0.0-beta.19 h1:/oX2Er2XgeTBz9pyuQNnwLwAtjjapEhkXCB9HpBjSk8=
+github.com/wailsapp/wails/v3 v3.0.0-beta.19/go.mod h1:zKZYhB3WjrN5LhJWbnOAVMN0Xf8qTozbw2nf5micKl4=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 github.com/xtaci/lossyconn v0.0.0-20190602105132-8df528c0c9ae h1:J0GxkO96kL4WF+AIT3M4mfUVinOCPgf2uUWYFUzN0sM=
