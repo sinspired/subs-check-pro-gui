@@ -11,7 +11,7 @@ require (
 	github.com/metacubex/utls v1.8.7
 	github.com/sinspired/subs-check-pro-webui v1.2.6
 	github.com/sinspired/subs-check-pro/v2 v2.8.0
-	github.com/wailsapp/wails/v3 v3.0.0-beta.16
+	github.com/wailsapp/wails/v3 v3.0.0-beta.19
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 )
