@@ -204,15 +204,10 @@ jobs:
         with:
           node-version: 24
 
-      - name: Setup Zig
-        uses: mlugg/setup-zig@v2
-
-      - name: Configure CGO with Zig (Linux GUI only)
-        if: runner.os == 'Linux' && matrix.goos == 'linux'
-        run: |
-          echo "CGO_ENABLED=1" >> $GITHUB_ENV
-          echo "CC=zig cc" >> $GITHUB_ENV
-          echo "CXX=zig c++" >> $GITHUB_ENV
+      # ⬇全局强制开启 CGO (因为 quickjs-go 强依赖 CGO)
+      - name: Enable CGO globally
+        shell: bash
+        run: echo "CGO_ENABLED=1" >> $GITHUB_ENV
 
       # ── Linux：GTK4 / WebKitGTK 依赖 ──
       - name: Install Linux Dependencies

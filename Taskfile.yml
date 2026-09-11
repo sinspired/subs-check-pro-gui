@@ -18,14 +18,15 @@ vars:
   # 不依赖 Python/Bash，只要能编译本项目就有 go 命令。
   # 可用环境变量覆盖：CORE_VERSION=v2.5.4 CORE_COMMIT=7c23868 task build
   CORE_VERSION:
-    sh: task verinfo -- core-version
+    sh: 'echo ${CORE_VERSION:-$(go run ./build/tools/verinfo core-version)}'
+  
   CORE_COMMIT:
-    sh: task verinfo -- core-commit
+    sh: 'echo ${CORE_COMMIT:-$(go run ./build/tools/verinfo core-commit)}'
 
-  # GUI 自身版本：取当前仓库 git tag
+  # GUI 版本同样优先用环境变量，本地 fallback 回退使用 git describe
   GUI_VERSION:
-    sh: git describe --tags --abbrev=0 2>/dev/null || echo "dev"
-
+    sh: 'echo ${GUI_VERSION:-$(git describe --tags --abbrev=0 2>/dev/null || echo "dev")}'
+    
 includes:
   common: ./build/Taskfile.yml
   windows: ./build/windows/Taskfile.yml

@@ -1,3 +1,4 @@
+# build\windows\Taskfile.yml
 version: "3"
 
 includes:
@@ -36,7 +37,7 @@ tasks:
           GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
     vars:
       # Default to CGO_ENABLED=0 if not explicitly set
-      CGO_ENABLED: '{{.CGO_ENABLED | default "0"}}'
+      CGO_ENABLED: '{{.CGO_ENABLED | default "1"}}'
 
   build:native:
     summary: Builds the application using native Go cross-compilation

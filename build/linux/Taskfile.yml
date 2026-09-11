@@ -1,3 +1,4 @@
+# build\linux\Taskfile.yml
 version: "3"
 
 includes:
@@ -5,8 +6,8 @@ includes:
 
 env:
   CGO_ENABLED: 1
-  CC: zig cc
-  CXX: zig c++
+  CC: gcc
+  CXX: g++
 
 vars:
   # Signing configuration - edit these values for your project
