@@ -1,7 +1,7 @@
 /**
  * frontend/src/components/QuitDialog.tsx
  */
-import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
+import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui/v2';
 
 interface Props {
   onClose: () => void;

@@ -332,8 +332,12 @@ github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e h1:ur8uMsPIF
 github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e/go.mod h1:+e5fBW3bpPyo+3uLo513gIUblc03egGjMM0+5GKbzK8=
 github.com/sinspired/checkip v0.5.3 h1:esSnsq/2mxVZrWfCkEAhUJgij+jAMy89IJy+O3PhS8o=
 github.com/sinspired/checkip v0.5.3/go.mod h1:YN9g9B/RLXALA0h17qpK6SOZIeg+c0iMknHIkjYewqc=
+github.com/sinspired/subs-check-pro-gui v1.2.9 h1:iFfWk1aRaaJ0l97A5o0wv7gLTmlHXEAUah10rcx48po=
+github.com/sinspired/subs-check-pro-gui v1.2.9/go.mod h1:L/WGHwqWrBHxIP2hMF/1iOB4VzE+3FE8f3ws+SE5n94=
 github.com/sinspired/subs-check-pro-webui v1.2.6 h1:vkNQ9rxZHQsTT2qN2FnmGJySU2/MzAUPwGECzNJLTcM=
 github.com/sinspired/subs-check-pro-webui v1.2.6/go.mod h1:rg8DBZnTSh5/5tHCwQJrMVX6tKqqI5m8BrTT+gCB92M=
+github.com/sinspired/subs-check-pro/v2 v2.8.0 h1:KI1Ys+s8ZROD9CROGb65ZNvpvEghHS8Q/p/FAmzHVSs=
+github.com/sinspired/subs-check-pro/v2 v2.8.0/go.mod h1:BBzgBQqCCeafsgBrqSKOl1P8rzmI27bryVfdVZAa58E=
 github.com/sinspired/subs-check-pro/v3 v3.0.0-alpha.1 h1:NCzNzXkZ/7Gdmfx0DXQ2eb+PSIeFjbmnzmmbTYihS0E=
 github.com/sinspired/subs-check-pro/v3 v3.0.0-alpha.1/go.mod h1:fqvTnsq7OsJc5M25r/4dsyg3+3sj4gU13wVkINe8g7w=
 github.com/sirupsen/logrus v1.10.2 h1:G2SED73/qrAu6YwbdxOD6peLkCBI3z7L+ykJFTXJBBo=

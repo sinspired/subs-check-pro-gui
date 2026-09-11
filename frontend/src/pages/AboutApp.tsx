@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useTheme } from '../hooks/useTheme';
 import { useWailsReady } from '../hooks/useWailsReady';
-import { GuiApp, AppInfo, UpdateInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
+import { GuiApp, AppInfo, UpdateInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui/v2';
 import { useToast } from '../hooks/useToast';
 import { Toast } from '../components/Toast';
 import { md2html } from '../utils/markdown';

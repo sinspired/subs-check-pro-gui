@@ -3,8 +3,8 @@
  */
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { Browser } from '@wailsio/runtime'; // 引入 Wails3 Browser API
-import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
-import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
+import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui/v2';
+import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui/v2';
 
 interface Props {
   info: AppInfo;

@@ -16,9 +16,9 @@ import { PasswordConfirm } from './components/PasswordConfirm';
 import { Toast } from './components/Toast';
 import { QuitDialog } from './components/QuitDialog';
 
-import { GuiApp } from '../bindings/github.com/sinspired/subs-check-pro-gui';
-import { AppInfo } from '../bindings/github.com/sinspired/subs-check-pro-gui';
-import { Notifier } from '../bindings/github.com/sinspired/subs-check-pro-gui';
+import { GuiApp } from '../bindings/github.com/sinspired/subs-check-pro-gui/v2';
+import { AppInfo } from '../bindings/github.com/sinspired/subs-check-pro-gui/v2';
+import { Notifier } from '../bindings/github.com/sinspired/subs-check-pro-gui/v2';
 
 // UI 状态机：每个状态对应一个独立视图
 type View = 'loading' | 'error' | 'portConflict' | 'main' | 'password' | 'about';
@@ -316,7 +316,7 @@ export function App() {
       <div class="lp-footer">
         <a
           class="ver-tag ver-gui"
-          onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro-gui')}
+          onClick={() => openLink('https://proxy.linkpc.dpdns.org/https://github.com/sinspired/subs-check-pro-gui/v2')}
           title={`GUI 版本：${info.guiVersion || 'dev'}  →  sinspired/subs-check-pro-gui`}
         >
           GUI&nbsp;{info.guiVersion || 'dev'}

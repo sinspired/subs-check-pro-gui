@@ -1,4 +1,4 @@
-module github.com/sinspired/subs-check-pro-gui
+module github.com/sinspired/subs-check-pro-gui/v2
 
 go 1.27.0
 
@@ -9,6 +9,7 @@ require (
 	github.com/lmittmann/tint v1.2.0
 	github.com/metacubex/mihomo v1.19.30
 	github.com/metacubex/utls v1.8.7
+	github.com/sinspired/subs-check-pro-gui v1.2.9
 	github.com/sinspired/subs-check-pro-webui v1.2.6
 	github.com/sinspired/subs-check-pro/v3 v3.0.0-alpha.1
 	github.com/wailsapp/wails/v3 v3.0.0-beta.19
@@ -155,6 +156,7 @@ require (
 	github.com/sina-ghaderi/rabaead v0.0.0-20220730151906-ab6e06b96e8c // indirect
 	github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e // indirect
 	github.com/sinspired/checkip v0.5.3 // indirect
+	github.com/sinspired/subs-check-pro/v2 v2.8.0 // indirect
 	github.com/sirupsen/logrus v1.10.2 // indirect
 	github.com/sohaha/zlsgo v1.7.21 // indirect
 	github.com/tailscale/certstore v0.1.1-0.20260409135935-3638fb84b77d // indirect

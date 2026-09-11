@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 // 从 GuiApp 的绑定文件中引入包装好的方法
-import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
+import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui/v2';
 
 export function NotchApp() {
   const [state, setState] = useState({

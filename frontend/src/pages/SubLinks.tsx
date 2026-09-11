@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { useTheme } from '../hooks/useTheme';
 import { useWailsReady } from '../hooks/useWailsReady';
-import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
+import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui/v2';
 
 // 通过 userAgent 判断是否为 macOS
 const isMac = /Macintosh|Mac OS X/i.test(navigator.userAgent);

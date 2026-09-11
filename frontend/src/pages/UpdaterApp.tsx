@@ -32,7 +32,7 @@
  */
 import { useEffect, useState } from 'preact/hooks';
 import { Events } from '@wailsio/runtime';
-import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
+import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui/v2';
 import { useWailsReady } from '../hooks/useWailsReady';
 import { useTheme } from '../hooks/useTheme';
 import { md2html } from '../utils/markdown';

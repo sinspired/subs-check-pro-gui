@@ -6,7 +6,7 @@
 name: "subs-check-pro-gui"
 arch: ${GOARCH}
 platform: "linux"
-version: "${VERSION}" 
+version: "${VERSION}"
 section: "default"
 priority: "extra"
 maintainer: ${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>

@@ -14,8 +14,8 @@
  *   - 两者均冲突     → 双列，两字段并排
  */
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
-import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
+import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui/v2';
+import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui/v2';
 
 interface Props {
   info: AppInfo;

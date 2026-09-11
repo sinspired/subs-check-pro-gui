@@ -5,8 +5,8 @@
  * 通过校验后 GUI 会 Shutdown 旧内核、初始化新内核，并自动进入管理界面。
  */
 import { useState } from 'preact/hooks';
-import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
-import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui';
+import { GuiApp } from '../../bindings/github.com/sinspired/subs-check-pro-gui/v2';
+import { AppInfo } from '../../bindings/github.com/sinspired/subs-check-pro-gui/v2';
 
 interface Props {
   cfgPath: string;
