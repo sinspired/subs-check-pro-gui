@@ -76,6 +76,7 @@ tasks:
         case "$(uname -s)" in
           Darwin) HOST_TAG="darwin-x86_64" ;;
           Linux)  HOST_TAG="linux-x86_64" ;;
+          MINGW*|MSYS*|CYGWIN*) HOST_TAG="windows-x86_64" ;;
           *)      echo "Unsupported host OS"; exit 1 ;;
         esac
 
@@ -182,68 +183,70 @@ tasks:
       - sh: 'command -v java >/dev/null || [ -n "$JAVA_HOME" ]'
         msg: "Java not found. Install a JDK (e.g. brew install openjdk@21) and/or set JAVA_HOME"
     cmds:
-      - |
-        cd build/android
-        # The exec bit is lost when gradlew is extracted from the embedded
-        # build assets, so restore it before invoking the wrapper.
-        chmod +x ./gradlew
-        ./gradlew assembleDebug
-        cp app/build/outputs/apk/debug/app-debug.apk "../../{{.BIN_DIR}}/{{.APP_NAME}}.apk"
-        echo "APK created: {{.BIN_DIR}}/{{.APP_NAME}}.apk"
+      - platforms: [windows]
+        cmd: |
+          cd build/android
+          gradlew.bat assembleDebug
+          powershell -Command "Copy-Item 'app\\build\\outputs\\apk\\debug\\app-debug.apk' '..\\..\\{{.BIN_DIR}}\\{{.APP_NAME}}.apk'"
+          powershell -Command "Write-Output 'APK created: {{.BIN_DIR}}\\{{.APP_NAME}}.apk'"
+      - platforms: [linux, darwin]
+        cmd: |
+          cd build/android
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk "../../{{.BIN_DIR}}/{{.APP_NAME}}.apk"
+          echo "APK created: {{.BIN_DIR}}/{{.APP_NAME}}.apk"
 
   assemble:apk:release:
-    summary: Assembles a release APK using Gradle (signed with the debug keystore unless ANDROID_KEYSTORE_FILE is set)
-    preconditions:
-      - sh: 'command -v java >/dev/null || [ -n "$JAVA_HOME" ]'
-        msg: "Java not found. Install a JDK (e.g. brew install openjdk@21) and/or set JAVA_HOME"
+    summary: Assembles a release APK using Gradle
     cmds:
-      - |
-        cd build/android
-        # The exec bit is lost when gradlew is extracted from the embedded
-        # build assets, so restore it before invoking the wrapper.
-        chmod +x ./gradlew
-        ./gradlew assembleRelease
-        cp app/build/outputs/apk/release/app-release.apk "../../{{.BIN_DIR}}/{{.APP_NAME}}.apk"
-        echo "Release APK created: {{.BIN_DIR}}/{{.APP_NAME}}.apk"
+      - platforms: [windows]
+        cmd: |
+          cd build/android
+          gradlew.bat assembleRelease
+          powershell -Command "Copy-Item 'app\\build\\outputs\\apk\\release\\app-release.apk' '..\\..\\{{.BIN_DIR}}\\{{.APP_NAME}}.apk'"
+          powershell -Command "Write-Output 'Release APK created: {{.BIN_DIR}}\\{{.APP_NAME}}.apk'"
+      - platforms: [linux, darwin]
+        cmd: |
+          cd build/android
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk "../../{{.BIN_DIR}}/{{.APP_NAME}}.apk"
+          echo "Release APK created: {{.BIN_DIR}}/{{.APP_NAME}}.apk"
 
   assemble:aab:
-    summary: Assembles a debug AAB (Android App Bundle) using Gradle
-    preconditions:
-      - sh: 'command -v java >/dev/null || [ -n "$JAVA_HOME" ]'
-        msg: "Java not found. Install a JDK (e.g. brew install openjdk@21) and/or set JAVA_HOME"
+    summary: Assembles a debug AAB using Gradle
     cmds:
-      - |
-        cd build/android
-        # The exec bit is lost when gradlew is extracted from the embedded
-        # build assets, so restore it before invoking the wrapper.
-        chmod +x ./gradlew
-        ./gradlew bundleDebug
-        cp app/build/outputs/bundle/debug/app-debug.aab "../../{{.BIN_DIR}}/{{.APP_NAME}}.aab"
-        echo "AAB created: {{.BIN_DIR}}/{{.APP_NAME}}.aab"
+      - platforms: [windows]
+        cmd: |
+          cd build/android
+          gradlew.bat bundleDebug
+          powershell -Command "Copy-Item 'app\\build\\outputs\\bundle\\debug\\app-debug.aab' '..\\..\\{{.BIN_DIR}}\\{{.APP_NAME}}.aab'"
+          powershell -Command "Write-Output 'AAB created: {{.BIN_DIR}}\\{{.APP_NAME}}.aab'"
+      - platforms: [linux, darwin]
+        cmd: |
+          cd build/android
+          chmod +x ./gradlew
+          ./gradlew bundleDebug
+          cp app/build/outputs/bundle/debug/app-debug.aab "../../{{.BIN_DIR}}/{{.APP_NAME}}.aab"
+          echo "AAB created: {{.BIN_DIR}}/{{.APP_NAME}}.aab"
 
   assemble:aab:release:
-    summary: Assembles a release AAB for Play Store upload (signed with the debug keystore unless ANDROID_KEYSTORE_FILE is set)
-    preconditions:
-      - sh: 'command -v java >/dev/null || [ -n "$JAVA_HOME" ]'
-        msg: "Java not found. Install a JDK (e.g. brew install openjdk@21) and/or set JAVA_HOME"
+    summary: Assembles a release AAB using Gradle
     cmds:
-      - |
-        # With Play App Signing, the keystore configured here is your UPLOAD
-        # key: Google verifies the upload with it, then re-signs the app with
-        # the app signing key it manages for distribution.
-        if [ -z "$ANDROID_KEYSTORE_FILE" ]; then
-          echo "WARNING: ANDROID_KEYSTORE_FILE is not set, so this AAB will be"
-          echo "signed with the debug keystore. Google Play rejects debug-signed"
-          echo "bundles. Set ANDROID_KEYSTORE_FILE, ANDROID_KEYSTORE_PASSWORD,"
-          echo "ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD before uploading."
-        fi
-        cd build/android
-        # The exec bit is lost when gradlew is extracted from the embedded
-        # build assets, so restore it before invoking the wrapper.
-        chmod +x ./gradlew
-        ./gradlew bundleRelease
-        cp app/build/outputs/bundle/release/app-release.aab "../../{{.BIN_DIR}}/{{.APP_NAME}}.aab"
-        echo "Release AAB created: {{.BIN_DIR}}/{{.APP_NAME}}.aab"
+      - platforms: [windows]
+        cmd: |
+          cd build/android
+          gradlew.bat bundleRelease
+          powershell -Command "Copy-Item 'app\\build\\outputs\\bundle\\release\\app-release.aab' '..\\..\\{{.BIN_DIR}}\\{{.APP_NAME}}.aab'"
+          powershell -Command "Write-Output 'Release AAB created: {{.BIN_DIR}}\\{{.APP_NAME}}.aab'"
+      - platforms: [linux, darwin]
+        cmd: |
+          cd build/android
+          chmod +x ./gradlew
+          ./gradlew bundleRelease
+          cp app/build/outputs/bundle/release/app-release.aab "../../{{.BIN_DIR}}/{{.APP_NAME}}.aab"
+          echo "Release AAB created: {{.BIN_DIR}}/{{.APP_NAME}}.aab"
 
   generate:android:overlay:
     internal: true

@@ -9,3 +9,13 @@ build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
 *.ps1
 *.syso
 .wiki/
+
+# Mobile generated (per-machine; overlays hold absolute paths)
+build/ios/xcode/overlay.json
+build/ios/xcode/gen/
+build/android/overlay.json
+build/android/gen/
+build/android/app/build/
+build/android/app/src/main/jniLibs/
+build/android/build/
+build/android/.gradle/
