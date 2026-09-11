@@ -14,8 +14,8 @@ import (
 	"time"
 
 	utls "github.com/metacubex/utls"
-	"github.com/sinspired/subs-check-pro/v2/config"
-	"github.com/sinspired/subs-check-pro/v2/utils"
+	"github.com/sinspired/subs-check-pro/v3/config"
+	"github.com/sinspired/subs-check-pro/v3/utils"
 )
 
 // GhProxyBase 是本项目自建的 CF-Proxy Worker 中转地址，作为 GithubProxyGroup
@@ -43,9 +43,9 @@ const MaxDownloadDuration = 30 * time.Minute
 // speedCheckWindow 就单独核算这一窗口内的速度并重新计数，只有某一个
 // 窗口本身速度不达标才会中止，网络抖动后能自我恢复。
 const (
-	minDownloadSpeedBytesPerSec = 20 * 1024      // 20KB/s，放宽阈值以容忍较差网络
-	speedCheckGrace             = 60 * time.Second  // 预热期：TCP 慢启动/代理握手不计入判定
-	speedCheckWindow            = 60 * time.Second  // 滚动窗口大小
+	minDownloadSpeedBytesPerSec = 20 * 1024        // 20KB/s，放宽阈值以容忍较差网络
+	speedCheckGrace             = 60 * time.Second // 预热期：TCP 慢启动/代理握手不计入判定
+	speedCheckWindow            = 60 * time.Second // 滚动窗口大小
 )
 
 // ---------------------------------------------------------------------

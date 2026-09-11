@@ -7,7 +7,7 @@ import (
 
 	"github.com/lmittmann/tint"
 	mihomoLog "github.com/metacubex/mihomo/log"
-	"github.com/sinspired/subs-check-pro/v2/app"
+	"github.com/sinspired/subs-check-pro/v3/app"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 

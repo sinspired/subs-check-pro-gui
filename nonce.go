@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sinspired/subs-check-pro/v2/utils"
+	"github.com/sinspired/subs-check-pro/v3/utils"
 )
 
 const nonceTTL = 30 * time.Second
@@ -24,9 +24,9 @@ type nonceEntry struct {
 }
 
 var (
-	nonceMu     sync.Mutex
-	guiNonces   = make(map[string]nonceEntry)
-	nonceOnce   sync.Once // 确保后台清理只启动一次
+	nonceMu   sync.Mutex
+	guiNonces = make(map[string]nonceEntry)
+	nonceOnce sync.Once // 确保后台清理只启动一次
 )
 
 // generateNonce 生成一次性 nonce，绑定 apiKey 和 remember 标志，30 秒后自动过期。

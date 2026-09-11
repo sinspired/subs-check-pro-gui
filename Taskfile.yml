@@ -18,6 +18,11 @@ vars:
   GUI_VERSION:
     sh: git describe --tags --abbrev=0 2>/dev/null || echo "dev"
 
+env:
+  CGO_ENABLED: 1
+  CC: zig cc
+  CXX: zig c++
+
 includes:
   common: ./build/Taskfile.yml
   windows: ./build/windows/Taskfile.yml

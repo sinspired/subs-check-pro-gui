@@ -10,7 +10,7 @@ require (
 	github.com/metacubex/mihomo v1.19.30
 	github.com/metacubex/utls v1.8.7
 	github.com/sinspired/subs-check-pro-webui v1.2.6
-	github.com/sinspired/subs-check-pro/v2 v2.8.0
+	github.com/sinspired/subs-check-pro/v3 v3.0.0-alpha.1
 	github.com/wailsapp/wails/v3 v3.0.0-beta.19
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -28,6 +28,7 @@ require (
 	github.com/andybalholm/brotli v1.2.3 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/biter777/countries v1.7.5 // indirect
+	github.com/buke/quickjs-go v0.7.7 // indirect
 	github.com/bytedance/gopkg v0.1.4 // indirect
 	github.com/bytedance/sonic v1.15.3 // indirect
 	github.com/bytedance/sonic/loader v0.5.2 // indirect
@@ -40,7 +41,6 @@ require (
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dunglas/httpsfv v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/ebitengine/purego v0.11.0 // indirect
 	github.com/enfein/mieru/v3 v3.36.1 // indirect
 	github.com/ericlagergren/aegis v0.0.0-20250325060835-cd0defd64358 // indirect
 	github.com/ericlagergren/polyval v0.0.0-20230805202542-18692a1b76f9 // indirect
@@ -84,7 +84,6 @@ require (
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/klauspost/reedsolomon v1.14.2 // indirect
 	github.com/leodido/go-urn v1.5.0 // indirect
-	github.com/lufia/plan9stats v0.0.0-20260802145828-341c2f0c90b5 // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mdlayher/netlink v1.11.2 // indirect
@@ -145,7 +144,6 @@ require (
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.29 // indirect
 	github.com/pires/go-proxyproto v0.15.0 // indirect
-	github.com/power-devops/perfstat v0.0.0-20260805114148-88456608a4f6 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
 	github.com/quic-go/quic-go v0.62.0 // indirect
 	github.com/rasky/go-lzo v0.0.0-20200203143853-96a758eda86e // indirect
@@ -153,7 +151,6 @@ require (
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/safchain/ethtool v0.7.0 // indirect
 	github.com/samber/lo v1.53.0 // indirect
-	github.com/shirou/gopsutil/v4 v4.26.8 // indirect
 	github.com/sina-ghaderi/poly1305 v0.0.0-20220724002748-c5926b03988b // indirect
 	github.com/sina-ghaderi/rabaead v0.0.0-20220730151906-ab6e06b96e8c // indirect
 	github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e // indirect
@@ -165,8 +162,6 @@ require (
 	github.com/tailscale/hujson v0.0.0-20260727124030-b80ff77dac4f // indirect
 	github.com/tailscale/peercred v0.0.0-20250107143737-35a0c7bd7edc // indirect
 	github.com/tinylib/msgp v1.6.4 // indirect
-	github.com/tklauser/go-sysconf v0.4.0 // indirect
-	github.com/tklauser/numcpus v0.12.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/u-root/uio v0.0.0-20240224005618-d2acac8f3701 // indirect
 	github.com/ugorji/go/codec v1.3.2 // indirect
@@ -175,7 +170,6 @@ require (
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
-	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
 	github.com/zlsgo/useragent v0.0.0-20251119103354-4ad4f1fe3b88 // indirect
 	gitlab.com/gitlab-org/api/client-go v1.46.0 // indirect
