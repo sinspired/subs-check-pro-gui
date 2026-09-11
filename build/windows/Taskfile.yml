@@ -119,22 +119,15 @@ tasks:
       INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
 
   # generate:syso — 生成 Windows .syso（PE 版本资源 + 清单）
-  # generate:syso — 生成 Windows .syso（PE 版本资源 + 清单）
   generate:syso:
     summary: Generates Windows `.syso` file with version from GUI_VERSION
     dir: build
-    # ⬇️ 修复：使用标准的 env 块，专门为这个小工具关闭 CGO，确保生成完美的纯净 exe
-    env:
-      CGO_ENABLED: 0
     cmds:
-      - go build -o verinfo_tool.exe ./tools/verinfo
-      # ⬇️ 修复：使用 cmd /c 强制执行，兼容性极佳
-      - cmd /c verinfo_tool.exe gen-syso windows/info.json windows/wails.exe.manifest windows/info_gen_{{.ARCH}}.json windows/wails_gen_{{.ARCH}}.exe.manifest "{{.GUI_VERSION}}"
+      # ⬇️ 修复：强行锁死 GOOS=windows 和 GOARCH=amd64，防止被交叉编译环境变量污染变成 Linux 二进制
+      - env GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -o verinfo_tool.exe ./tools/verinfo
+      - ./verinfo_tool.exe gen-syso windows/info.json windows/wails.exe.manifest windows/info_gen_{{.ARCH}}.json windows/wails_gen_{{.ARCH}}.exe.manifest "{{.GUI_VERSION}}"
       - wails3 generate syso -arch {{.ARCH}} -icon windows/icon.ico -manifest windows/wails_gen_{{.ARCH}}.exe.manifest -info windows/info_gen_{{.ARCH}}.json -out ../wails_windows_{{.ARCH}}.syso
-      - cmd: rm "windows\info_gen_{{.ARCH}}.json" "windows\wails_gen_{{.ARCH}}.exe.manifest" verinfo_tool.exe
-        platforms: [windows]
-      - cmd: rm -f windows/info_gen_{{.ARCH}}.json windows/wails_gen_{{.ARCH}}.exe.manifest verinfo_tool.exe
-        platforms: [linux, darwin]
+      - rm -f windows/info_gen_{{.ARCH}}.json windows/wails_gen_{{.ARCH}}.exe.manifest verinfo_tool.exe
     vars:
       ARCH: "{{.ARCH | default ARCH}}"
       GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
