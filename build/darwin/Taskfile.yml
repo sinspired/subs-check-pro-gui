@@ -185,14 +185,15 @@ tasks:
     summary: Creates a configurable `.dmg` from the `.app` bundle
     platforms: [darwin]
     cmds:
-      - >-
-        wails3 tool package --format dmg --name "{{.APP_NAME}}" --out "{{.BIN_DIR}}"
-        --background "{{.DMG_BACKGROUND}}"
-        --volume-icon "{{.DMG_VOLUME_ICON}}"
-        --file-icon "{{.DMG_FILE_ICON}}"
-        --window-width "{{.DMG_WINDOW_WIDTH}}"
-        --window-height "{{.DMG_WINDOW_HEIGHT}}"
-        {{if .DMG_FILES}}--files "{{.DMG_FILES}}"{{end}}
+      # ⬇️ 修复：智能判断，只有当美化素材存在时，才向打包器传递相应参数
+      - |
+        set -e
+        ARGS=(--format dmg --name "{{.APP_NAME}}" --out "{{.BIN_DIR}}" --window-width "{{.DMG_WINDOW_WIDTH}}" --window-height "{{.DMG_WINDOW_HEIGHT}}")
+        if [ -f "{{.DMG_BACKGROUND}}" ]; then ARGS+=(--background "{{.DMG_BACKGROUND}}"); fi
+        if [ -f "{{.DMG_VOLUME_ICON}}" ]; then ARGS+=(--volume-icon "{{.DMG_VOLUME_ICON}}"); fi
+        if [ -f "{{.DMG_FILE_ICON}}" ]; then ARGS+=(--file-icon "{{.DMG_FILE_ICON}}"); fi
+        if [ -n "{{.DMG_FILES}}" ]; then ARGS+=(--files "{{.DMG_FILES}}"); fi
+        wails3 tool package "${ARGS[@]}"
     vars:
       DMG_BACKGROUND: '{{.DMG_BACKGROUND | default "build/darwin/dmg-background.png"}}'
       DMG_VOLUME_ICON: '{{.DMG_VOLUME_ICON | default "build/darwin/icons.icns"}}'

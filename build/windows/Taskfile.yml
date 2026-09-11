@@ -118,13 +118,13 @@ tasks:
       FORMAT: '{{.FORMAT | default "nsis"}}'
       INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
 
-# generate:syso — 生成 Windows .syso（PE 版本资源 + 清单）
+  # generate:syso — 生成 Windows .syso（PE 版本资源 + 清单）
   generate:syso:
     summary: Generates Windows `.syso` file with version from GUI_VERSION
     dir: build
     cmds:
-      # ⬇️ 修复：先显式编译为本地 exe，再运行，避免被 Windows Defender 吞掉
-      - go build -o verinfo_tool.exe ./tools/verinfo
+      # ⬇️ 修复：强制关闭 CGO 并指定架构为 amd64，确保宿主机(GitHub Runner)绝对能运行它
+      - CGO_ENABLED=0 GOARCH=amd64 go build -o verinfo_tool.exe ./tools/verinfo
       - ./verinfo_tool.exe gen-syso windows/info.json windows/wails.exe.manifest windows/info_gen_{{.ARCH}}.json windows/wails_gen_{{.ARCH}}.exe.manifest "{{.GUI_VERSION}}"
       - wails3 generate syso -arch {{.ARCH}} -icon windows/icon.ico -manifest windows/wails_gen_{{.ARCH}}.exe.manifest -info windows/info_gen_{{.ARCH}}.json -out ../wails_windows_{{.ARCH}}.syso
       - cmd: rm "windows\info_gen_{{.ARCH}}.json" "windows\wails_gen_{{.ARCH}}.exe.manifest" verinfo_tool.exe
