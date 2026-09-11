@@ -106,20 +106,13 @@ tasks:
     cmds:
       - task: '{{if eq (.FORMAT | default "nsis") "msix"}}create:msix:package{{else}}create:nsis:installer{{end}}'
         vars:
-          INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+          INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
           GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
     vars:
       FORMAT: '{{.FORMAT | default "nsis"}}'
-      INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
-      GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
+      INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
 
-  # ──────────────────────────────────────────────────────────────────────────
   # generate:syso — 生成 Windows .syso（PE 版本资源 + 清单）
-  #
-  # 在调用 wails3 generate syso 之前，先用 build/tools/verinfo 生成两个临时文件：
-  #   windows/info_gen_<ARCH>.json         — 注入正确的 file_version / ProductVersion
-  #   windows/wails_gen_<ARCH>.exe.manifest — 注入正确的 assemblyIdentity version
-  # ──────────────────────────────────────────────────────────────────────────
   generate:syso:
     summary: Generates Windows `.syso` file with version from GUI_VERSION
     dir: build
@@ -134,13 +127,6 @@ tasks:
       ARCH: "{{.ARCH | default ARCH}}"
       GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # create:nsis:installer — 打包 NSIS 安装包
-  #
-  # 通过 makensis -D 覆盖 wails_tools.nsh 中的硬编码版本：
-  #   INFO_PRODUCTVERSION          — 显示版本字符串（写入注册表 DisplayVersion）
-  #   INFO_PRODUCTVERSION_NUMERIC  — 4段纯数字版本（用于 VIProductVersion / VIFileVersion）
-  # ──────────────────────────────────────────────────────────────────────────
   create:nsis:installer:
     summary: Creates an NSIS installer
     dir: build/windows/nsis
@@ -163,10 +149,11 @@ tasks:
     vars:
       ARCH: "{{.ARCH | default ARCH}}"
       ARG_FLAG: '{{if eq .ARCH "amd64"}}AMD64{{else}}ARM64{{end}}'
-      INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
-      GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
+      INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
+      GUI_VERSION:
+        '{{.GUI_VERSION | default "v0.0.0"}}'
 
-      # 去掉 v 前缀的显示版本（利用 Taskfile 内置模板函数，彻底告别 sed）
+        # 去掉 v 前缀的显示版本（利用 Taskfile 内置模板函数，彻底告别 sed）
       GUI_VERSION_STR: '{{trimPrefix "v" .GUI_VERSION}}'
 
       # 4 段纯数字版本
@@ -207,32 +194,30 @@ tasks:
     summary: Signs the Windows executable
     desc: |
       Signs the .exe with an Authenticode certificate.
-      Configure SIGN_CERTIFICATE or SIGN_THUMBPRINT in the vars section at the top of this file.
+      Set SIGN_CERTIFICATE or SIGN_THUMBPRINT to override the certificate
+      configured globally via `wails3 setup` (~/.config/wails/defaults.yaml).
       Password is retrieved from system keychain (run: wails3 setup signing)
     deps:
       - task: build
     cmds:
-      - wails3 tool sign --input "{{.BIN_DIR}}/{{.APP_NAME}}.exe" {{if .SIGN_CERTIFICATE}}--certificate {{.SIGN_CERTIFICATE}}{{end}} {{if .SIGN_THUMBPRINT}}--thumbprint {{.SIGN_THUMBPRINT}}{{end}} {{if .TIMESTAMP_SERVER}}--timestamp {{.TIMESTAMP_SERVER}}{{end}}
-    preconditions:
-      - sh: '[ -n "{{.SIGN_CERTIFICATE}}" ] || [ -n "{{.SIGN_THUMBPRINT}}" ]'
-        msg: "Either SIGN_CERTIFICATE or SIGN_THUMBPRINT is required. Set it in the vars section at the top of build/windows/Taskfile.yml"
+      # Certificate vars are optional: if unset, `wails3 tool sign` falls back to
+      # the certificate configured globally via `wails3 setup`.
+      - wails3 tool sign --input "{{.BIN_DIR}}/{{.APP_NAME}}.exe" {{if .SIGN_CERTIFICATE}}--certificate "{{.SIGN_CERTIFICATE}}"{{end}} {{if .SIGN_THUMBPRINT}}--thumbprint "{{.SIGN_THUMBPRINT}}"{{end}} {{if .TIMESTAMP_SERVER}}--timestamp "{{.TIMESTAMP_SERVER}}"{{end}}
 
   sign:installer:
     summary: Signs the NSIS installer
     desc: |
       Creates and signs the NSIS installer.
-      Configure SIGN_CERTIFICATE or SIGN_THUMBPRINT in the vars section at the top of this file.
+      Set SIGN_CERTIFICATE or SIGN_THUMBPRINT to override the certificate
+      configured globally via `wails3 setup` (~/.config/wails/defaults.yaml).
       Password is retrieved from system keychain (run: wails3 setup signing)
     deps:
       - task: create:nsis:installer
         vars:
-          INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+          INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
           GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
     vars:
-      INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+      INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
       GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
     cmds:
-      - wails3 tool sign --input "build/windows/nsis/{{.APP_NAME}}-installer.exe" {{if .SIGN_CERTIFICATE}}--certificate {{.SIGN_CERTIFICATE}}{{end}} {{if .SIGN_THUMBPRINT}}--thumbprint {{.SIGN_THUMBPRINT}}{{end}} {{if .TIMESTAMP_SERVER}}--timestamp {{.TIMESTAMP_SERVER}}{{end}}
-    preconditions:
-      - sh: '[ -n "{{.SIGN_CERTIFICATE}}" ] || [ -n "{{.SIGN_THUMBPRINT}}" ]'
-        msg: "Either SIGN_CERTIFICATE or SIGN_THUMBPRINT is required. Set it in the vars section at the top of build/windows/Taskfile.yml"
+      - wails3 tool sign --input "build/windows/nsis/{{.APP_NAME}}-installer.exe" {{if .SIGN_CERTIFICATE}}--certificate "{{.SIGN_CERTIFICATE}}"{{end}} {{if .SIGN_THUMBPRINT}}--thumbprint "{{.SIGN_THUMBPRINT}}"{{end}} {{if .TIMESTAMP_SERVER}}--timestamp "{{.TIMESTAMP_SERVER}}"{{end}}

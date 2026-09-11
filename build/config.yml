@@ -1,7 +1,7 @@
 # This file contains the configuration for this project.
 # When you update `info` or `fileAssociations`, run `wails3 task common:update:build-assets` to update the assets.
 # Note that this will overwrite any changes you have made to the assets.
-version: "3"
+version: '3'
 
 # This information is used to generate the build assets.
 info:
@@ -11,7 +11,6 @@ info:
   description: "Subs-Check-Pro 桌面端" # The application description
   copyright: "(c) 2025, sinspired" # Copyright text
   comments: "跨平台现代 GUI 客户端，基于 Subs Check PRO 内核，本地原生界面 + WebUI，可远程管理，后台运行，支持开机自启。" # Comments
-  version: "1.0.0-beta.3" # The application version
   # cfBundleIconName: "appicon" # The macOS icon name in Assets.car icon bundles (optional)
   #                               # Should match the name of your .icon file without the extension
   #                               # If not set and Assets.car exists, defaults to "appicon"

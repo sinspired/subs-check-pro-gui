@@ -8,7 +8,7 @@ export {
     Notifier
 };
 
-export {
+export type {
     AppInfo,
     CheckState,
     UpdateInfo

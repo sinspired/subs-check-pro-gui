@@ -1,0 +1,5 @@
+{
+  "Replace": {
+    "D:\\Desktop\\myapp\\main_android.gen.go": "D:\\Desktop\\myapp\\build\\android\\gen\\main_android.gen.go"
+  }
+}

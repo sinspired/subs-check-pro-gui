@@ -10,15 +10,15 @@
     <Installer
         Path="subs-check-pro-gui.exe"
         Arguments=""
-        InstallLocation="C:\Program Files\My Company\My Product">
+        InstallLocation="C:\Program Files\Sinspired\subs-check-pro-gui">
     </Installer>
     <PackageInformation
-        PackageName="My Product"
-        PackageDisplayName="My Product"
-        PublisherName="CN=My Company"
-        PublisherDisplayName="My Company"
+        PackageName="Subs-Check-Pro-GUI"
+        PackageDisplayName="Subs-Check-Pro-GUI"
+        PublisherName="CN=Sinspired"
+        PublisherDisplayName="Sinspired"
         Version="0.1.0.0"
-        PackageDescription="A subs-check-pro-gui application">
+        PackageDescription="A Performance Proxy Chcker and sub store">
         <Capabilities>
             <Capability Name="runFullTrust" />
             
@@ -26,8 +26,8 @@
         <Applications>
             <Application
                 Id="com.example.subs-check-pro-gui"
-                Description="A subs-check-pro-gui application"
-                DisplayName="My Product"
+                Description="A Performance Proxy Chcker and sub store"
+                DisplayName="Subs-Check-Pro-GUI"
                 ExecutableName="subs-check-pro-gui.exe"
                 EntryPoint="Windows.FullTrustApplication">
                 
@@ -41,9 +41,9 @@
         </Dependencies>
         <Properties>
             <Framework>false</Framework>
-            <DisplayName>My Product</DisplayName>
-            <PublisherDisplayName>My Company</PublisherDisplayName>
-            <Description>A subs-check-pro-gui application</Description>
+            <DisplayName>Subs-Check-Pro-GUI</DisplayName>
+            <PublisherDisplayName>Sinspired</PublisherDisplayName>
+            <Description>A Performance Proxy Chcker and sub store</Description>
             <Logo>Assets\AppIcon.png</Logo>
         </Properties>
     </PackageInformation>
