@@ -6,9 +6,11 @@ includes:
 
 env:
   CGO_ENABLED: 1
+  GOOS: darwin
+  GOARCH: "{{.ARCH}}"
   CC: clang
   CXX: clang++
-  MACOSX_DEPLOYMENT_TARGET: 12.0
+  MACOSX_DEPLOYMENT_TARGET: "12.0"
 
 vars:
   # Docker image for cross-compilation (used when building on non-macOS)

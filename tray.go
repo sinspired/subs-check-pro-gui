@@ -15,7 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	guiupdater "github.com/sinspired/subs-check-pro-gui/updater"
+	guiupdater "github.com/sinspired/subs-check-pro-gui/v2/updater"
 	"github.com/wailsapp/wails/v3/pkg/updater"
 
 	"github.com/sinspired/subs-check-pro/v3/app"

@@ -22,7 +22,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/sinspired/subs-check-pro-gui/updater"
+	"github.com/sinspired/subs-check-pro-gui/v2/updater"
 
 	"gopkg.in/yaml.v3"
 )
@@ -948,7 +948,7 @@ func (g *GuiApp) GetUpdateInfo() UpdateInfo {
 	}
 
 	// 拼出 Release 页面链接
-	targetURL := fmt.Sprintf("https://github.com/sinspired/subs-check-pro-gui/releases/tag/%s", tagName)
+	targetURL := fmt.Sprintf("https://github.com/sinspired/subs-check-pro-gui/v2/releases/tag/%s", tagName)
 
 	// 计算文件大小 (MB)
 	sizeMB := float64(rel.Artifact.Size) / (1024 * 1024)

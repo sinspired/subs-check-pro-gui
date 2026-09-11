@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	guiupdater "github.com/sinspired/subs-check-pro-gui/updater"
+	guiupdater "github.com/sinspired/subs-check-pro-gui/v2/updater"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 	"github.com/wailsapp/wails/v3/pkg/services/notifications"
@@ -90,7 +90,7 @@ func main() {
 			CurrentVersion: currentVer,
 			Providers:      []updater.Provider{ghProvider},
 			CheckInterval:  6 * time.Hour,
-			Window:         updater.WindowNone,  // 不弹窗
+			Window:         updater.WindowNone, // 不弹窗
 		}); err != nil {
 			slog.Warn("Updater: Init 失败", "error", err)
 		} else {
