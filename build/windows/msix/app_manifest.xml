@@ -8,8 +8,8 @@
   IgnorableNamespaces="uap3">
   
   <Identity 
-    Name="com.example.subs-check-pro-gui"
-    Publisher="CN=github.com/sinspired"
+    Name="com.sinspired.subs-check-pro-gui"
+    Publisher="CN=Sinspired"
     Version="0.1.0.0" 
     ProcessorArchitecture="x64" />
   

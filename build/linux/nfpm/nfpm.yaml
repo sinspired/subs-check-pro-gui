@@ -1,13 +1,12 @@
-# nfpm configuration for Linux package generation
-# See: https://nfpm.goreleaser.com/configuration/
+# Feel free to remove those if you don't want/need to use them.
+# Make sure to check the documentation at https://nfpm.goreleaser.com
 #
-# VERSION 环境变量由 CI 注入（见 release.yml），格式为 "2.5.6"（不含 v 前缀）
-# arch    由 GOARCH 环境变量提供（amd64 / arm64）
+# The lines below are called `modelines`. See `:help modeline`
 
 name: "subs-check-pro-gui"
 arch: ${GOARCH}
 platform: "linux"
-version: "${VERSION}" # ← 修复：原来写死 "0.0.1"，现在从环境变量读取
+version: "${VERSION}" 
 section: "default"
 priority: "extra"
 maintainer: ${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>
