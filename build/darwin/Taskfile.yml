@@ -214,24 +214,17 @@ tasks:
       - cp "{{.BIN_DIR}}/{{.APP_NAME}}" "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS"
       - cp build/darwin/Info.plist "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents"
 
-      # 版本号动态注入
+      # 版本号动态注入 (替换掉原来的 python3 - "${PLIST}" "${VER}" << 'PYEOF' ...)
       - |
         set -euo pipefail
         PLIST="{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Info.plist"
         RAW_VER="{{.GUI_VERSION | default "0.0.1"}}"
-        # 去掉 v 前缀：v1.1.2 → 1.1.2；非 v 开头直接用原值
         VER="${RAW_VER#v}"
-        python3 - "${PLIST}" "${VER}" << 'PYEOF'
-        import sys, plistlib, pathlib
-        plist_path, version = pathlib.Path(sys.argv[1]), sys.argv[2]
-        with open(plist_path, 'rb') as f:
-            data = plistlib.load(f)
-        data['CFBundleShortVersionString'] = version
-        data['CFBundleVersion'] = version
-        with open(plist_path, 'wb') as f:
-            plistlib.dump(data, f)
-        print(f"✅ Info.plist: CFBundleVersion → {version}")
-        PYEOF
+
+        # 使用 macOS 原生 PlistBuddy 写入版本号 (极其稳定)
+        /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${VER}" "${PLIST}" || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string ${VER}" "${PLIST}"
+        /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${VER}" "${PLIST}" || /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string ${VER}" "${PLIST}"
+        echo "✅ Info.plist: CFBundleVersion → ${VER}"
       - task: '{{if eq OS "darwin"}}codesign:adhoc{{else}}codesign:skip{{end}}'
 
   codesign:adhoc:
