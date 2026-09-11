@@ -97,7 +97,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # 从 go.mod 精确解析已锁定的版本号（格式：v2.6.2）
-          CORE_VERSION=$(grep 'github.com/sinspired/subs-check-pro/v2' go.mod \
+          CORE_VERSION=$(grep 'github.com/sinspired/subs-check-pro/v3' go.mod \
             | awk '{print $2}' | tr -d '[:space:]')
 
           if [ -z "${CORE_VERSION}" ]; then
@@ -203,6 +203,15 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+
+      - name: Configure CGO with Zig
+        run: |
+          echo "CGO_ENABLED=1" >> $GITHUB_ENV
+          echo "CC=zig cc" >> $GITHUB_ENV
+          echo "CXX=zig c++" >> $GITHUB_ENV
 
       # ── Linux：GTK4 / WebKitGTK 依赖 ──
       - name: Install Linux Dependencies

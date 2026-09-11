@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/sinspired/subs-check-pro-webui/webui"
-	"github.com/sinspired/subs-check-pro/v2/config"
+	"github.com/sinspired/subs-check-pro/v3/config"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
@@ -80,7 +80,7 @@ func newCombinedAssetHandler(getConfigPath func() string, getPort func() string)
 		// 请求由 Go 服务器端发出，不存在 CORS 问题。
 		case strings.HasPrefix(p, "/api/") || strings.HasPrefix(p, "/admin/") || strings.HasPrefix(p, "/gui/"):
 			// 每次请求调用 getListenPort() 动态获取，确保端口修改后立即生效
-		reverseProxyToGin(w, r, getPort())
+			reverseProxyToGin(w, r, getPort())
 
 		// ── /static/… ──────────────────────────────────────────────────────
 		// admin.html 内所有资源引用均使用 /static/ 绝对路径（与 Gin 保持一致），
@@ -127,6 +127,7 @@ func renderWebuiAdmin(w http.ResponseWriter, templatesFS fs.FS, configPath strin
 		slog.Error("webui: 渲染 admin.html 失败", "error", err)
 	}
 }
+
 // reverseProxyToGin 将请求透明转发给本机 Gin HTTP 服务（127.0.0.1:port），
 // 用于让 Wails webview 内的页面访问 /api/* 等端点，绕开浏览器 CORS 限制。
 func reverseProxyToGin(w http.ResponseWriter, r *http.Request, listenPort string) {

@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"runtime"
 
-	coreapp "github.com/sinspired/subs-check-pro/v2/app"
-	"github.com/sinspired/subs-check-pro/v2/config"
-	"github.com/sinspired/subs-check-pro/v2/utils"
+	coreapp "github.com/sinspired/subs-check-pro/v3/app"
+	"github.com/sinspired/subs-check-pro/v3/config"
+	"github.com/sinspired/subs-check-pro/v3/utils"
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
 	wupdater "github.com/wailsapp/wails/v3/pkg/updater"

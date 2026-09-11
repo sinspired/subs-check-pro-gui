@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sinspired/subs-check-pro/v2/config"
+	"github.com/sinspired/subs-check-pro/v3/config"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 

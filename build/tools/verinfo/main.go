@@ -27,7 +27,7 @@ import (
 	"strings"
 )
 
-const coreModule = "github.com/sinspired/subs-check-pro/v2"
+const coreModule = "github.com/sinspired/subs-check-pro/v3"
 
 var debugEnabled = os.Getenv("TASK_DEBUG") == "1"
 
