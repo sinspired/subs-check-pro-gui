@@ -1,10 +1,5 @@
 version: "3"
 
-env:
-  CGO_ENABLED: 1
-  CC: zig cc
-  CXX: zig c++
-
 vars:
   APP_NAME: "subs-check-pro-gui"
   BIN_DIR: "bin"
@@ -53,7 +48,6 @@ tasks:
           CORE_VERSION: "{{.CORE_VERSION}}"
           CORE_COMMIT: "{{.CORE_COMMIT}}"
           GUI_VERSION: "{{.GUI_VERSION}}"
-
 
   run:
     summary: Runs the application

@@ -3,6 +3,11 @@ version: "3"
 includes:
   common: ../Taskfile.yml
 
+env:
+  CGO_ENABLED: 1
+  CC: gcc
+  CXX: g++
+
 vars:
   # Signing configuration - edit these values for your project
   # SIGN_CERTIFICATE: "path/to/certificate.pfx"
@@ -63,7 +68,7 @@ tasks:
     vars:
       # VERSION_LDFLAGS 在 release 构建时注入内核版本 + GUI 版本；dev 构建跳过
       VERSION_LDFLAGS: '{{if ne .DEV "true"}}-X main.GuiVersion={{.GUI_VERSION | default "dev"}} -X main.Version={{.CORE_VERSION | default "dev"}} -X main.CurrentCommit={{.CORE_COMMIT | default "unknown"}}{{end}}'
-      BUILD_FLAGS: '{{if eq .DEV "true"}}{{if or .EXTRA_TAGS (eq .OBFUSCATED "true")}}-tags {{if eq .OBFUSCATED "true"}}wails_obfuscated{{if .EXTRA_TAGS}},{{end}}{{end}}{{.EXTRA_TAGS}} {{end}}-buildvcs=false -gcflags=all="-l"{{else}}-tags production{{if eq .OBFUSCATED "true"}},wails_obfuscated{{end}}{{if .EXTRA_TAGS}},{{.EXTRA_TAGS}}{{end}} -trimpath -buildvcs=false -ldflags="-w -s -H windowsgui {{.VERSION_LDFLAGS}}"{{end}}'
+      BUILD_FLAGS: '{{if eq .DEV "true"}}{{if or .EXTRA_TAGS (eq .OBFUSCATED "true")}}-tags {{if eq .OBFUSCATED "true"}}wails_obfuscated{{if .EXTRA_TAGS}},{{end}}{{end}}{{.EXTRA_TAGS}} {{end}}-buildvcs=false -gcflags=all="-l"{{else}}-tags production{{if eq .OBFUSCATED "true"}},wails_obfuscated{{end}}{{if .EXTRA_TAGS}},{{.EXTRA_TAGS}}{{end}} -trimpath -buildvcs=false -ldflags="-w -s -H windowsgui -extldflags=-mwindows {{.VERSION_LDFLAGS}}"{{end}}'
     env:
       GOOS: windows
       CGO_ENABLED: '{{.CGO_ENABLED | default "0"}}'
