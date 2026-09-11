@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 tasks:
   go:mod:tidy:
@@ -161,8 +161,6 @@ tasks:
           sed -E -i'' 's/class=\"btn\"/class=\"p-btn p-prim-col\"/g' "$INDEX_HTML" || true
         fi
 
-
-
   generate:bindings:
     label: generate:bindings (BUILD_FLAGS={{.BUILD_FLAGS}})
     summary: Generates bindings for the frontend
@@ -171,7 +169,7 @@ tasks:
     sources:
       - "**/*.[jt]s"
       - exclude: frontend/**/*
-      - frontend/bindings/**/*  # Rerun when switching between dev/production mode causes changes in output
+      - frontend/bindings/**/* # Rerun when switching between dev/production mode causes changes in output
       - "**/*.go"
       - go.mod
       - go.sum
@@ -255,7 +253,15 @@ tasks:
       The image is based on distroless for security and small size.
       Usage: task build:docker [TAG=myapp:latest]
     cmds:
-      - docker build -t {{.TAG | default (printf "%s:latest" .APP_NAME)}} -f build/docker/Dockerfile.server .
+      - >-
+        docker build
+        --build-arg CGO_ENABLED={{.CGO_ENABLED | default "1"}}
+        # CGO 需要 glibc 或 musl，必须将编译镜像换为 bookworm 等包含 C 库的环境
+        --build-arg GO_IMAGE={{.GO_IMAGE | default "golang:bookworm"}}
+        # 运行时镜像必须换成 base (包含 glibc)，不能用 static
+        --build-arg RUNTIME_IMAGE={{.RUNTIME_IMAGE | default "gcr.io/distroless/base-debian12"}}
+        -t {{.TAG | default (printf "%s:latest" .APP_NAME)}}
+        -f build/docker/Dockerfile.server .
     vars:
       TAG: "{{.TAG}}"
     preconditions:
@@ -302,13 +308,13 @@ tasks:
   ios:run:device:
     summary: Build, install, and launch on a physical iPhone using Apple tools (xcodebuild/devicectl)
     vars:
-      PROJECT: '{{.PROJECT}}'   # e.g., build/ios/xcode/<YourProject>.xcodeproj
-      SCHEME: '{{.SCHEME}}'     # e.g., ios.dev
+      PROJECT: "{{.PROJECT}}" # e.g., build/ios/xcode/<YourProject>.xcodeproj
+      SCHEME: "{{.SCHEME}}" # e.g., ios.dev
       CONFIG: '{{.CONFIG | default "Debug"}}'
       DERIVED: '{{.DERIVED | default "build/ios/DerivedData"}}'
-      UDID: '{{.UDID}}'         # from `task ios:device:list`
-      BUNDLE_ID: '{{.BUNDLE_ID}}' # e.g., com.yourco.wails.ios.dev
-      TEAM_ID: '{{.TEAM_ID}}'   # optional, if your project is not already set up for signing
+      UDID: "{{.UDID}}" # from `task ios:device:list`
+      BUNDLE_ID: "{{.BUNDLE_ID}}" # e.g., com.yourco.wails.ios.dev
+      TEAM_ID: "{{.TEAM_ID}}" # optional, if your project is not already set up for signing
     preconditions:
       - sh: xcrun -f xcodebuild
         msg: "xcodebuild not found. Please install Xcode."

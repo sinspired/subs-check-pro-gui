@@ -1,10 +1,10 @@
-version: '3'
+version: "3"
 
 vars:
   APP_NAME: "subs-check-pro-gui"
   BIN_DIR: "bin"
   PACKAGE_MANAGER: '{{.PACKAGE_MANAGER | default "npm"}}'
-  VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
+  VITE_PORT: "{{.WAILS_VITE_PORT | default 9245}}"
 
   # 内核版本/commit：从 go.mod 解析，用 build/tools/verinfo 这个 Go 小工具实现，
   # 不依赖 Python/Bash，只要能编译本项目就有 go 命令。
@@ -20,8 +20,6 @@ vars:
 
 env:
   CGO_ENABLED: 1
-  CC: zig cc
-  CXX: zig c++
 
 includes:
   common: ./build/Taskfile.yml
