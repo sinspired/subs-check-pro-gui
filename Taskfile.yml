@@ -18,9 +18,9 @@ vars:
   # 不依赖 Python/Bash，只要能编译本项目就有 go 命令。
   # 可用环境变量覆盖：CORE_VERSION=v2.5.4 CORE_COMMIT=7c23868 task build
   CORE_VERSION:
-    sh: go run ./build/tools/verinfo core-version
+    sh: task verinfo -- core-version
   CORE_COMMIT:
-    sh: go run ./build/tools/verinfo core-commit
+    sh: task verinfo -- core-commit
 
   # GUI 自身版本：取当前仓库 git tag
   GUI_VERSION:
@@ -35,6 +35,12 @@ includes:
   android: ./build/android/Taskfile.yml
 
 tasks:
+  verinfo:
+    env:
+      CGO_ENABLED: 0
+    cmds:
+      - go run ./build/tools/verinfo {{.CLI_ARGS}}
+
   build:
     summary: Builds the application
     cmds:

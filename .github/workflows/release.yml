@@ -207,8 +207,8 @@ jobs:
       - name: Setup Zig
         uses: mlugg/setup-zig@v2
 
-      - name: Configure CGO with Zig (Linux only)
-        if: runner.os == 'Linux'
+      - name: Configure CGO with Zig (Linux GUI only)
+        if: runner.os == 'Linux' && matrix.goos == 'linux'
         run: |
           echo "CGO_ENABLED=1" >> $GITHUB_ENV
           echo "CC=zig cc" >> $GITHUB_ENV
