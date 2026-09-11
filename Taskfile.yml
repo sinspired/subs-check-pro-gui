@@ -1,4 +1,8 @@
+# Taskfile.yml
 version: "3"
+
+env:
+  CGO_ENABLED: 1
 
 vars:
   APP_NAME: "subs-check-pro-gui"

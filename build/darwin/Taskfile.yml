@@ -1,7 +1,14 @@
+# build\darwin\Taskfile.yml
 version: "3"
 
 includes:
   common: ../Taskfile.yml
+
+env:
+  CGO_ENABLED: 1
+  CC: clang
+  CXX: clang++
+  MACOSX_DEPLOYMENT_TARGET: 12.0
 
 vars:
   # Docker image for cross-compilation (used when building on non-macOS)
@@ -205,7 +212,7 @@ tasks:
       - cp "{{.BIN_DIR}}/{{.APP_NAME}}" "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS"
       - cp build/darwin/Info.plist "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents"
 
-      # 版本号动态注入 
+      # 版本号动态注入
       - |
         set -euo pipefail
         PLIST="{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Info.plist"
