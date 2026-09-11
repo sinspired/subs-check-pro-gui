@@ -204,14 +204,17 @@ jobs:
         with:
           node-version: 24
 
-      - name: Setup Zig
-        uses: mlugg/setup-zig@v2
+      # 1. 全局开启 CGO
+      - name: Configure CGO
+        shell: bash
+        run: echo "CGO_ENABLED=1" >> $GITHUB_ENV
 
-      - name: Configure CGO with Zig
-        run: |
-          echo "CGO_ENABLED=1" >> $GITHUB_ENV
-          echo "CC=zig cc" >> $GITHUB_ENV
-          echo "CXX=zig c++" >> $GITHUB_ENV
+      # 2. Windows 原生 CGO 需要 GCC 编译器（安装 MinGW-w64）
+      - name: Setup MinGW for Windows CGO
+        if: runner.os == 'Windows'
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
 
       # ── Linux：GTK4 / WebKitGTK 依赖 ──
       - name: Install Linux Dependencies
