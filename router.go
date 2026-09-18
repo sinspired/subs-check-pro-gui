@@ -90,29 +90,33 @@ func handleGuiEnter(c *gin.Context) {
 		redirect = "/admin"
 	}
 
+	// 在这里提前给 Wails WebView 种下 Cookie
+	// 这样下一步 JS 执行 window.location.replace(redirect) 时，
+	// 请求就会带上 Cookie，直接通过 pageAuthMiddleware 鉴权，而不会被 302 拦截到 /login
+	c.SetCookie("scp_api_key", apiKey, 2592000, "/", "", false, false)
+
 	c.Header("Cache-Control", "no-store, no-cache")
 	c.Header("Content-Type", "text/html; charset=utf-8")
 
 	var extraLS string
 	if remember {
 		extraLS = fmt.Sprintf(
-			"try { localStorage.setItem('subscheck_api_key', %q); } catch(e) {}",
+			"try { localStorage.setItem('scp_api_key', %q); } catch(e) {}",
 			apiKey,
 		)
 	}
 
-	// 写入两个 storage key，兼容 admin.js 和 analysis.js。
+	// 写入 storage key。
 	c.String(http.StatusOK, fmt.Sprintf(`<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <script>
 (function(){
-  try { sessionStorage.setItem('subscheck_session_key', %q); } catch(e) {}
-  try { sessionStorage.setItem('subscheck_api_key', %q); } catch(e) {}
+  try { sessionStorage.setItem('scp_api_key', %q); } catch(e) {}
   %s
   window.location.replace(%q);
 })();
 </script>
-</head><body></body></html>`, apiKey, apiKey, extraLS, redirect))
+</head><body></body></html>`, apiKey, extraLS, redirect))
 }
 
 // handleGuiPopup 接收来自 WebUI 注入脚本的"新窗口"请求。
