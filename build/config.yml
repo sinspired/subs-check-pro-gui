@@ -1,21 +1,21 @@
 # This file contains the configuration for this project.
 # When you update `info` or `fileAssociations`, run `wails3 task common:update:build-assets` to update the assets.
 # Note that this will overwrite any changes you have made to the assets.
-version: "3"
+version: '3'
 
 # This information is used to generate the build assets.
 info:
-  companyName: "sinspired" # The name of the company
-  productName: "subs-check-pro-gui" # The name of the application
-  productIdentifier: "com.sinspired.subs-check-pro-gui" # The unique product identifier
-  description: "Subs-Check-Pro 桌面端" # The application description
-  copyright: "(c) 2025, sinspired" # Copyright text
-  comments: "跨平台现代 GUI 客户端，基于 Subs Check PRO 内核，本地原生界面 + WebUI，可远程管理，后台运行，支持开机自启。" # Comments
-  version: "1.0.0-beta.3" # The application version
-  # cfBundleIconName: "appicon" # The macOS icon name in Assets.car icon bundles (optional)
-  #                               # Should match the name of your .icon file without the extension
-  #                               # If not set and Assets.car exists, defaults to "appicon"
+  companyName: 'sinspired' # The name of the company
+  productName: 'subs-check-pro-gui' # The name of the application
+  productIdentifier: 'com.sinspired.subs_check_pro_gui' # The unique product identifier
+  description: 'Subs-Check-Pro 桌面端' # The application description
+  copyright: '(c) 2025, sinspired' # Copyright text
+  comments: '跨平台现代 GUI 客户端，基于 Subs Check PRO 内核，本地原生界面 + WebUI，可远程管理，后台运行，支持开机自启。' # Comments
+  version: '1.0.0' # The application version
 
+# cfBundleIconName: "appicon" # The macOS icon name in Assets.car icon bundles (optional)
+#                               # Should match the name of your .icon file without the extension
+#                               # If not set and Assets.car exists, defaults to "appicon"
 # iOS build configuration (uncomment to customise iOS project generation)
 # Note: Keys under `ios` OVERRIDE values under `info` when set.
 # ios:
@@ -45,11 +45,11 @@ dev_mode:
       - .DS_Store
       - .gitignore
       - .gitkeep
-      - "*_test.go"
+      - '*_test.go'
     watched_extension:
-      - "*.go"
-      - "*.js" # Watch for changes to JS/TS files included using the //wails:include directive.
-      - "*.ts" # The frontend directory will be excluded entirely by the setting above.
+      - '*.go'
+      - '*.js' # Watch for changes to JS/TS files included using the //wails:include directive.
+      - '*.ts' # The frontend directory will be excluded entirely by the setting above.
     git_ignore: true
   executes:
     - cmd: wails3 build DEV=true

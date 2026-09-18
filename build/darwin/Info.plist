@@ -5,7 +5,8 @@
 		<key>CFBundleExecutable</key>
 		<string>subs-check-pro-gui</string>
 		<key>CFBundleGetInfoString</key>
-		<string>A modern GUI of Subs-Check-Pro, for high-performance proxy management, check, and subscription management and generation</string>
+		<string>A modern GUI of Subs-Check-Pro, for high-performance proxy management, check, and
+			subscription management and generation</string>
 		<key>CFBundleIconFile</key>
 		<string>icons</string>
 		<key>CFBundleIconName</key>
@@ -25,9 +26,9 @@
 		<key>NSAppTransportSecurity</key>
 		<dict>
 			<key>NSAllowsLocalNetworking</key>
-			<true/>
+			<true />
 			<key>NSAllowsArbitraryLoads</key>
-			<true/>
+			<true />
 		</dict>
 		<key>NSHighResolutionCapable</key>
 		<string>true</string>

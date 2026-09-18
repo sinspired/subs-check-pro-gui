@@ -5,6 +5,6 @@ Exec=subs-check-pro-gui
 Icon=subs-check-pro-gui
 Categories=Development;
 Terminal=false
-Keywords=wails
+Keywords=proxy check
 Version=1.0
 StartupNotify=false

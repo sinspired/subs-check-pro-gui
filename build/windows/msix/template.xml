@@ -10,39 +10,41 @@
     <Installer
         Path="subs-check-pro-gui.exe"
         Arguments=""
-        InstallLocation="C:\Program Files\My Company\My Product">
+        InstallLocation="C:\Program Files\Sinspired
+        \subs-check-pro-gui">
     </Installer>
     <PackageInformation
-        PackageName="My Product"
-        PackageDisplayName="My Product"
-        PublisherName="CN=My Company"
-        PublisherDisplayName="My Company"
+        PackageName="Subs Check Pro GUI"
+        PackageDisplayName="Subs Check Pro GUI"
+        PublisherName="CN=Sinspire Inc."
+        PublisherDisplayName="Sinspire Inc."
         Version="0.1.0.0"
         PackageDescription="A subs-check-pro-gui application">
         <Capabilities>
             <Capability Name="runFullTrust" />
-            
+
         </Capabilities>
         <Applications>
             <Application
-                Id="com.example.subs-check-pro-gui"
+                Id="com.sinspired.subs_free"
                 Description="A subs-check-pro-gui application"
                 DisplayName="My Product"
                 ExecutableName="subs-check-pro-gui.exe"
                 EntryPoint="Windows.FullTrustApplication">
-                
+
             </Application>
         </Applications>
         <Resources>
             <Resource Language="en-us" />
         </Resources>
         <Dependencies>
-            <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+            <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0"
+                MaxVersionTested="10.0.19041.0" />
         </Dependencies>
         <Properties>
             <Framework>false</Framework>
             <DisplayName>My Product</DisplayName>
-            <PublisherDisplayName>My Company</PublisherDisplayName>
+            <PublisherDisplayName>Sinspire Inc.</PublisherDisplayName>
             <Description>A subs-check-pro-gui application</Description>
             <Logo>Assets\AppIcon.png</Logo>
         </Properties>

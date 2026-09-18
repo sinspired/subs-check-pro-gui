@@ -8,7 +8,7 @@
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
-import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Create } from "@wailsio/runtime";
+import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wailsio/runtime";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
@@ -60,9 +60,7 @@ export function GetAPIKey(): $CancellablePromise<string> {
  * GetAppInfo 返回应用运行信息（含端口冲突检测）。
  */
 export function GetAppInfo(): $CancellablePromise<$models.AppInfo> {
-    return $Call.ByID(1303911513).then(($result: any) => {
-        return $$createType0($result);
-    });
+    return $Call.ByID(1303911513);
 }
 
 /**
@@ -76,9 +74,7 @@ export function GetAutoStartEnabled(): $CancellablePromise<boolean> {
  * GetCheckState 返回当前后端的检测进度状态，供灵动岛等前端页面调用
  */
 export function GetCheckState(): $CancellablePromise<$models.CheckState> {
-    return $Call.ByID(3279137383).then(($result: any) => {
-        return $$createType1($result);
-    });
+    return $Call.ByID(3279137383);
 }
 
 /**
@@ -108,15 +104,11 @@ export function GetListenPort(): $CancellablePromise<string> {
  * GetUpdateInfo 通过 Wails 内置更新器查询更新状态，返回给前端。
  */
 export function GetUpdateInfo(): $CancellablePromise<$models.UpdateInfo> {
-    return $Call.ByID(1712625151).then(($result: any) => {
-        return $$createType2($result);
-    });
+    return $Call.ByID(1712625151);
 }
 
 export function GetUpdateStatus(): $CancellablePromise<updater$0.UpdateStatus> {
-    return $Call.ByID(3197368653).then(($result: any) => {
-        return $$createType3($result);
-    });
+    return $Call.ByID(3197368653);
 }
 
 /**
@@ -245,9 +237,7 @@ export function ShowWindow(): $CancellablePromise<void> {
  * 错误原样返回给前端展示，用户可重试或重启程序。
  */
 export function SwitchConfigFile(path: string, enteredKey: string): $CancellablePromise<$models.AppInfo> {
-    return $Call.ByID(3083586062, path, enteredKey).then(($result: any) => {
-        return $$createType0($result);
-    });
+    return $Call.ByID(3083586062, path, enteredKey);
 }
 
 /**
@@ -264,9 +254,3 @@ export function ValidateConfigKey(enteredKey: string, remember: boolean): $Cance
 export function ValidatePort(port: string): $CancellablePromise<string> {
     return $Call.ByID(2902552419, port);
 }
-
-// Private type creation functions
-const $$createType0 = $models.AppInfo.createFrom;
-const $$createType1 = $models.CheckState.createFrom;
-const $$createType2 = $models.UpdateInfo.createFrom;
-const $$createType3 = updater$0.UpdateStatus.createFrom;

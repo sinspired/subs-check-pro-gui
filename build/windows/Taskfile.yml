@@ -1,4 +1,4 @@
-version: "3"
+version: '3'
 
 includes:
   common: ../Taskfile.yml
@@ -16,16 +16,21 @@ vars:
 
 tasks:
   build:
+    env:
+      CGO_ENABLED: 1
+      CC: gcc
+      CXX: g++
+      CGO_CFLAGS: -Dstrdup=_strdup
     summary: Builds the application for Windows
     cmds:
       # Auto-detect CGO: if CGO_ENABLED=1, use Docker; otherwise use native Go cross-compile
       - task: '{{if and (ne OS "windows") (eq .CGO_ENABLED "1")}}build:docker{{else}}build:native{{end}}'
         vars:
-          ARCH: "{{.ARCH}}"
-          DEV: "{{.DEV}}"
-          EXTRA_TAGS: "{{.EXTRA_TAGS}}"
-          OBFUSCATED: "{{.OBFUSCATED}}"
-          GARBLE_ARGS: "{{.GARBLE_ARGS}}"
+          ARCH: '{{.ARCH}}'
+          DEV: '{{.DEV}}'
+          EXTRA_TAGS: '{{.EXTRA_TAGS}}'
+          OBFUSCATED: '{{.OBFUSCATED}}'
+          GARBLE_ARGS: '{{.GARBLE_ARGS}}'
           CORE_VERSION: '{{.CORE_VERSION | default "dev"}}'
           CORE_COMMIT: '{{.CORE_COMMIT | default "unknown"}}'
           GUI_VERSION: '{{.GUI_VERSION | default "dev"}}'
@@ -53,7 +58,7 @@ tasks:
     cmds:
       - task: generate:syso
         vars:
-          ARCH: "{{.ARCH}}"
+          ARCH: '{{.ARCH}}'
           GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
       - '{{if eq .OBFUSCATED "true"}}garble {{.GARBLE_ARGS}} build{{else}}go build{{end}} {{.BUILD_FLAGS}} -o "{{.BIN_DIR}}/{{.APP_NAME}}.exe"'
       - cmd: powershell Remove-item *.syso
@@ -88,7 +93,7 @@ tasks:
     cmds:
       - task: generate:syso
         vars:
-          ARCH: "{{.ARCH}}"
+          ARCH: '{{.ARCH}}'
           GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
       - docker run --rm -v "{{.ROOT_DIR}}:/app" {{.DOCKER_MOUNTS}} -e APP_NAME="{{.APP_NAME}}" {{if .EXTRA_TAGS}}-e EXTRA_TAGS="{{.EXTRA_TAGS}}"{{end}} {{if eq .OBFUSCATED "true"}}-e OBFUSCATED=true{{end}} {{if .GARBLE_ARGS}}-e GARBLE_ARGS="{{.GARBLE_ARGS}}"{{end}} {{.CROSS_IMAGE}} windows {{.DOCKER_ARCH}}
       - cmd: docker run --rm -v "{{.ROOT_DIR}}:/app" alpine chown -R $(id -u):$(id -g) /app/bin
@@ -99,27 +104,25 @@ tasks:
       # Generate Docker volume mounts: Go module cache + go.mod replace directives
       # Uses wails3 tool docker-mounts for cross-platform compatibility (Windows/Linux/macOS)
       DOCKER_MOUNTS:
-        sh: "wails3 tool docker-mounts"
+        sh: 'wails3 tool docker-mounts'
 
   package:
     summary: Packages the application
     cmds:
       - task: '{{if eq (.FORMAT | default "nsis") "msix"}}create:msix:package{{else}}create:nsis:installer{{end}}'
         vars:
-          INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+          INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
           GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
     vars:
       FORMAT: '{{.FORMAT | default "nsis"}}'
-      INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+      INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
       GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
 
-  # ──────────────────────────────────────────────────────────────────────────
   # generate:syso — 生成 Windows .syso（PE 版本资源 + 清单）
   #
   # 在调用 wails3 generate syso 之前，先用 build/tools/verinfo 生成两个临时文件：
   #   windows/info_gen_<ARCH>.json         — 注入正确的 file_version / ProductVersion
   #   windows/wails_gen_<ARCH>.exe.manifest — 注入正确的 assemblyIdentity version
-  # ──────────────────────────────────────────────────────────────────────────
   generate:syso:
     summary: Generates Windows `.syso` file with version from GUI_VERSION
     dir: build
@@ -134,13 +137,12 @@ tasks:
       ARCH: "{{.ARCH | default ARCH}}"
       GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
 
-  # ──────────────────────────────────────────────────────────────────────────
   # create:nsis:installer — 打包 NSIS 安装包
   #
   # 通过 makensis -D 覆盖 wails_tools.nsh 中的硬编码版本：
   #   INFO_PRODUCTVERSION          — 显示版本字符串（写入注册表 DisplayVersion）
   #   INFO_PRODUCTVERSION_NUMERIC  — 4段纯数字版本（用于 VIProductVersion / VIFileVersion）
-  # ──────────────────────────────────────────────────────────────────────────
+
   create:nsis:installer:
     summary: Creates an NSIS installer
     dir: build/windows/nsis
@@ -163,7 +165,7 @@ tasks:
     vars:
       ARCH: "{{.ARCH | default ARCH}}"
       ARG_FLAG: '{{if eq .ARCH "amd64"}}AMD64{{else}}ARM64{{end}}'
-      INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+      INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
       GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
 
       # 去掉 v 前缀的显示版本（利用 Taskfile 内置模板函数，彻底告别 sed）
@@ -189,7 +191,7 @@ tasks:
           {{if .PUBLISHER}}--publisher "{{.PUBLISHER}}"{{end}} \
           {{if .USE_MSIX_TOOL}}--use-msix-tool{{else}}--use-makeappx{{end}}
     vars:
-      ARCH: "{{.ARCH | default ARCH}}"
+      ARCH: '{{.ARCH | default ARCH}}'
       CERT_PATH: '{{.CERT_PATH | default ""}}'
       PUBLISHER: '{{.PUBLISHER | default ""}}'
       USE_MSIX_TOOL: '{{.USE_MSIX_TOOL | default "false"}}'
@@ -201,38 +203,36 @@ tasks:
 
   run:
     cmds:
-      - "{{.BIN_DIR}}/{{.APP_NAME}}.exe"
+      - '{{.BIN_DIR}}/{{.APP_NAME}}.exe'
 
   sign:
     summary: Signs the Windows executable
     desc: |
       Signs the .exe with an Authenticode certificate.
-      Configure SIGN_CERTIFICATE or SIGN_THUMBPRINT in the vars section at the top of this file.
+      Set SIGN_CERTIFICATE or SIGN_THUMBPRINT to override the certificate
+      configured globally via `wails3 setup` (~/.config/wails/defaults.yaml).
       Password is retrieved from system keychain (run: wails3 setup signing)
     deps:
       - task: build
     cmds:
-      - wails3 tool sign --input "{{.BIN_DIR}}/{{.APP_NAME}}.exe" {{if .SIGN_CERTIFICATE}}--certificate {{.SIGN_CERTIFICATE}}{{end}} {{if .SIGN_THUMBPRINT}}--thumbprint {{.SIGN_THUMBPRINT}}{{end}} {{if .TIMESTAMP_SERVER}}--timestamp {{.TIMESTAMP_SERVER}}{{end}}
-    preconditions:
-      - sh: '[ -n "{{.SIGN_CERTIFICATE}}" ] || [ -n "{{.SIGN_THUMBPRINT}}" ]'
-        msg: "Either SIGN_CERTIFICATE or SIGN_THUMBPRINT is required. Set it in the vars section at the top of build/windows/Taskfile.yml"
+      # Certificate vars are optional: if unset, `wails3 tool sign` falls back to
+      # the certificate configured globally via `wails3 setup`.
+      - wails3 tool sign --input "{{.BIN_DIR}}/{{.APP_NAME}}.exe" {{if .SIGN_CERTIFICATE}}--certificate "{{.SIGN_CERTIFICATE}}"{{end}} {{if .SIGN_THUMBPRINT}}--thumbprint "{{.SIGN_THUMBPRINT}}"{{end}} {{if .TIMESTAMP_SERVER}}--timestamp "{{.TIMESTAMP_SERVER}}"{{end}}
 
   sign:installer:
     summary: Signs the NSIS installer
     desc: |
       Creates and signs the NSIS installer.
-      Configure SIGN_CERTIFICATE or SIGN_THUMBPRINT in the vars section at the top of this file.
+      Set SIGN_CERTIFICATE or SIGN_THUMBPRINT to override the certificate
+      configured globally via `wails3 setup` (~/.config/wails/defaults.yaml).
       Password is retrieved from system keychain (run: wails3 setup signing)
     deps:
       - task: create:nsis:installer
         vars:
-          INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+          INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
           GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
     vars:
-      INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "user"}}'
+      INSTALL_SCOPE: '{{.INSTALL_SCOPE | default "machine"}}'
       GUI_VERSION: '{{.GUI_VERSION | default "v0.0.0"}}'
     cmds:
-      - wails3 tool sign --input "build/windows/nsis/{{.APP_NAME}}-installer.exe" {{if .SIGN_CERTIFICATE}}--certificate {{.SIGN_CERTIFICATE}}{{end}} {{if .SIGN_THUMBPRINT}}--thumbprint {{.SIGN_THUMBPRINT}}{{end}} {{if .TIMESTAMP_SERVER}}--timestamp {{.TIMESTAMP_SERVER}}{{end}}
-    preconditions:
-      - sh: '[ -n "{{.SIGN_CERTIFICATE}}" ] || [ -n "{{.SIGN_THUMBPRINT}}" ]'
-        msg: "Either SIGN_CERTIFICATE or SIGN_THUMBPRINT is required. Set it in the vars section at the top of build/windows/Taskfile.yml"
+      - wails3 tool sign --input "build/windows/nsis/{{.APP_NAME}}-installer.exe" {{if .SIGN_CERTIFICATE}}--certificate "{{.SIGN_CERTIFICATE}}"{{end}} {{if .SIGN_THUMBPRINT}}--thumbprint "{{.SIGN_THUMBPRINT}}"{{end}} {{if .TIMESTAMP_SERVER}}--timestamp "{{.TIMESTAMP_SERVER}}"{{end}}

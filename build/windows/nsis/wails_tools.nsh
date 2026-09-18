@@ -8,16 +8,16 @@
     !define INFO_PROJECTNAME "subs-check-pro-gui"
 !endif
 !ifndef INFO_COMPANYNAME
-    !define INFO_COMPANYNAME "sinspired"
+    !define INFO_COMPANYNAME "Sinspire Inc."
 !endif
 !ifndef INFO_PRODUCTNAME
-    !define INFO_PRODUCTNAME "subs-check-pro-gui"
+    !define INFO_PRODUCTNAME "My Product"
 !endif
 !ifndef INFO_PRODUCTVERSION
-    !define INFO_PRODUCTVERSION "0.0.1"
+    !define INFO_PRODUCTVERSION "0.1.0"
 !endif
 !ifndef INFO_COPYRIGHT
-    !define INFO_COPYRIGHT "(c) 2025, sinspired"
+    !define INFO_COPYRIGHT "© 2026, Sinspire Inc."
 !endif
 !ifndef PRODUCT_EXECUTABLE
     !define PRODUCT_EXECUTABLE "${INFO_PROJECTNAME}.exe"
@@ -188,17 +188,17 @@ RequestExecutionLevel "${REQUEST_EXECUTION_LEVEL}"
             Goto ok
         ${EndIf}
      ${EndIf}
-    
+
 	SetDetailsPrint both
     DetailPrint "${WAILS_INSTALL_WEBVIEW_DETAILPRINT}"
     SetDetailsPrint listonly
-    
+
     InitPluginsDir
     CreateDirectory "$pluginsdir\webview2bootstrapper"
     SetOutPath "$pluginsdir\webview2bootstrapper"
     File "MicrosoftEdgeWebview2Setup.exe"
     ExecWait '"$pluginsdir\webview2bootstrapper\MicrosoftEdgeWebview2Setup.exe" /silent /install'
-    
+
     SetDetailsPrint both
     ok:
 !macroend
@@ -228,12 +228,12 @@ RequestExecutionLevel "${REQUEST_EXECUTION_LEVEL}"
 
 !macro wails.associateFiles
     ; Create file associations
-    
+
 !macroend
 
 !macro wails.unassociateFiles
     ; Delete app associations
-    
+
 !macroend
 
 !macro CUSTOM_PROTOCOL_ASSOCIATE PROTOCOL DESCRIPTION ICON COMMAND
@@ -252,10 +252,10 @@ RequestExecutionLevel "${REQUEST_EXECUTION_LEVEL}"
 
 !macro wails.associateCustomProtocols
     ; Create custom protocols associations
-    
+
 !macroend
 
 !macro wails.unassociateCustomProtocols
     ; Delete app custom protocol associations
-    
+
 !macroend

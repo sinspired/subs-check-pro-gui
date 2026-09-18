@@ -6,7 +6,7 @@ Unicode true
 ## If the keyword is not defined, "wails_tools.nsh" will populate them.
 ## If they are defined here, "wails_tools.nsh" will not touch them. This allows you to use this project.nsi manually
 ## from outside of Wails for debugging and development of the installer.
-## 
+##
 ## For development first make a wails nsis build to populate the "wails_tools.nsh":
 ## > wails build --target windows/amd64 --nsis
 ## Then you can call makensis on this file with specifying the path to your binary:
@@ -20,27 +20,16 @@ Unicode true
 ## The following information is taken from the wails_tools.nsh file, but they can be overwritten here.
 ####
 ## !define INFO_PROJECTNAME    "my-project" # Default "subs-check-pro-gui"
-## !define INFO_COMPANYNAME    "My Company" # Default "My Company"
+## !define INFO_COMPANYNAME    "My Company" # Default "Sinspire Inc."
 ## !define INFO_PRODUCTNAME    "My Product Name" # Default "My Product"
 ## !define INFO_PRODUCTVERSION "1.0.0"     # Default "0.1.0"
-## !define INFO_COPYRIGHT      "(c) Now, My Company" # Default "© 2026, My Company"
+## !define INFO_COPYRIGHT      "(c) Now, My Company" # Default "© 2026, Sinspire Inc."
 ###
 ## !define PRODUCT_EXECUTABLE  "Application.exe"      # Default "${INFO_PROJECTNAME}.exe"
 ## !define UNINST_KEY_NAME     "UninstKeyInRegistry"  # Default "${INFO_COMPANYNAME}${INFO_PRODUCTNAME}"
 ####
 ## !define REQUEST_EXECUTION_LEVEL "admin"            # Default "admin"  see also https://nsis.sourceforge.io/Docs/Chapter4.html
 ## !define WAILS_INSTALL_SCOPE     "user"             # Default "machine" - set to "user" for per-user install ($LOCALAPPDATA) without UAC prompt
-####
-## Default to per-user install: no UAC prompt during setup, app runs without admin rights.
-## Install path: %LOCALAPPDATA%\Programs\<ProductName>  (modern desktop app best practice)
-## Override at build time: makensis -DWAILS_INSTALL_SCOPE=machine -DREQUEST_EXECUTION_LEVEL=admin ...
-####
-!ifndef WAILS_INSTALL_SCOPE
-  !define WAILS_INSTALL_SCOPE "user"
-!endif
-!ifndef REQUEST_EXECUTION_LEVEL
-  !define REQUEST_EXECUTION_LEVEL "user"
-!endif
 ####
 ## Include the wails tools
 ####
@@ -101,7 +90,7 @@ Section
     !insertmacro wails.webview2runtime
 
     SetOutPath $INSTDIR
-    
+
     !insertmacro wails.files
 
     CreateShortcut "$SMPROGRAMS\${INFO_PRODUCTNAME}.lnk" "$INSTDIR\${PRODUCT_EXECUTABLE}"
@@ -109,11 +98,11 @@ Section
 
     !insertmacro wails.associateFiles
     !insertmacro wails.associateCustomProtocols
-    
+
     !insertmacro wails.writeUninstaller
 SectionEnd
 
-Section "uninstall" 
+Section "uninstall"
     !insertmacro wails.setShellContext
 
     RMDir /r "$AppData\${PRODUCT_EXECUTABLE}" # Remove the WebView2 DataPath
