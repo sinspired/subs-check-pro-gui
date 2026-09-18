@@ -20,14 +20,19 @@ func init() {
 	}
 
 	logLevel := getLogLevelWails()
+	logPath, err := app.GetLogPath()
+	if err != nil {
+		slog.Error("无法获取日志存储路径", "error", err)
+	}
 
-	// GUI 模式：只写文件日志，不输出到控制台（避免 Windows 弹黑窗）
+	// 配置日志文件
 	fileLogger := &lumberjack.Logger{
-		Filename:   app.TempLog(),
+		Filename:   logPath,
 		MaxSize:    10,
 		MaxBackups: 3,
 		MaxAge:     7,
 	}
+
 	fileHandler := tint.NewTextHandler(fileLogger, &tint.Options{
 		Level:      logLevel,
 		TimeFormat: "01-02 15:04:05",
