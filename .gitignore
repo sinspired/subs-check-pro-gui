@@ -18,5 +18,4 @@ build/android/.gradle/
 *.ps1
 *.syso
 *.car
-*.icns
 .wiki/
