@@ -612,7 +612,7 @@ func (g *GuiApp) OpenInternalPage(path string, title string, windowSize string) 
 	}
 
 	nonce := generateNonce(config.GlobalConfig.APIKey, false)
-	
+
 	// 使用 url.QueryEscape 对 path 进行编码
 	// 防止 path 中本身带有 ?theme=dark 等参数时，破坏完整的 GET 参数结构
 	targetURL := baseURL + "/gui/enter?n=" + nonce + "&redirect=" + url.QueryEscape(path)
@@ -951,7 +951,7 @@ func (g *GuiApp) GetUpdateInfo() UpdateInfo {
 	}
 
 	// 拼出 Release 页面链接
-	targetURL := fmt.Sprintf("https://github.com/sinspired/subs-check-pro-gui/releases/tag/%s", tagName)
+	targetURL := fmt.Sprintf("https://github.com/sinspired/subs-free/releases/tag/%s", tagName)
 
 	// 计算文件大小 (MB)
 	sizeMB := float64(rel.Artifact.Size) / (1024 * 1024)

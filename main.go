@@ -59,7 +59,7 @@ func main() {
 
 		// 第二次启动时：唤醒第一实例
 		SingleInstance: &application.SingleInstanceOptions{
-			UniqueID:      "com.sinspired.subs-check-pro-gui",
+			UniqueID:      "com.sinspired.subs_free",
 			EncryptionKey: singleInstanceKey,
 			OnSecondInstanceLaunch: func(data application.SecondInstanceData) {
 				slog.Debug("收到第二实例唤醒", "args", data.Args)
@@ -77,7 +77,7 @@ func main() {
 	}
 
 	ghProvider, ghErr := github.New(github.Config{
-		Repository:    "sinspired/subs-check-pro-gui",
+		Repository:    "sinspired/subs-free",
 		ChecksumAsset: "SHA256SUMS",
 		HTTPClient:    guiupdater.NewHTTPClient(),
 		AssetMatcher:  guiupdater.AssetMatcher,
