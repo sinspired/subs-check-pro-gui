@@ -7,6 +7,10 @@
 header = "# Changelog\n\n"
 # 每个 tag 的正文模板（Tera 模板语法）
 body = """
+## 版本说明
+
+`v2` 版本使用最新内核，不再依赖 `node`，增加了 `Android 应用`，应用体积也大幅下降。自 `v2.0.0` 起，仓库迁移至 [Subs Free](https://github.com/sinspired/subs-free) ，已下载的应用未来也将自动升级至新仓库。如需继续使用旧版，请保持使用 `v1` 版本。
+
 ## What's Changed
 
 {% for group, commits in commits | group_by(attribute="group") %}

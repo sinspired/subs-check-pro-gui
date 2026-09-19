@@ -4,15 +4,27 @@
 
 基于 [Wails v3](https://v3.wails.io/) 构建，为 [subs-check-pro](https://github.com/sinspired/subs-check-pro) 提供的桌面程序。
 
-[![Go](https://img.shields.io/github/go-mod/go-version/sinspired/subs-check-pro-gui
-)](https://go.dev/)
+[![Go](https://img.shields.io/github/go-mod/go-version/sinspired/subs-check-pro-gui)](https://go.dev/)
 [![Wails](https://img.shields.io/badge/Wails-v3.0.0--alpha-red?logo=wails)](https://v3.wails.io/)
-[![License: GPL v3](https://img.shields.io/github/license/sinspired/subs-check-pro-gui
-)](./LICENCE)
+[![License: GPL v3](https://img.shields.io/github/license/sinspired/subs-check-pro-gui)](./LICENCE)
 
 </div>
 
-![preview](./frontend/public/GUI.png)  
+## 📷 预览
+
+### 💻 桌面端
+
+![preview](./frontend/public/GUI.png)
+
+### 📱 手机 APP
+
+| Android 完整版                                                        | Android 精简版                                                                  |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| <img src="./frontend/public/Android.png" alt="Android"/> | <img src="./frontend/public/Android_Lite.png" alt="Android_Lite"/> |
+
+## 🏷 版本说明
+
+`v2` 版本使用最新内核，不再依赖 `node`，增加了 `Android 应用`，应用体积也大幅下降。自 `v2.0.0` 起，仓库迁移至 [Subs Free](https://github.com/sinspired/subs-free) ，已下载的应用未来也将自动升级至新仓库。如需继续使用旧版，请保持使用 `v1` 版本。
 
 ## ✨ 特性
 
@@ -26,13 +38,13 @@
 
 ## 🖥️ 环境要求
 
-| 工具              | 版本     | 说明                                                        |
-| ----------------- | -------- | ----------------------------------------------------------- |
-| Go                | ≥ 1.26   |                                                             |
-| Node.js           | ≥ 20     |                                                             |
-| pnpm / npm / yarn | 任意     | 前端包管理器                                                |
-| Wails CLI v3      | alpha | `go install github.com/wailsapp/wails/v3/cmd/wails3@latest` |
-| Docker            | 可选     | 跨平台编译时需要                                            |
+| 工具              | 版本   | 说明                                                        |
+| ----------------- | ------ | ----------------------------------------------------------- |
+| Go                | ≥ 1.26 |                                                             |
+| Node.js           | ≥ 20   |                                                             |
+| pnpm / npm / yarn | 任意   | 前端包管理器                                                |
+| Wails CLI v3      | alpha  | `go install github.com/wailsapp/wails/v3/cmd/wails3@latest` |
+| Docker            | 可选   | 跨平台编译时需要                                            |
 
 ### Windows 额外依赖
 
@@ -46,7 +58,6 @@ sudo apt install libgtk-4-dev libwebkit2gtk-4.1-dev
 ```
 
 > **注意**：Wails v3 使用 `GtkFileDialog`（GTK 4.10+），Debian 12 Bookworm 自带的 GTK 4.8 无法编译。跨平台 Docker 编译请使用 `golang:1.26-trixie` 镜像，详见[跨平台构建](#跨平台构建-docker)。
-
 
 ### Mac 需要处理权限？
 
@@ -160,13 +171,13 @@ wails3 task linux:build ARCH=arm64
 
 ```yaml
 # HTTP 服务监听端口（默认 8199）
-listen_port: ":8199"
+listen_port: ':8199'
 
 # Sub-Store 端口（可选）
-sub_store_port: ":1122"
+sub_store_port: ':1122'
 
 # API 密钥（留空则每次启动随机生成）
-api-key: "your-fixed-key"
+api-key: 'your-fixed-key'
 ```
 
 > 建议在 `config.yaml` 中固定 `api-key`，否则每次重启后密钥变更，需要重新登录。
