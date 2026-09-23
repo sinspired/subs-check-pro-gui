@@ -16,9 +16,9 @@
 
 ![preview](./frontend/public/GUI.png)
 
-### 📱 手机 APP
+### 📱 手机 APP [迁移至 Subs-Free 仓库](https://github.com/sinspired/subs-free)
 
-| Android 完整版                                                        | Android 精简版                                                                  |
+| 正常版                                                        | Lite 版                                                                  |
 | --------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | <img src="./frontend/public/Android.png" alt="Android"/> | <img src="./frontend/public/Android_Lite.png" alt="Android_Lite"/> |
 
